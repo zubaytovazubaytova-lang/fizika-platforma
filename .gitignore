@@ -19,14 +19,15 @@ frontend/.env.production.local
 .claude/
 
 # Eski root-level Django fayllari (backend/ ga ko'chirilgan)
-ai_tutor/
-courses/
-tests/
-users/
-config/
-manage.py
-requirements.txt
-db.sqlite3
+# /dirname/ — faqat root darajasida ignore qiladi
+/ai_tutor/
+/courses/
+/tests/
+/users/
+/config/
+/manage.py
+/requirements.txt
+/db.sqlite3
 
 # OS
 .DS_Store
