@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { coursesApi } from '@/lib/api'
 import { useAuthStore } from '@/store/auth'
 import { Course } from '@/types'
@@ -10,6 +11,9 @@ import {
   CheckCircle2, Lock, Loader2, BarChart3, Video, FileText,
 } from 'lucide-react'
 import clsx from 'clsx'
+import { detectFx } from '@/components/effects/TopicParticles'
+
+const TopicParticles = dynamic(() => import('@/components/effects/TopicParticles'), { ssr: false })
 
 const LEVEL_LABEL: Record<string, string> = {
   beginner:     'Boshlang\'ich',
@@ -58,6 +62,10 @@ function TopicAccordion({
 
       {open && (
         <div className="divide-y divide-gray-800/50 border-t border-gray-800">
+          {/* Topic particle effect */}
+          <div className="flex justify-center bg-gray-950/60 py-2">
+            <TopicParticles type={detectFx(topic.title)} width={280} height={100} />
+          </div>
           {topic.lessons?.map((lesson, li) => {
             const lessonMins = Math.round((lesson.total_duration_seconds ?? 0) / 60)
             const Icon = lesson.lesson_type === 'video' ? Play : lesson.lesson_type === 'text' ? FileText : Video
