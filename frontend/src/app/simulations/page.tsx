@@ -1,122 +1,589 @@
 'use client'
-import { useState } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 import dynamic from 'next/dynamic'
-import { Atom, Clock, Zap } from 'lucide-react'
-import clsx from 'clsx'
+import { Play, Pause, RotateCcw, Maximize2, Minimize2 } from 'lucide-react'
+import SimChat     from '@/components/3d/SimChat'
+import SimSelector from '@/components/3d/SimSelector'
+import type { PendulumSimProps  } from '@/components/3d/PendulumSim'
+import type { ElectricSimProps  } from '@/components/3d/ElectricFieldSim'
 
-const PendulumSim = dynamic(() => import('@/components/3d/PendulumSim'), {
-  ssr: false,
-  loading: () => (
-    <div className="flex h-full items-center justify-center">
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
-    </div>
-  ),
-})
+const PendulumSim      = dynamic<PendulumSimProps>(() => import('@/components/3d/PendulumSim'),      { ssr: false })
+const ElectricFieldSim = dynamic<ElectricSimProps>(() => import('@/components/3d/ElectricFieldSim'), { ssr: false })
+const TezlikSim        = dynamic(() => import('@/components/3d/TezlikSim'),        { ssr: false })
+const PaskalSim        = dynamic(() => import('@/components/3d/PaskalSim'),        { ssr: false })
+const PaskalShariSim   = dynamic(() => import('@/components/3d/PaskalShariSim'),   { ssr: false })
+const ElektroskopSim   = dynamic(() => import('@/components/3d/ElektroskopSim'),   { ssr: false })
+const SimInfoPanel     = dynamic(() => import('@/components/3d/SimInfoPanel'),     { ssr: false })
 
-const SIMS = [
-  {
-    id: 'pendulum',
-    title: 'Matematik mayatnik',
-    desc: 'Davr va uzunlik munosabati',
-    icon: Clock,
-    color: 'text-blue-400',
-    bg: 'bg-blue-900/20 border-blue-800/50',
-    activeBg: 'bg-blue-900/40 border-blue-600',
-    info: (
-      <div className="space-y-2 text-sm text-gray-400">
-        <p>
-          Davr formulasi:{' '}
-          <code className="rounded bg-gray-800 px-1.5 py-0.5 font-mono text-blue-300">
-            T = 2π√(L/g)
-          </code>
-        </p>
-        <p>Bu yerda <strong className="text-white">L</strong> — ip uzunligi (m), <strong className="text-white">g</strong> — erkin tushish tezlanishi (9.8 m/s²).</p>
-        <p>Davr massaga bog'liq emas — faqat uzunlikka!</p>
-        <p className="text-gray-600">Sichqoncha bilan 3D ko&apos;rinishni aylantirish mumkin.</p>
+/* ── tiny slider helper ── */
+function Slider({
+  label, value, min, max, step = 1, unit = '', color = '#60a5fa',
+  onChange,
+}: {
+  label: string; value: number; min: number; max: number
+  step?: number; unit?: string; color?: string; onChange: (v: number) => void
+}) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 100 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>
+        <span style={{ fontWeight: 600 }}>{label}</span>
+        <span style={{ color, fontWeight: 700, fontFamily: 'monospace' }}>{value}{unit}</span>
       </div>
-    ),
+      <input
+        type="range" min={min} max={max} step={step} value={value}
+        onChange={e => onChange(Number(e.target.value))}
+        style={{ accentColor: color, width: '100%', cursor: 'pointer' }}
+      />
+    </div>
+  )
+}
+
+/* ── pendulum controls ── */
+function PendulumControls({
+  length, angleDeg, speed, paused,
+  setLength, setAngleDeg, setSpeed, setPaused, onReset,
+}: {
+  length: number; angleDeg: number; speed: number; paused: boolean
+  setLength: (v:number) => void; setAngleDeg: (v:number) => void
+  setSpeed: (v:number) => void; setPaused: (v:boolean) => void; onReset: () => void
+}) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
+      padding: '10px 14px', background: 'rgba(5,8,25,0.85)', backdropFilter: 'blur(12px)',
+      borderTop: '1px solid rgba(96,165,250,0.2)' }}>
+      <Slider label="Uzunlik" value={length} min={0.5} max={5} step={0.1} unit=" m" color="#60a5fa"
+        onChange={setLength} />
+      <Slider label="Burchak" value={angleDeg} min={5} max={75} step={1} unit="°" color="#a78bfa"
+        onChange={setAngleDeg} />
+      <Slider label="Tezlik" value={speed} min={0.1} max={3} step={0.1} unit="×" color="#34d399"
+        onChange={setSpeed} />
+      <div style={{ display: 'flex', gap: 6 }}>
+        <button onClick={() => setPaused(!paused)}
+          style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8,
+            background: paused ? 'rgba(96,165,250,0.2)' : 'rgba(255,255,255,0.07)',
+            border: `1px solid ${paused ? 'rgba(96,165,250,0.5)' : 'rgba(255,255,255,0.12)'}`,
+            color: 'white', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+          {paused ? <><Play className="h-3 w-3" /> Davom</> : <><Pause className="h-3 w-3" /> Pauza</>}
+        </button>
+        <button onClick={onReset}
+          style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 10px', borderRadius: 8,
+            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+            color: 'rgba(255,255,255,0.6)', fontSize: 12, cursor: 'pointer' }}>
+          <RotateCcw className="h-3 w-3" /> Reset
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/* ── electric controls ── */
+function ElectricControls({
+  q1, q2, dist, numLines, paused,
+  setQ1, setQ2, setDist, setNumLines, setPaused, onReset,
+}: {
+  q1:number; q2:number; dist:number; numLines:number; paused:boolean
+  setQ1:(v:number)=>void; setQ2:(v:number)=>void; setDist:(v:number)=>void
+  setNumLines:(v:number)=>void; setPaused:(v:boolean)=>void; onReset:()=>void
+}) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
+      padding: '10px 14px', background: 'rgba(5,8,25,0.85)', backdropFilter: 'blur(12px)',
+      borderTop: '1px solid rgba(251,191,36,0.2)' }}>
+      <Slider label="q₁ (μC)" value={q1} min={-8} max={8} step={1} unit="μC" color="#f87171" onChange={setQ1} />
+      <Slider label="q₂ (μC)" value={q2} min={-8} max={8} step={1} unit="μC" color="#60a5fa" onChange={setQ2} />
+      <Slider label="Masofa" value={dist} min={1} max={8} step={0.5} unit=" m" color="#fbbf24" onChange={setDist} />
+      <Slider label="Chiziq soni" value={numLines} min={4} max={20} step={2} color="#34d399" onChange={setNumLines} />
+      <div style={{ display: 'flex', gap: 6 }}>
+        <button onClick={() => setPaused(!paused)}
+          style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8,
+            background: paused ? 'rgba(251,191,36,0.2)' : 'rgba(255,255,255,0.07)',
+            border: `1px solid ${paused ? 'rgba(251,191,36,0.5)' : 'rgba(255,255,255,0.12)'}`,
+            color: 'white', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+          {paused ? <><Play className="h-3 w-3" /> Davom</> : <><Pause className="h-3 w-3" /> Pauza</>}
+        </button>
+        <button onClick={onReset}
+          style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 10px', borderRadius: 8,
+            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+            color: 'rgba(255,255,255,0.6)', fontSize: 12, cursor: 'pointer' }}>
+          <RotateCcw className="h-3 w-3" /> Reset
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/* ── idle placeholder ── */
+function IdlePlaceholder() {
+  return (
+    <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center', gap: 14, color: 'rgba(255,255,255,0.35)' }}>
+      <div style={{ fontSize: 52 }}>🔬</div>
+      <p style={{ fontSize: 15, fontWeight: 600 }}>Simulatsiya tanlanmagan</p>
+      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>Pastagi ro&apos;yxatdan fizik hodisani tanlang</p>
+      <div style={{ display: 'flex', gap: 12, marginTop: 6 }}>
+        {['⚙️','⚡','〰️','🔥','⚛️'].map(e => (
+          <span key={e} style={{ fontSize: 22, opacity: 0.5 }}>{e}</span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/* ════════════ Elektroskop Ma'lumot paneli ════════════ */
+const PARTS = [
+  { num: 1, name: 'Plastmassa tiqin', color: '#60a5fa', desc: 'Metall sterjenni metalldan iborat gardishdan izolyatsiya qiladi. Zaryad tashqariga chiqib ketmasligi uchun plastmassadan yasalgan.' },
+  { num: 2, name: 'Metall sterjen',   color: '#34d399', desc: 'Sharcha bilan folga yaproqchalari orasidagi o\'tkazgich. Elektr zaryadni ikkalasiga birday uzatadi.' },
+  { num: 3, name: 'Sharcha',          color: '#fbbf24', desc: 'Zaryadlangan jism tekkiziladi yoki yaqin keltiriladi. Katta yuzasi tufayli zaryadni yaxshi qabul qiladi.' },
+  { num: 4, name: 'Folga yaproqchalari', color: '#f87171', desc: 'Juda ingichka oltin folga barglar. Bir xil zaryad olganida bir-birini itarib, ochilib ketadi — bu zaryadlanishning ko\'rsatkichidir.' },
+]
+
+const INFO_CATS = [
+  {
+    icon: '🏛️',
+    title: 'Kim tomonidan yaratilgan',
+    color: '#a78bfa',
+    body: 'Varag\'li elektroskopni 1787-yilda ingliz olimi Abraham Bennet ixtiro qildi. Undan oldin 1748-yilda Yan Ingenhous sodda ko\'rinishini taklif qilgan edi. Zamonaviy ko\'rinishi XIX asrda Faraday va boshqalar tomonidan takomillashtirildi.',
   },
   {
-    id: 'coming1',
-    title: 'Elektr maydon',
-    desc: 'Zaryadlar o\'rtasidagi kuch',
-    icon: Zap,
-    color: 'text-yellow-400',
-    bg: 'bg-yellow-900/10 border-yellow-900/30',
-    activeBg: 'bg-yellow-900/10 border-yellow-900/30',
-    info: null,
-    disabled: true,
+    icon: '🔬',
+    title: 'Qachon tajriba o\'tkazilgan',
+    color: '#34d399',
+    body: '1787-yil: Bennet dastlabki tajribalar o\'tkazdi. 1832-yil: Maykl Faraday elektroskop yordamida induksiya hodisasini tasdiqladi. XIX asr oxiri: Rentgen nurlarini aniqlashda keng qo\'llanildi.',
   },
   {
-    id: 'coming2',
-    title: 'To\'lqin interferensiyasi',
-    desc: 'To\'lqinlar ustma-ust kelishi',
-    icon: Atom,
-    color: 'text-purple-400',
-    bg: 'bg-purple-900/10 border-purple-900/30',
-    activeBg: 'bg-purple-900/10 border-purple-900/30',
-    info: null,
-    disabled: true,
+    icon: '🎯',
+    title: 'Nima maqsadda ishlatamiz',
+    color: '#fbbf24',
+    body: 'Jismning zaryadlanganligini va zaryad belgisini (musbat yoki manfiy) aniqlash uchun ishlatiladi. Zaryadlangan jism tekkizilganda yaproqlar ochiladi; manfiy jism yaqin keltirilganda ham xuddi shunday bo\'ladi (induksiya).',
+  },
+  {
+    icon: '📚',
+    title: 'Bu jarayonni o\'rganish nimaga kerak',
+    color: '#60a5fa',
+    body: 'Elektrostatika asoslarini tushunish uchun zarur. Kulon qonuni, elektr maydon, induksiya va o\'tkazgichlik tushunchalarini vizual ko\'rsatadi. Zamonaviy kondensator, voltmetr va dielektrik nazariyasining ibtidosi shu qurilmadan boshlangan.',
+  },
+  {
+    icon: '🌍',
+    title: 'Hayotda qo\'llanilishi',
+    color: '#f87171',
+    body: [
+      'Elektr stansiyalarida — statik zaryad xavfini nazorat qilish',
+      'Havo kemachiligida — chaqmoqdan himoya tizimlarini tekshirish',
+      'Tibbiyotda — defibrillator va EKG qurilmalarini sinash',
+      'Meteorologiyada — atmosfera elektr maydonini kuzatish',
+      'Kimyo laboratoriyalarida — gazlardagi ionlanishni o\'lchash',
+    ],
   },
 ]
 
-export default function SimulationsPage() {
-  const [activeId, setActiveId] = useState('pendulum')
-  const active = SIMS.find((s) => s.id === activeId)!
-
+function ElektroskopInfoPanel() {
+  const S: React.CSSProperties = {
+    background: 'rgba(6,10,30,0.92)',
+    backdropFilter: 'blur(16px)',
+    border: '1px solid rgba(99,102,241,0.25)',
+    borderRadius: 18,
+    padding: '24px 28px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 22,
+    animation: 'slideDown 0.32s cubic-bezier(.22,1,.36,1)',
+  }
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">3D Simulatsiyalar</h1>
-        <p className="mt-1 text-gray-400">Fizika qonunlarini real vaqtda interaktiv 3D muhitda kuzating</p>
-      </div>
+    <>
+      <style>{`
+        @keyframes slideDown {
+          from { opacity:0; transform:translateY(-14px) }
+          to   { opacity:1; transform:translateY(0) }
+        }
+      `}</style>
+      <div style={S}>
 
-      <div className="grid gap-6 lg:grid-cols-4">
-        {/* Chap — ro'yxat */}
-        <div className="lg:col-span-1">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">Simulatsiyalar</p>
-          <div className="space-y-2">
-            {SIMS.map(({ id, title, desc, icon: Icon, color, bg, activeBg, disabled }) => (
-              <button
-                key={id}
-                disabled={disabled}
-                onClick={() => !disabled && setActiveId(id)}
-                className={clsx(
-                  'flex w-full items-center gap-3 rounded-xl border p-4 text-left transition-all',
-                  disabled
-                    ? 'cursor-not-allowed opacity-40 ' + bg
-                    : activeId === id
-                    ? activeBg
-                    : bg + ' hover:opacity-90'
-                )}
-              >
-                <Icon className={clsx('h-5 w-5 shrink-0', color)} />
+        {/* Sarlavha */}
+        <div style={{ display:'flex', alignItems:'center', gap:10, borderBottom:'1px solid rgba(255,255,255,0.07)', paddingBottom:16 }}>
+          <span style={{ fontSize:22 }}>⚡</span>
+          <div>
+            <h2 style={{ margin:0, fontSize:18, fontWeight:900, color:'#e2e8f0' }}>Elektroskop haqida to&apos;liq ma&apos;lumot</h2>
+            <p style={{ margin:0, fontSize:12, color:'rgba(255,255,255,0.35)', marginTop:2 }}>
+              Qismlar tasnifi • Ishlash jarayoni • Tarix • Qo&apos;llanilishi
+            </p>
+          </div>
+        </div>
+
+        {/* Qismlar */}
+        <div>
+          <h3 style={{ margin:'0 0 12px', fontSize:13, fontWeight:700, color:'rgba(255,255,255,0.5)', textTransform:'uppercase', letterSpacing:'0.8px' }}>
+            Belgilangan qismlar
+          </h3>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(240px,1fr))', gap:10 }}>
+            {PARTS.map(p => (
+              <div key={p.num} style={{
+                background:'rgba(255,255,255,0.04)',
+                border:`1px solid ${p.color}30`,
+                borderRadius:12,
+                padding:'12px 14px',
+                display:'flex', gap:12, alignItems:'flex-start',
+              }}>
+                <span style={{
+                  background: p.color,
+                  color:'#000',
+                  borderRadius:'50%',
+                  width:24, height:24, minWidth:24,
+                  display:'inline-flex', alignItems:'center', justifyContent:'center',
+                  fontSize:13, fontWeight:900, marginTop:1,
+                }}>{p.num}</span>
                 <div>
-                  <p className={clsx('text-sm font-medium', activeId === id ? 'text-white' : 'text-gray-300')}>
-                    {title}
-                  </p>
-                  <p className="text-xs text-gray-500">{desc}</p>
+                  <div style={{ fontSize:13, fontWeight:700, color:p.color, marginBottom:4 }}>{p.name}</div>
+                  <div style={{ fontSize:12, color:'rgba(255,255,255,0.55)', lineHeight:1.6 }}>{p.desc}</div>
                 </div>
-                {disabled && (
-                  <span className="ml-auto rounded-full bg-gray-800 px-2 py-0.5 text-xs text-gray-500">Tez orada</span>
-                )}
-              </button>
+              </div>
             ))}
           </div>
         </div>
 
-        {/* O'ng — simulatsiya */}
-        <div className="lg:col-span-3">
-          <div className="overflow-hidden rounded-2xl border border-gray-800 bg-gray-950" style={{ height: '480px' }}>
-            {activeId === 'pendulum' && <PendulumSim />}
+        {/* Ishlash jarayoni */}
+        <div style={{
+          background:'rgba(251,191,36,0.07)',
+          border:'1px solid rgba(251,191,36,0.20)',
+          borderRadius:12, padding:'14px 18px',
+        }}>
+          <h3 style={{ margin:'0 0 8px', fontSize:13, fontWeight:700, color:'#fbbf24', textTransform:'uppercase', letterSpacing:'0.8px' }}>
+            ⚙️ Ishlash jarayoni
+          </h3>
+          <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
+            {[
+              { step:'1', text:'Zaryadlangan jism (3) sharchasiga tekkiziladi yoki yaqin keltiriladi.' },
+              { step:'2', text:'Zaryad (2) metall sterjen orqali (4) folga yaproqchalarga o\'tadi.' },
+              { step:'3', text:'Ikkala yaproqcha bir xil zaryad oladi → Kulon qonuniga ko\'ra bir-birini itaradi.' },
+              { step:'4', text:'Yaproqlar ochilib, burchak hosil qiladi — burchak qanchalik katta bo\'lsa, zaryad shunchalik ko\'p.' },
+              { step:'5', text:'Zaryadlangan jism olib ketilgandan keyin yaproqlar asta-sekin yopiladi (izolyatsiya saqlanadi).' },
+            ].map(({ step, text }) => (
+              <div key={step} style={{ display:'flex', gap:10, alignItems:'flex-start', fontSize:13, color:'rgba(255,255,255,0.7)', lineHeight:1.6 }}>
+                <span style={{
+                  background:'rgba(251,191,36,0.2)', color:'#fbbf24',
+                  borderRadius:6, width:20, height:20, minWidth:20,
+                  display:'inline-flex', alignItems:'center', justifyContent:'center',
+                  fontSize:11, fontWeight:900, marginTop:1,
+                }}>{step}</span>
+                {text}
+              </div>
+            ))}
           </div>
-          {active.info && (
-            <div className="mt-4 rounded-xl border border-gray-800 bg-gray-900 p-5">
-              <h3 className="mb-3 font-semibold">{active.title}</h3>
-              {active.info}
-            </div>
+        </div>
+
+        {/* Kategoriyalangan ma'lumotlar */}
+        <div>
+          <h3 style={{ margin:'0 0 12px', fontSize:13, fontWeight:700, color:'rgba(255,255,255,0.5)', textTransform:'uppercase', letterSpacing:'0.8px' }}>
+            Kategoriyalangan ma&apos;lumotlar
+          </h3>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:12 }}>
+            {INFO_CATS.map(cat => (
+              <div key={cat.title} style={{
+                background:'rgba(255,255,255,0.03)',
+                border:`1px solid ${cat.color}25`,
+                borderRadius:13,
+                padding:'14px 16px',
+              }}>
+                <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:9 }}>
+                  <span style={{ fontSize:18 }}>{cat.icon}</span>
+                  <span style={{ fontSize:12, fontWeight:700, color:cat.color }}>{cat.title}</span>
+                </div>
+                {Array.isArray(cat.body) ? (
+                  <ul style={{ margin:0, padding:'0 0 0 16px', display:'flex', flexDirection:'column', gap:5 }}>
+                    {cat.body.map((item, i) => (
+                      <li key={i} style={{ fontSize:12, color:'rgba(255,255,255,0.58)', lineHeight:1.6 }}>{item}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p style={{ margin:0, fontSize:12, color:'rgba(255,255,255,0.58)', lineHeight:1.7 }}>{cat.body}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+    </>
+  )
+}
+
+/* ════════════════════════════════════════════ */
+export default function SimulationsPage() {
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const [viewedId, setViewedId] = useState<string | null>(null)
+  const [simKey,   setSimKey]   = useState(0)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const [snapUrl,  setSnapUrl]  = useState<string | null>(null)
+  const canvasRef    = useRef<HTMLDivElement>(null)
+  const dismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const toggleFullscreen = useCallback(async () => {
+    if (!canvasRef.current) return
+    if (!document.fullscreenElement) {
+      await canvasRef.current.requestFullscreen()
+    } else {
+      await document.exitFullscreen()
+    }
+  }, [])
+
+  function takeScreenshot() {
+    const canvas = canvasRef.current?.querySelector('canvas')
+    if (!canvas) return
+    canvas.toBlob(blob => {
+      if (!blob) return
+      const url = URL.createObjectURL(blob)
+      setSnapUrl(url)
+      if (dismissTimer.current) clearTimeout(dismissTimer.current)
+      dismissTimer.current = setTimeout(() => {
+        setSnapUrl(prev => { if (prev) URL.revokeObjectURL(prev); return null })
+      }, 7000)
+    }, 'image/png')
+  }
+
+  function downloadSnap() {
+    if (!snapUrl) return
+    const a = document.createElement('a')
+    a.href = snapUrl; a.download = 'simulatsiya.png'; a.click()
+  }
+
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement)
+    document.addEventListener('fullscreenchange', handler)
+    return () => document.removeEventListener('fullscreenchange', handler)
+  }, [])
+
+  /* ── Pendulum state ── */
+  const [pendLen,    setPendLen]    = useState(2)
+  const [pendAngle,  setPendAngle]  = useState(30)
+  const [pendSpeed,  setPendSpeed]  = useState(1)
+  const [pendPaused, setPendPaused] = useState(false)
+
+  /* ── Electric field state ── */
+  const [elQ1,      setElQ1]      = useState(4)
+  const [elQ2,      setElQ2]      = useState(-4)
+  const [elDist,    setElDist]    = useState(4)
+  const [elLines,   setElLines]   = useState(10)
+  const [elPaused,  setElPaused]  = useState(false)
+
+  /* ── Elektroskop info panel ── */
+  const [eInfoOpen, setEInfoOpen] = useState(false)
+
+  function handleSelect(id: string) {
+    setActiveId(id)
+    setSimKey(k => k + 1)
+    if (id === 'pendulum') setPendPaused(false)
+    if (id === 'electric') setElPaused(false)
+    if (id !== 'elektroskop') setEInfoOpen(false)
+  }
+
+  function resetSim() {
+    setSimKey(k => k + 1)
+    if (activeId === 'pendulum') { setPendPaused(false) }
+    if (activeId === 'electric') { setElPaused(false) }
+  }
+
+  const simTitle =
+    activeId === 'pendulum' ? 'Matematik mayatnik' :
+    activeId === 'electric' ? 'Elektr maydon' :
+    activeId === 'tezlik'   ? "Tezlik. Yo'l. Vaqt. Tezlanish" :
+    activeId === 'paskal'      ? 'Paskal qonuni (silindr)'  :
+    activeId === 'paskal-shar'  ? 'Paskal shari (360°)'       :
+    activeId === 'elektroskop'  ? 'Elektroskop'               :
+    'Fizika simulatsiyasi'
+
+  return (
+    <div style={{ minHeight: '100vh', padding: '20px 20px' }}>
+      <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+        {/* header */}
+        <div>
+          <h1 style={{ fontSize: 26, fontWeight: 900, color: 'white', marginBottom: 4 }}>
+            3D Simulatsiyalar
+          </h1>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>
+            Fizika qonunlarini real vaqtda interaktiv 3D muhitda kuzating
+          </p>
+        </div>
+
+        {/* ── 3D canvas area ── */}
+        <div style={{ borderRadius: 20, overflow: 'hidden',
+          border: '1px solid rgba(255,255,255,0.09)',
+          background: 'rgba(6,8,22,0.85)', backdropFilter: 'blur(12px)',
+          display: 'flex', flexDirection: 'column',
+        }}>
+          {/* canvas itself — fixed tall height */}
+          <div ref={canvasRef} style={{ height: 'clamp(420px, 62vh, 680px)', position: 'relative', background: isFullscreen ? 'rgba(6,8,22,1)' : undefined }}>
+            {!activeId && <IdlePlaceholder />}
+
+            {/* ── Screenshot burchak toast ── */}
+            {snapUrl && (
+              <div style={{ position: 'absolute', bottom: 14, right: 58, zIndex: 30,
+                animation: 'snapIn 0.28s cubic-bezier(.22,1,.36,1)' }}>
+                <style>{`@keyframes snapIn{from{opacity:0;transform:scale(.7) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}`}</style>
+                <div style={{ position: 'relative' }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={snapUrl} alt="snap" onClick={downloadSnap}
+                    style={{ width: 130, borderRadius: 10, display: 'block', cursor: 'pointer',
+                      boxShadow: '0 6px 28px rgba(0,0,0,0.75)',
+                      border: '2px solid rgba(251,191,36,0.50)' }} />
+                  <button onClick={() => { URL.revokeObjectURL(snapUrl); setSnapUrl(null) }}
+                    style={{ position: 'absolute', top: -7, right: -7, width: 20, height: 20,
+                      borderRadius: '50%', background: '#1e293b',
+                      border: '1px solid rgba(255,255,255,0.2)',
+                      color: 'white', fontSize: 11, lineHeight: '20px',
+                      cursor: 'pointer', padding: 0, textAlign: 'center' }}>✕</button>
+                  <p style={{ margin: '5px 0 0', fontSize: 10,
+                    color: 'rgba(255,255,255,0.45)', textAlign: 'center' }}>
+                    Saqlash uchun bosing
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* 📷 Screenshot tugmasi */}
+            {activeId && (
+              <button
+                onClick={takeScreenshot}
+                title="Skrinshot"
+                style={{
+                  position: 'absolute', top: 12, right: 56, zIndex: 20,
+                  width: 36, height: 36,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  borderRadius: 10,
+                  background: 'rgba(10,12,35,0.75)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  backdropFilter: 'blur(10px)',
+                  color: 'rgba(255,255,255,0.8)',
+                  cursor: 'pointer', fontSize: 16,
+                }}
+              >📷</button>
+            )}
+
+            {/* To'liq ekran tugmasi */}
+            <button
+              onClick={toggleFullscreen}
+              title={isFullscreen ? "Kichraytirish" : "To'liq ekran"}
+              style={{
+                position: 'absolute', top: 12, right: 12, zIndex: 20,
+                width: 36, height: 36,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                borderRadius: 10,
+                background: 'rgba(10,12,35,0.75)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                backdropFilter: 'blur(10px)',
+                color: 'rgba(255,255,255,0.8)',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = 'rgba(99,102,241,0.35)'
+                ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(99,102,241,0.6)'
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = 'rgba(10,12,35,0.75)'
+                ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.15)'
+              }}
+            >
+              {isFullscreen
+                ? <Minimize2 style={{ width: 16, height: 16 }} />
+                : <Maximize2 style={{ width: 16, height: 16 }} />
+              }
+            </button>
+
+            {activeId === 'pendulum' && (
+              <PendulumSim
+                key={simKey}
+                length={pendLen}
+                angleDeg={pendAngle}
+                paused={pendPaused}
+                speed={pendSpeed}
+                simKey={simKey}
+                boardMode={false}
+              />
+            )}
+
+            {activeId === 'electric' && (
+              <ElectricFieldSim
+                key={simKey}
+                q1={elQ1}
+                q2={elQ2}
+                dist={elDist}
+                numLines={elLines}
+                paused={elPaused}
+                simKey={simKey}
+                boardMode={false}
+              />
+            )}
+
+            {activeId === 'tezlik' && (
+              <TezlikSim key={simKey} />
+            )}
+
+            {activeId === 'paskal' && (
+              <PaskalSim key={simKey} />
+            )}
+
+            {activeId === 'paskal-shar' && (
+              <PaskalShariSim key={simKey} />
+            )}
+
+            {activeId === 'elektroskop' && (
+              <ElektroskopSim
+                key={simKey}
+                showLabels={eInfoOpen}
+                onToggle={() => setEInfoOpen(v => !v)}
+              />
+            )}
+          </div>
+
+          {/* controls strip — only for pendulum & electric */}
+          {activeId === 'pendulum' && (
+            <PendulumControls
+              length={pendLen} angleDeg={pendAngle} speed={pendSpeed} paused={pendPaused}
+              setLength={v => { setPendLen(v); setSimKey(k => k+1) }}
+              setAngleDeg={v => { setPendAngle(v); setSimKey(k => k+1) }}
+              setSpeed={setPendSpeed}
+              setPaused={setPendPaused}
+              onReset={resetSim}
+            />
+          )}
+
+          {activeId === 'electric' && (
+            <ElectricControls
+              q1={elQ1} q2={elQ2} dist={elDist} numLines={elLines} paused={elPaused}
+              setQ1={v => { setElQ1(v); setSimKey(k => k+1) }}
+              setQ2={v => { setElQ2(v); setSimKey(k => k+1) }}
+              setDist={v => { setElDist(v); setSimKey(k => k+1) }}
+              setNumLines={v => { setElLines(v); setSimKey(k => k+1) }}
+              setPaused={setElPaused}
+              onReset={resetSim}
+            />
           )}
         </div>
+
+        {/* ── Elektroskop Ma'lumot paneli ── */}
+        {activeId === 'elektroskop' && eInfoOpen && (
+          <ElektroskopInfoPanel />
+        )}
+
+        {/* ── bottom two panels ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          {/* left: AI Chat */}
+          <SimChat simId={activeId ?? 'general'} simTitle={simTitle} />
+
+          {/* right: selector + info */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <SimSelector
+              activeId={activeId}
+              viewedId={viewedId}
+              onSelect={handleSelect}
+              onView={setViewedId}
+            />
+            {viewedId && viewedId !== activeId && (
+              <SimInfoPanel simId={viewedId} />
+            )}
+          </div>
+        </div>
+
       </div>
     </div>
   )

@@ -1,6 +1,8 @@
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
+from rest_framework.exceptions import NotFound, AuthenticationFailed
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.exceptions import AuthenticationFailed as JWTAuthFailed
 from .models import CustomUser
 
 
@@ -27,9 +29,9 @@ class UserDetailSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'username', 'email',
             'first_name', 'last_name', 'full_name',
-            'role', 'avatar', 'bio', 'phone', 'date_joined',
+            'role', 'avatar', 'bio', 'phone', 'date_joined', 'is_staff',
         )
-        read_only_fields = ('id', 'username', 'role', 'date_joined')
+        read_only_fields = ('id', 'username', 'role', 'date_joined', 'is_staff')
 
     def get_full_name(self, obj):
         return obj.get_full_name() or obj.username
@@ -39,11 +41,33 @@ class UserDetailSerializer(serializers.ModelSerializer):
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     """
-    Login javobiga user ma'lumotini ham qo'shadi:
-    { access, refresh, user: {...} }
+    Login javobiga user ma'lumotini qo'shadi.
+    Aniq xato kodlar: user_not_found (404), wrong_password (401).
     """
     def validate(self, attrs):
-        data = super().validate(attrs)
+        username = attrs.get(self.username_field, '')
+
+        # Email orqali username ni topish
+        if '@' in username:
+            try:
+                user_obj = CustomUser.objects.get(
+                    email__iexact=username, is_deleted=False,
+                )
+                attrs[self.username_field] = user_obj.username
+            except CustomUser.DoesNotExist:
+                raise NotFound({'error': 'user_not_found'})
+        else:
+            if not CustomUser.objects.filter(
+                username__iexact=username, is_active=True, is_deleted=False,
+            ).exists():
+                raise NotFound({'error': 'user_not_found'})
+
+        # Autentifikatsiya (noto'g'ri parol)
+        try:
+            data = super().validate(attrs)
+        except (JWTAuthFailed, AuthenticationFailed):
+            raise AuthenticationFailed({'error': 'wrong_password'})
+
         data['user'] = UserDetailSerializer(self.user).data
         return data
 
@@ -56,30 +80,31 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ('username', 'email', 'first_name', 'last_name', 'password', 'password2')
+        fields = ('email', 'password', 'password2')
         extra_kwargs = {
-            'email':      {'required': True},
-            'first_name': {'required': True},
-            'last_name':  {'required': True},
+            'email': {'required': True},
         }
 
     def validate_email(self, value):
-        if CustomUser.objects.filter(email=value).exists():
+        if CustomUser.objects.filter(email__iexact=value).exists():
             raise serializers.ValidationError('Bu email allaqachon ro\'yxatdan o\'tgan.')
-        return value
-
-    def validate_username(self, value):
-        if CustomUser.objects.filter(username=value).exists():
-            raise serializers.ValidationError('Bu foydalanuvchi nomi band.')
-        return value
+        return value.lower()
 
     def validate(self, attrs):
         if attrs['password'] != attrs['password2']:
-            raise serializers.ValidationError({'password': 'Parollar mos kelmadi.'})
+            raise serializers.ValidationError({'password': ['Parollar mos kelmadi.']})
         return attrs
 
     def create(self, validated_data):
         validated_data.pop('password2')
+        email = validated_data['email']
+        base = email.split('@')[0]
+        username = base
+        n = 1
+        while CustomUser.objects.filter(username=username).exists():
+            username = f'{base}{n}'
+            n += 1
+        validated_data['username'] = username
         return CustomUser.objects.create_user(**validated_data)
 
 

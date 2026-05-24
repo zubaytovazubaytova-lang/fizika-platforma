@@ -2,21 +2,110 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { coursesApi } from '@/lib/api'
 import { useRequireAuth } from '@/hooks/useRequireAuth'
-import { Lesson, Course, LessonProgress } from '@/types'
+import { Lesson, Course, LessonProgress, Slide } from '@/types'
 import VideoPlayer from '@/components/video/VideoPlayer'
 import {
   ChevronLeft, ChevronRight, CheckCircle2,
   Loader2, BookOpen, Play, FileText, Video,
-  ChevronDown,
+  ChevronDown, Layers,
 } from 'lucide-react'
 import clsx from 'clsx'
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:8000'
+
+/* ── Slide Viewer ── */
+function SlideViewer({ slides }: { slides: Slide[] }) {
+  const [cur, setCur] = useState(0)
+  if (!slides.length) return null
+  const slide = slides[cur]
+
+  return (
+    <div className="mb-6 overflow-hidden rounded-2xl border border-gray-800"
+      style={{ background: 'rgba(8,8,25,0.9)' }}>
+
+      {/* Progress bar */}
+      <div className="flex h-1">
+        {slides.map((_, i) => (
+          <div key={i}
+            onClick={() => setCur(i)}
+            className="flex-1 cursor-pointer transition-colors"
+            style={{ background: i <= cur ? '#06b6d4' : 'rgba(255,255,255,0.1)', marginRight: 2 }}
+          />
+        ))}
+      </div>
+
+      {/* Slide counter */}
+      <div className="flex items-center justify-between px-5 pt-3 pb-1">
+        <span className="flex items-center gap-1.5 text-xs font-bold text-cyan-400">
+          <Layers className="h-3.5 w-3.5" /> Slayd {cur + 1} / {slides.length}
+        </span>
+        <div className="flex gap-1">
+          {slides.map((_, i) => (
+            <button key={i} onClick={() => setCur(i)}
+              className="h-1.5 rounded-full transition-all"
+              style={{ width: i === cur ? 20 : 6, background: i === cur ? '#06b6d4' : 'rgba(255,255,255,0.15)' }}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Slide content */}
+      <div className="min-h-64 px-6 py-4">
+        {slide.title && (
+          <h2 className="mb-4 text-xl font-black text-white">{slide.title}</h2>
+        )}
+        {slide.image && (
+          <div className="mb-4 overflow-hidden rounded-xl" style={{ maxHeight: 360, position: 'relative' }}>
+            <Image
+              src={slide.image.startsWith('http') ? slide.image : `${API_BASE}${slide.image}`}
+              alt={slide.title || `Slayd ${cur + 1}`}
+              width={800} height={450} unoptimized
+              className="w-full rounded-xl object-contain"
+            />
+          </div>
+        )}
+        {slide.content && (
+          <div className="prose prose-invert prose-sm max-w-none">
+            <pre className="whitespace-pre-wrap font-sans text-gray-300 leading-relaxed text-sm">
+              {slide.content}
+            </pre>
+          </div>
+        )}
+      </div>
+
+      {/* Navigation */}
+      <div className="flex items-center justify-between border-t border-gray-800 px-5 py-3">
+        <button
+          onClick={() => setCur((v) => Math.max(0, v - 1))}
+          disabled={cur === 0}
+          className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all disabled:opacity-30"
+          style={{ background: 'rgba(255,255,255,0.05)', color: '#9ca3af' }}
+        >
+          <ChevronLeft className="h-4 w-4" /> Oldingi
+        </button>
+
+        <span className="text-xs text-gray-600">{cur + 1} / {slides.length}</span>
+
+        <button
+          onClick={() => setCur((v) => Math.min(slides.length - 1, v + 1))}
+          disabled={cur === slides.length - 1}
+          className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-bold transition-all disabled:opacity-30"
+          style={{ background: 'rgba(6,182,212,0.15)', color: '#67e8f9', border: '1px solid rgba(6,182,212,0.25)' }}
+        >
+          Keyingi <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  )
+}
 
 export default function LessonPage() {
   const { id, lessonId } = useParams<{ id: string; lessonId: string }>()
   const router = useRouter()
-  const { user, loading: authLoading } = useRequireAuth()
+  const { loading: authLoading } = useRequireAuth()
 
   const [lesson, setLesson]     = useState<Lesson | null>(null)
   const [course, setCourse]     = useState<Course | null>(null)
@@ -45,12 +134,7 @@ export default function LessonPage() {
     }
   }, [lessonId])
 
-  // Video tugaganda avtomatik "bajarildi"
-  const handleVideoEnded = useCallback(() => {
-    if (!progress?.completed) handleMarkDone()
-  }, [progress])
-
-  const handleMarkDone = async () => {
+  const handleMarkDone = useCallback(async () => {
     if (marking || progress?.completed) return
     setMarking(true)
     try {
@@ -59,7 +143,12 @@ export default function LessonPage() {
     } finally {
       setMarking(false)
     }
-  }
+  }, [marking, progress, lessonId])
+
+  // Video tugaganda avtomatik "bajarildi"
+  const handleVideoEnded = useCallback(() => {
+    if (!progress?.completed) handleMarkDone()
+  }, [progress, handleMarkDone])
 
   // Oldingi/keyingi darslarni topish
   const allLessons = course?.topics?.flatMap((t) => t.lessons ?? []) ?? []
@@ -146,7 +235,12 @@ export default function LessonPage() {
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-4xl px-4 py-6">
 
-            {/* Video tablar (bir nechta video bo'lsa) */}
+            {/* ── Slaydlar ── */}
+            {lesson.slides && lesson.slides.length > 0 && (
+              <SlideViewer slides={lesson.slides} />
+            )}
+
+            {/* ── Video tablar (bir nechta video bo'lsa) ── */}
             {lesson.videos && lesson.videos.length > 1 && (
               <div className="mb-4 flex gap-2 overflow-x-auto">
                 {lesson.videos.map((v, i) => (
@@ -168,7 +262,7 @@ export default function LessonPage() {
               </div>
             )}
 
-            {/* Video player */}
+            {/* ── Video player ── */}
             {currentVideo && (
               <div className="mb-6">
                 <VideoPlayer
@@ -189,7 +283,7 @@ export default function LessonPage() {
               </div>
             )}
 
-            {/* Matn kontent */}
+            {/* ── Matn kontent ── */}
             {lesson.content && (
               <div className="prose prose-invert prose-sm max-w-none rounded-2xl border border-gray-800 bg-gray-900 p-6">
                 <pre className="whitespace-pre-wrap font-sans text-gray-300 leading-relaxed">
@@ -198,7 +292,8 @@ export default function LessonPage() {
               </div>
             )}
 
-            {!currentVideo && !lesson.content && (
+            {/* ── Kontent yo'q ── */}
+            {!currentVideo && !lesson.content && (!lesson.slides || lesson.slides.length === 0) && (
               <div className="py-16 text-center text-gray-500">
                 Bu dars uchun kontent tez orada qo&apos;shiladi
               </div>
@@ -274,7 +369,7 @@ function TopicList({
         <div>
           {topic.lessons?.map((lesson) => {
             const isActive = lesson.id === activeLessonId
-            const Icon = lesson.lesson_type === 'text' ? FileText : lesson.has_video ? Play : Video
+            const Icon = lesson.lesson_type === 'slide' ? Layers : lesson.lesson_type === 'text' ? FileText : lesson.has_video ? Play : Video
             return (
               <Link
                 key={lesson.id}

@@ -565,13 +565,13 @@ function LoginOverlay() {
           ))}
         </ul>
         <div className="flex flex-col gap-3 w-full">
-          <Link href="/login"
+          <Link href="/login?next=/ai-tutor"
             className="relative overflow-hidden flex items-center justify-center gap-2 rounded-2xl py-3 font-bold text-white"
             style={{ background:'linear-gradient(135deg,#06b6d4,#3b82f6)', boxShadow:'0 0 25px rgba(0,212,255,0.35)' }}>
             <span className="shimmer absolute inset-0" />
             <LogIn className="h-4 w-4" /> Kirish
           </Link>
-          <Link href="/register"
+          <Link href="/register?next=/ai-tutor"
             className="flex items-center justify-center gap-2 rounded-2xl py-3 font-semibold text-gray-300 hover:text-white transition-all"
             style={{ border:'1px solid rgba(255,255,255,0.10)', background:'rgba(255,255,255,0.03)' }}>
             Ro&apos;yxatdan o&apos;tish — bepul
@@ -635,7 +635,7 @@ export default function AITutorPage() {
   }, [active])
 
   const toggleFav = useCallback((id: number) => {
-    setFavorites((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n })
+    setFavorites((p) => { const n = new Set(p); if (n.has(id)) n.delete(id); else n.add(id); return n })
   }, [])
 
   const send = useCallback(async (text?: string) => {
@@ -690,8 +690,7 @@ export default function AITutorPage() {
       const decoder = new TextDecoder()
       let firstChunk = true
 
-      // eslint-disable-next-line no-constant-condition
-      while (true) {
+      while (true) { // stream loop
         const { done, value } = await reader.read()
         if (done) break
 

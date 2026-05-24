@@ -1,341 +1,255 @@
 'use client'
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { testsApi } from '@/lib/api'
-import { useRequireAuth } from '@/hooks/useRequireAuth'
 import { Quiz, Question } from '@/types'
-import {
-  Clock, ChevronLeft, ChevronRight, Send,
-  HelpCircle, Loader2, AlertTriangle, CheckSquare, Circle,
-} from 'lucide-react'
+import { Clock, ChevronLeft, ChevronRight, Send, Loader2, CheckCircle2, RotateCcw } from 'lucide-react'
 import clsx from 'clsx'
 
-// ── Taymer ──────────────────────────────────────────────────────────────────
-function Timer({ totalSeconds, onExpire }: { totalSeconds: number; onExpire: () => void }) {
-  const [left, setLeft] = useState(totalSeconds)
-  const ref = useRef(onExpire)
-  ref.current = onExpire
-
+function Timer({ totalSecs, onExpire }: { totalSecs: number; onExpire: () => void }) {
+  const [left, setLeft] = useState(totalSecs)
+  const cb = useRef(onExpire)
+  useEffect(() => { cb.current = onExpire })
   useEffect(() => {
-    if (totalSeconds === 0) return
-    const id = setInterval(() => {
-      setLeft((s) => {
-        if (s <= 1) { clearInterval(id); ref.current(); return 0 }
-        return s - 1
-      })
-    }, 1000)
+    if (!totalSecs) return
+    const id = setInterval(() => setLeft((s) => { if (s<=1){clearInterval(id);cb.current();return 0} return s-1 }),1000)
     return () => clearInterval(id)
-  }, [totalSeconds])
-
-  if (totalSeconds === 0) return null
-
-  const m = Math.floor(left / 60)
-  const s = left % 60
-  const urgent = left < 60
-
+  }, [totalSecs])
+  if (!totalSecs) return null
+  const m=Math.floor(left/60), s=left%60, pct=left/totalSecs
+  const color = pct>.5?'#34D399':pct>.25?'#FFB347':'#EF4444'
   return (
-    <div className={clsx(
-      'flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm font-mono font-semibold tabular-nums',
-      urgent ? 'bg-red-900/40 text-red-400 animate-pulse' : 'bg-gray-800 text-gray-300'
-    )}>
+    <div className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-mono font-bold"
+      style={{ background:`${color}15`, border:`1px solid ${color}40`, color }}>
       <Clock className="h-4 w-4" />
-      {String(m).padStart(2, '0')}:{String(s).padStart(2, '0')}
+      {String(m).padStart(2,'0')}:{String(s).padStart(2,'0')}
     </div>
   )
 }
 
-// ── Bir savol ────────────────────────────────────────────────────────────────
-function QuestionCard({
-  question,
-  index,
-  total,
-  selected,
-  onSelect,
-}: {
-  question: Question
-  index: number
-  total: number
-  selected: number[]
-  onSelect: (choiceId: number) => void
-}) {
-  const isMultiple = question.question_type === 'multiple'
-
+function ResultScreen({ score, passed, total, correct, quizId }:
+  { score:number; passed:boolean; total:number; correct:number; quizId:string }) {
+  const color = passed ? '#34D399' : '#EF4444'
+  const r=54, circ=2*Math.PI*r
   return (
-    <div className="flex flex-col gap-5">
-      {/* Savol matni */}
-      <div className="rounded-2xl border border-gray-800 bg-gray-900 p-6">
-        <div className="mb-3 flex items-center gap-2 text-xs text-gray-500">
-          <span className="flex items-center gap-1">
-            {isMultiple
-              ? <><CheckSquare className="h-3.5 w-3.5 text-purple-400" /> Ko&apos;p javobli</>
-              : <><Circle className="h-3.5 w-3.5 text-blue-400" /> Bir javobli</>
-            }
-          </span>
-          <span>·</span>
-          <span>{question.points} ball</span>
+    <div className="flex min-h-screen items-center justify-center px-4">
+      <div className="w-full max-w-md rounded-3xl overflow-hidden"
+        style={{ background:'rgba(8,8,25,0.9)', border:`1px solid ${color}30`, boxShadow:`0 0 60px ${color}15` }}>
+        <div className="py-4 text-center font-bold text-sm" style={{ background:`${color}20`, color }}>
+          {passed ? '🎉 Tabriklaymiz! Test muvaffaqiyatli topshirildi!' : "😔 Test o'tilmadi. Yana urinib ko'ring!"}
         </div>
-        <p className="text-lg font-medium leading-relaxed text-white">{question.text}</p>
-      </div>
-
-      {/* Javob variantlari */}
-      <div className="grid gap-3">
-        {question.choices.map((choice) => {
-          const checked = selected.includes(choice.id)
-          return (
-            <button
-              key={choice.id}
-              onClick={() => onSelect(choice.id)}
-              className={clsx(
-                'flex items-center gap-3 rounded-xl border p-4 text-left transition-all',
-                checked
-                  ? 'border-blue-500 bg-blue-900/20 text-white'
-                  : 'border-gray-700 bg-gray-900 text-gray-300 hover:border-gray-500 hover:bg-gray-800 hover:text-white'
-              )}
-            >
-              {/* Checkbox yoki radio */}
-              <div className={clsx(
-                'flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
-                checked ? 'border-blue-500 bg-blue-500' : 'border-gray-600'
-              )}>
-                {checked && (
-                  <div className={clsx('bg-white rounded-full', isMultiple ? 'h-2.5 w-2.5' : 'h-2 w-2')} />
-                )}
+        <div className="p-8 flex flex-col items-center gap-6">
+          <div className="relative h-40 w-40 flex items-center justify-center">
+            <svg className="absolute -rotate-90" width="140" height="140">
+              <circle cx="70" cy="70" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="10"/>
+              <circle cx="70" cy="70" r={r} fill="none" stroke={color} strokeWidth="10"
+                strokeDasharray={`${(score/100)*circ} ${circ}`} strokeLinecap="round" className="transition-all duration-1000"/>
+            </svg>
+            <div className="text-center">
+              <div className="text-4xl font-black" style={{ color }}>{score}%</div>
+              <div className="text-xs text-gray-500">natija</div>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-4 w-full text-center">
+            {[["To'g'ri",correct,'#34D399'],["Noto'g'ri",total-correct,'#EF4444'],['Jami',total,'#00D4FF']].map(([l,v,c])=>(
+              <div key={l as string} className="rounded-2xl p-3" style={{ background:`${c}10`, border:`1px solid ${c}20` }}>
+                <div className="text-2xl font-black" style={{ color: c as string }}>{v as number}</div>
+                <div className="text-xs text-gray-500 mt-0.5">{l as string}</div>
               </div>
-              <span className="text-sm leading-relaxed">{choice.text}</span>
-            </button>
-          )
-        })}
+            ))}
+          </div>
+          <div className="flex gap-3 w-full">
+            <Link href={`/tests/${quizId}`}
+              className="flex-1 flex items-center justify-center gap-2 rounded-2xl py-3 font-bold text-white text-sm"
+              style={{ background:'linear-gradient(135deg,#06b6d4,#3b82f6)', boxShadow:'0 0 20px rgba(0,212,255,0.25)' }}>
+              <RotateCcw className="h-4 w-4"/> Qayta
+            </Link>
+            <Link href="/tests"
+              className="flex-1 flex items-center justify-center gap-2 rounded-2xl py-3 font-semibold text-gray-300 text-sm"
+              style={{ background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)' }}>
+              Testlar <ChevronRight className="h-4 w-4"/>
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   )
 }
 
-// ── Asosiy sahifa ────────────────────────────────────────────────────────────
-export default function QuizPage() {
-  const { id }  = useParams<{ id: string }>()
-  const router  = useRouter()
-  const { loading: authLoading } = useRequireAuth()
+const OPTS = ['A','B','C','D']
 
-  const [quiz, setQuiz]       = useState<Quiz | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [started, setStarted] = useState(false)
-  const [current, setCurrent] = useState(0)
-  const [answers, setAnswers] = useState<Record<number, number[]>>({})
-  const [submitting, setSubmitting] = useState(false)
+export default function TestPage() {
+  const { id } = useParams<{ id:string }>()
+  const router  = useRouter()
+  const [quiz,     setQuiz]    = useState<Quiz|null>(null)
+  const [loading,  setLoading] = useState(true)
+  const [started,  setStarted] = useState(false)
+  const [current,  setCurrent] = useState(0)
+  const [answers,  setAnswers] = useState<Record<number,number[]>>({})
+  const [submitting,setSubmit] = useState(false)
+  const [result,   setResult]  = useState<{score:number;passed:boolean;total:number;correct:number}|null>(null)
 
   useEffect(() => {
-    if (authLoading) return
     testsApi.detail(Number(id))
       .then((r) => { setQuiz(r.data); setLoading(false) })
       .catch(() => { router.replace('/tests'); setLoading(false) })
-  }, [id, authLoading, router])
+  }, [id, router])
 
-  const questions = quiz?.questions ?? []
-  const currentQ  = questions[current]
+  const questions = useMemo<Question[]>(() => quiz?.questions ?? [], [quiz])
+  const q         = questions[current]
   const answered  = Object.keys(answers).length
-  const totalQ    = questions.length
+  const isLast    = current === questions.length - 1
+  const selected  = answers[q?.id] ?? []
 
-  const handleSelect = useCallback((choiceId: number) => {
-    if (!currentQ) return
-    const isMultiple = currentQ.question_type === 'multiple'
-    setAnswers((prev) => {
-      const existing = prev[currentQ.id] ?? []
-      if (isMultiple) {
-        return {
-          ...prev,
-          [currentQ.id]: existing.includes(choiceId)
-            ? existing.filter((id) => id !== choiceId)
-            : [...existing, choiceId],
-        }
-      }
-      return { ...prev, [currentQ.id]: [choiceId] }
+  const select = useCallback((cid: number) => {
+    if (!q) return
+    setAnswers((p) => {
+      const ex = p[q.id]??[]
+      if (q.question_type==='multiple')
+        return { ...p, [q.id]: ex.includes(cid)?ex.filter(x=>x!==cid):[...ex,cid] }
+      return { ...p, [q.id]: [cid] }
     })
-  }, [currentQ])
+  }, [q])
 
-  const handleSubmit = useCallback(async () => {
-    if (!quiz) return
-    setSubmitting(true)
+  const submit = useCallback(async () => {
+    if (!quiz) return; setSubmit(true)
     try {
-      const payload = questions.map((q) => ({
-        question_id: q.id,
-        choice_ids:  answers[q.id] ?? [],
-      }))
+      const payload = questions.map((q)=>({ question_id:q.id, choice_ids:answers[q.id]??[] }))
       const { data } = await testsApi.submit(quiz.id, payload)
-      router.push(`/tests/${quiz.id}/result/${data.id}`)
-    } catch {
-      setSubmitting(false)
-    }
-  }, [quiz, questions, answers, router])
+      let correct = 0
+      questions.forEach((q)=>{
+        const cIds = new Set(q.choices.filter(c=>c.is_correct).map(c=>c.id))
+        const chosen = new Set(answers[q.id]??[])
+        if (chosen.size===cIds.size && [...chosen].every(id=>cIds.has(id))) correct++
+      })
+      setResult({ score:data.score, passed:data.is_passed, total:questions.length, correct })
+    } catch { setSubmit(false) }
+  }, [quiz, questions, answers])
 
-  // ── Yuklash ──────────────────────────────────────────────────────────────
-  if (loading || authLoading) return (
-    <div className="flex justify-center py-32">
-      <Loader2 className="h-8 w-8 animate-spin text-green-400" />
-    </div>
-  )
+  if (loading) return <div className="flex justify-center py-32"><Loader2 className="h-8 w-8 animate-spin text-cyan-400"/></div>
   if (!quiz) return null
+  if (result) return <ResultScreen {...result} quizId={id}/>
 
-  // ── Boshlash ekrani ──────────────────────────────────────────────────────
   if (!started) return (
-    <div className="mx-auto max-w-xl px-4 py-16">
-      <div className="rounded-2xl border border-gray-800 bg-gray-900 p-8 text-center">
-        <div className="mb-4 flex justify-center">
-          <div className="rounded-2xl bg-green-900/30 p-4">
-            <HelpCircle className="h-10 w-10 text-green-400" />
-          </div>
-        </div>
-        <h1 className="mb-2 text-2xl font-bold">{quiz.title}</h1>
-        {quiz.description && (
-          <p className="mb-6 text-gray-400">{quiz.description}</p>
-        )}
-
-        <div className="mb-8 grid grid-cols-3 gap-4 rounded-xl bg-gray-800/50 p-4">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-white">{quiz.question_count}</div>
-            <div className="text-xs text-gray-400">Savol</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-white">
-              {quiz.time_limit_minutes > 0 ? `${quiz.time_limit_minutes}` : '∞'}
+    <div className="flex min-h-screen items-center justify-center px-4">
+      <div className="w-full max-w-md rounded-3xl p-8"
+        style={{ background:'rgba(8,8,25,0.9)', border:'1px solid rgba(0,212,255,0.2)', boxShadow:'0 0 60px rgba(0,212,255,0.08)' }}>
+        <div className="mb-6 h-16 w-16 rounded-2xl flex items-center justify-center text-3xl mx-auto"
+          style={{ background:'linear-gradient(135deg,rgba(0,212,255,0.2),rgba(139,92,246,0.2))', border:'1px solid rgba(0,212,255,0.3)' }}>📝</div>
+        <h1 className="text-2xl font-black text-white text-center mb-2">{quiz.title}</h1>
+        {quiz.description && <p className="text-gray-400 text-center text-sm mb-6">{quiz.description}</p>}
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          {[['Savol',quiz.question_count,'#00D4FF'],['Vaqt',quiz.time_limit_minutes>0?`${quiz.time_limit_minutes}m`:'∞','#FFB347'],["O'tish",`${quiz.pass_score}%`,'#34D399']].map(([l,v,c])=>(
+            <div key={l as string} className="rounded-2xl p-3 text-center" style={{ background:`${c}10`, border:`1px solid ${c}25` }}>
+              <div className="text-xl font-black" style={{ color:c as string }}>{v as string|number}</div>
+              <div className="text-xs text-gray-500 mt-0.5">{l as string}</div>
             </div>
-            <div className="text-xs text-gray-400">Daqiqa</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-white">{quiz.pass_score}%</div>
-            <div className="text-xs text-gray-400">O&apos;tish bali</div>
-          </div>
+          ))}
         </div>
-
-        <div className="mb-6 rounded-xl border border-yellow-800/50 bg-yellow-900/10 p-4 text-left text-sm text-yellow-300">
-          <div className="mb-1 flex items-center gap-2 font-medium">
-            <AlertTriangle className="h-4 w-4" /> Diqqat!
-          </div>
-          <ul className="list-inside list-disc space-y-1 text-yellow-400/80">
-            <li>Test boshlangach sahifani tark etmang</li>
-            <li>Har bir savolga faqat bir marta javob beriladi</li>
-            {quiz.time_limit_minutes > 0 && (
-              <li>Vaqt tugaganda javoblar avtomatik topshiriladi</li>
-            )}
-          </ul>
+        <div className="mb-6 rounded-2xl p-4 text-sm text-yellow-300"
+          style={{ background:'rgba(255,179,71,0.08)', border:'1px solid rgba(255,179,71,0.2)' }}>
+          ⚠️ Test boshlangandan sahifani tark etmang.
         </div>
-
-        <button
-          onClick={() => setStarted(true)}
-          className="w-full rounded-xl bg-green-600 py-3 font-semibold text-white hover:bg-green-500 transition-colors"
-        >
-          Testni boshlash
+        <button onClick={()=>setStarted(true)}
+          className="relative w-full overflow-hidden rounded-2xl py-3.5 font-black text-white text-base"
+          style={{ background:'linear-gradient(135deg,#06b6d4,#3b82f6)', boxShadow:'0 0 30px rgba(0,212,255,0.35)' }}>
+          <span className="shimmer absolute inset-0"/><span className="relative">🚀 Testni boshlash</span>
         </button>
       </div>
     </div>
   )
-
-  // ── Test jarayoni ────────────────────────────────────────────────────────
-  const selectedChoices = answers[currentQ?.id] ?? []
-  const isLast = current === totalQ - 1
-  const allAnswered = answered === totalQ
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8">
-
-      {/* Top panel */}
-      <div className="mb-6 flex items-center justify-between">
-        <div className="text-sm text-gray-400">
-          <span className="font-semibold text-white">{current + 1}</span> / {totalQ}
-        </div>
-        <Timer
-          totalSeconds={quiz.time_limit_minutes * 60}
-          onExpire={handleSubmit}
-        />
-        <div className="text-sm text-gray-400">
-          Javoblandi:{' '}
-          <span className={clsx('font-semibold', allAnswered ? 'text-green-400' : 'text-white')}>
-            {answered}/{totalQ}
+    <div className="min-h-screen px-4 py-6">
+      <div className="mx-auto max-w-2xl">
+        <div className="mb-5 flex items-center justify-between">
+          <span className="text-sm text-gray-400">
+            <span className="text-xl font-black text-white">{current+1}</span>/{questions.length}
+            <span className="ml-3 text-xs">Javoblandi: <span className={clsx('font-bold',answered===questions.length?'text-green-400':'text-white')}>{answered}</span></span>
           </span>
+          <Timer totalSecs={quiz.time_limit_minutes*60} onExpire={submit}/>
+        </div>
+
+        <div className="mb-5 h-2 rounded-full overflow-hidden" style={{ background:'rgba(255,255,255,0.06)' }}>
+          <div className="h-full rounded-full transition-all duration-300"
+            style={{ width:`${((current+1)/questions.length)*100}%`, background:'linear-gradient(90deg,#06b6d4,#3b82f6)' }}/>
+        </div>
+
+        <div className="mb-5 flex flex-wrap gap-1.5">
+          {questions.map((q2,i)=>{
+            const ans=!!answers[q2.id]?.length, cur=i===current
+            return (
+              <button key={q2.id} onClick={()=>setCurrent(i)}
+                className="h-8 w-8 rounded-lg text-xs font-bold transition-all"
+                style={{
+                  background:cur?'linear-gradient(135deg,#06b6d4,#3b82f6)':ans?'rgba(34,197,94,0.2)':'rgba(255,255,255,0.06)',
+                  border:`1px solid ${cur?'#06b6d4':ans?'rgba(34,197,94,0.4)':'rgba(255,255,255,0.1)'}`,
+                  color:cur?'#fff':ans?'#34D399':'#6b7280',
+                  boxShadow:cur?'0 0 12px rgba(0,212,255,0.3)':'none',
+                }}>{i+1}</button>
+            )
+          })}
+        </div>
+
+        {q && (
+          <>
+            <div className="mb-5 rounded-3xl p-6"
+              style={{ background:'rgba(8,8,25,0.85)', border:'1px solid rgba(0,212,255,0.12)', backdropFilter:'blur(12px)' }}>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xs font-bold text-cyan-400">{q.question_type==='multiple'?'☑️ Ko\'p javobli':'⭕ Bir javobli'}</span>
+                <span className="text-xs text-gray-600">· {q.points} ball</span>
+              </div>
+              <p className="text-lg font-semibold text-white leading-relaxed">{q.text}</p>
+            </div>
+
+            <div className="mb-5 space-y-3">
+              {q.choices.map((c,i)=>{
+                const sel=selected.includes(c.id)
+                return (
+                  <button key={c.id} onClick={()=>select(c.id)}
+                    className="flex items-center gap-4 w-full rounded-2xl p-4 text-left text-sm font-medium transition-all duration-200"
+                    style={{
+                      background:sel?'linear-gradient(135deg,rgba(0,212,255,0.15),rgba(139,92,246,0.15))':'rgba(8,8,25,0.7)',
+                      border:`1px solid ${sel?'rgba(0,212,255,0.5)':'rgba(255,255,255,0.08)'}`,
+                      color:sel?'#fff':'#9ca3af', transform:sel?'scale(1.01)':'none',
+                    }}>
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-black"
+                      style={{ background:sel?'linear-gradient(135deg,#06b6d4,#3b82f6)':'rgba(255,255,255,0.07)', color:sel?'#fff':'#6b7280' }}>
+                      {OPTS[i]}
+                    </span>
+                    <span className="flex-1 leading-snug">{c.text}</span>
+                    {sel && <CheckCircle2 className="ml-auto h-5 w-5 shrink-0 text-cyan-400"/>}
+                  </button>
+                )
+              })}
+            </div>
+          </>
+        )}
+
+        <div className="flex items-center justify-between">
+          <button onClick={()=>setCurrent(c=>Math.max(0,c-1))} disabled={current===0}
+            className="flex items-center gap-2 rounded-2xl px-5 py-2.5 text-sm font-semibold text-gray-400 disabled:opacity-30"
+            style={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)' }}>
+            <ChevronLeft className="h-4 w-4"/> Oldingi
+          </button>
+          {isLast ? (
+            <button onClick={submit} disabled={submitting}
+              className="relative overflow-hidden flex items-center gap-2 rounded-2xl px-6 py-2.5 font-bold text-white text-sm"
+              style={{ background:answered===questions.length?'linear-gradient(135deg,#06b6d4,#3b82f6)':'rgba(55,65,81,1)', boxShadow:answered===questions.length?'0 0 24px rgba(0,212,255,0.3)':'none' }}>
+              {answered===questions.length && <span className="shimmer absolute inset-0"/>}
+              {submitting?<Loader2 className="h-4 w-4 animate-spin"/>:<Send className="h-4 w-4"/>}
+              {submitting?'Topshirilmoqda...':'Testni topshirish'}
+            </button>
+          ) : (
+            <button onClick={()=>setCurrent(c=>Math.min(questions.length-1,c+1))}
+              className="relative overflow-hidden flex items-center gap-2 rounded-2xl px-5 py-2.5 font-bold text-white text-sm"
+              style={{ background:'linear-gradient(135deg,#06b6d4,#3b82f6)', boxShadow:'0 0 16px rgba(0,212,255,0.25)' }}>
+              <span className="shimmer absolute inset-0"/> Keyingi <ChevronRight className="h-4 w-4"/>
+            </button>
+          )}
         </div>
       </div>
-
-      {/* Progress bar */}
-      <div className="mb-6 h-1.5 w-full overflow-hidden rounded-full bg-gray-800">
-        <div
-          className="h-full rounded-full bg-green-500 transition-all duration-300"
-          style={{ width: `${((current + 1) / totalQ) * 100}%` }}
-        />
-      </div>
-
-      {/* Savol navigatsiya (dot) */}
-      <div className="mb-6 flex flex-wrap gap-2">
-        {questions.map((q, i) => (
-          <button
-            key={q.id}
-            onClick={() => setCurrent(i)}
-            className={clsx(
-              'h-8 w-8 rounded-lg text-xs font-semibold transition-colors',
-              i === current
-                ? 'bg-green-600 text-white'
-                : answers[q.id]?.length
-                ? 'bg-gray-700 text-green-400'
-                : 'bg-gray-800 text-gray-500 hover:bg-gray-700'
-            )}
-          >
-            {i + 1}
-          </button>
-        ))}
-      </div>
-
-      {/* Savol */}
-      {currentQ && (
-        <QuestionCard
-          question={currentQ}
-          index={current}
-          total={totalQ}
-          selected={selectedChoices}
-          onSelect={handleSelect}
-        />
-      )}
-
-      {/* Navigatsiya */}
-      <div className="mt-6 flex items-center justify-between">
-        <button
-          onClick={() => setCurrent((c) => Math.max(0, c - 1))}
-          disabled={current === 0}
-          className="flex items-center gap-2 rounded-xl border border-gray-700 px-4 py-2.5 text-sm text-gray-400 hover:border-gray-500 hover:text-white disabled:opacity-30"
-        >
-          <ChevronLeft className="h-4 w-4" /> Oldingi
-        </button>
-
-        {isLast ? (
-          <button
-            onClick={handleSubmit}
-            disabled={submitting}
-            className={clsx(
-              'flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold text-white transition-colors',
-              allAnswered
-                ? 'bg-green-600 hover:bg-green-500'
-                : 'bg-gray-700 hover:bg-gray-600'
-            )}
-          >
-            {submitting
-              ? <Loader2 className="h-4 w-4 animate-spin" />
-              : <Send className="h-4 w-4" />
-            }
-            {submitting ? 'Topshirilmoqda...' : 'Testni topshirish'}
-          </button>
-        ) : (
-          <button
-            onClick={() => setCurrent((c) => Math.min(totalQ - 1, c + 1))}
-            className="flex items-center gap-2 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-500"
-          >
-            Keyingi <ChevronRight className="h-4 w-4" />
-          </button>
-        )}
-      </div>
-
-      {/* Topshirish eslatmasi */}
-      {!allAnswered && isLast && (
-        <p className="mt-3 text-center text-xs text-yellow-400">
-          {totalQ - answered} ta savol javobsiz. Baribir topshirishingiz mumkin.
-        </p>
-      )}
     </div>
   )
 }

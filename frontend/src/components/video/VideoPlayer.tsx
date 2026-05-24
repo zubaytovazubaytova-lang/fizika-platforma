@@ -70,7 +70,7 @@ function NativePlayer({ video, onProgress, onEnded, startAt = 0 }: VideoPlayerPr
   const toggle = () => {
     const el = videoRef.current
     if (!el) return
-    el.paused ? el.play() : el.pause()
+    if (el.paused) el.play(); else el.pause()
     setPlaying(!el.paused)
   }
 

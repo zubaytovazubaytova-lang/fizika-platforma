@@ -1,491 +1,647 @@
-'use client'
+﻿'use client'
+import { useEffect, useRef, useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useEffect, useRef, useState } from 'react'
-import {
-  BookOpen, Zap, Bot, Trophy, ChevronRight,
-  Play, Star, Users, CheckCircle, Smartphone,
-} from 'lucide-react'
 
-/* ── Animated counter hook ── */
-function useCounter(target: number, duration = 1800) {
-  const [val, setVal] = useState(0)
-  const elRef = useRef<HTMLDivElement>(null)
+/* ─── Auth: token bo'lsa dashboard ga redirect ─────────────────── */
+function useAuthRedirect() {
+  const router = useRouter()
   useEffect(() => {
-    const el = elRef.current; if (!el) return
+    try {
+      const raw = localStorage.getItem('fizika-auth') ?? sessionStorage.getItem('fizika-auth')
+      const token = raw ? JSON.parse(raw)?.state?.accessToken : null
+      if (token) router.replace('/dashboard')
+    } catch { /* ignore */ }
+  }, [router])
+}
+
+/* ─── Typewriter — bir marta yozib, ekranda qoladi ─────────────── */
+function useTypewriterOnce(text: string, speed = 55, startDelay = 600) {
+  const [displayed, setDisplayed] = useState('')
+  const [done, setDone] = useState(false)
+  useEffect(() => {
+    let i = 0
+    const timeout = setTimeout(() => {
+      const iv = setInterval(() => {
+        i++
+        setDisplayed(text.slice(0, i))
+        if (i >= text.length) { clearInterval(iv); setDone(true) }
+      }, speed)
+      return () => clearInterval(iv)
+    }, startDelay)
+    return () => clearTimeout(timeout)
+  }, [text, speed, startDelay])
+  return { displayed, done }
+}
+
+
+/* ─── AnimCounter ───────────────────────────────────────────────── */
+function AnimCounter({ to, suffix = '' }: { to: number; suffix?: string }) {
+  const [n, setN] = useState(0)
+  const ref = useRef<HTMLSpanElement>(null)
+  useEffect(() => {
     const obs = new IntersectionObserver(([e]) => {
-      if (!e.isIntersecting) return
-      obs.disconnect()
-      let start = 0; const step = target / (duration / 16)
-      const t = setInterval(() => {
-        start += step
-        if (start >= target) { setVal(target); clearInterval(t) }
-        else setVal(Math.floor(start))
+      if (!e.isIntersecting) return; obs.disconnect()
+      let cur = 0; const step = to / (2000 / 16)
+      const iv = setInterval(() => {
+        cur += step
+        if (cur >= to) { setN(to); clearInterval(iv) }
+        else setN(Math.floor(cur))
       }, 16)
-    }, { threshold: 0.3 })
-    obs.observe(el)
+    }, { threshold: 0.5 })
+    if (ref.current) obs.observe(ref.current)
     return () => obs.disconnect()
-  }, [target, duration])
-  return { val, elRef }
+  }, [to])
+  return <span ref={ref}>{n.toLocaleString()}{suffix}</span>
 }
 
-/* ── Shimmer button ── */
-function ShimmerBtn({ children, href, className = '', onClick, style }: {
-  children: React.ReactNode; href?: string; className?: string; onClick?: () => void; style?: React.CSSProperties
-}) {
-  const handleClick = (e: React.MouseEvent<HTMLElement>) => {
-    const btn = e.currentTarget
-    const r = btn.getBoundingClientRect()
-    const rpl = document.createElement('span')
-    Object.assign(rpl.style, {
-      position: 'absolute', borderRadius: '50%',
-      width: '120px', height: '120px',
-      left: `${e.clientX - r.left - 60}px`, top: `${e.clientY - r.top - 60}px`,
-      background: 'rgba(255,255,255,0.25)', transform: 'scale(0)',
-      animation: 'ripple 0.55s ease-out forwards', pointerEvents: 'none',
-    })
-    btn.style.position = 'relative'; btn.style.overflow = 'hidden'
-    btn.appendChild(rpl); setTimeout(() => rpl.remove(), 600)
-    onClick?.()
-  }
-  const cls = `relative overflow-hidden inline-flex items-center gap-2 rounded-xl px-6 py-3 font-semibold text-white transition-all duration-200 ${className}`
-  if (href) return (
-    <Link href={href} className={cls} style={style} onClick={handleClick as never}>{children}</Link>
-  )
-  return <button className={cls} style={style} onClick={handleClick}>{children}</button>
-}
 
-/* ── Grade card ── */
-const GRADES = [
-  { grade: '7-SINF',  subject: 'Mexanika',         desc: 'Harakat va kuchlar',     icon: '🧲', lessons: 24, progress: 45,  color: '#FF6B6B', id: 1 },
-  { grade: '8-SINF',  subject: 'Termodinamika',    desc: 'Issiqlik va energiya',   icon: '🌡️', lessons: 18, progress: 20,  color: '#4ECDC4', id: 2 },
-  { grade: '9-SINF',  subject: 'Elektromagnitizm', desc: 'Elektr va magnit',       icon: '⚡', lessons: 30, progress: 0,   color: '#45B7D1', id: 3 },
-  { grade: '10-SINF', subject: 'Optika',           desc: "Yorug'lik va to'lqin",   icon: '🔭', lessons: 22, progress: 0,   color: '#96CEB4', id: 4 },
-  { grade: '11-SINF', subject: 'Zamonaviy fizika', desc: 'Yadro va kvant',         icon: '⚛️', lessons: 28, progress: 0,   color: '#DDA0DD', id: 5 },
-]
-
-function GradeCard({ g, delay }: { g: typeof GRADES[0]; delay: number }) {
-  const [hov, setHov] = useState(false)
+/* ─── Atom SVG ──────────────────────────────────────────────────── */
+function AtomSVG({ size = 100, label }: { size?: number; label?: string }) {
   return (
-    <div
-      className="slide-up glass rounded-2xl p-5 cursor-pointer transition-all duration-300 flex flex-col gap-3"
-      style={{
-        animationDelay: `${delay}ms`,
-        border: hov ? `1px solid ${g.color}55` : '1px solid rgba(255,255,255,0.07)',
-        boxShadow: hov ? `0 0 30px ${g.color}22, 0 8px 32px rgba(0,0,0,0.4)` : '0 4px 16px rgba(0,0,0,0.3)',
-        transform: hov ? 'translateY(-6px)' : 'none',
-      }}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-    >
-      <span className="text-xs font-bold tracking-widest" style={{ color: g.color }}>{g.grade}</span>
-      <div className="text-3xl">{g.icon}</div>
-      <div>
-        <h3 className="font-bold text-white text-lg">{g.subject}</h3>
-        <p className="text-sm text-gray-400 mt-0.5">{g.desc} · {g.lessons} dars</p>
+    <svg viewBox="0 0 100 100" width={size} height={size} style={{ overflow: 'visible', display: 'block' }}>
+      <defs>
+        <radialGradient id="nucGrad" cx="38%" cy="34%">
+          <stop offset="0%" stopColor="#fde68a" />
+          <stop offset="100%" stopColor="#f59e0b" />
+        </radialGradient>
+        <filter id="atomGlow" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="b" />
+          <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+      </defs>
+      {/* Ring 1 — 0° */}
+      <g>
+        <ellipse cx="50" cy="50" rx="44" ry="15" fill="none" stroke="#3b82f6" strokeWidth="1.4" opacity="0.8" />
+        <circle cx="94" cy="50" r="5" fill="#60a5fa" filter="url(#atomGlow)">
+          <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="2.2s" repeatCount="indefinite" />
+        </circle>
+      </g>
+      {/* Ring 2 — 60° */}
+      <g transform="rotate(60 50 50)">
+        <ellipse cx="50" cy="50" rx="44" ry="15" fill="none" stroke="#7c3aed" strokeWidth="1.4" opacity="0.8" />
+        <circle cx="6" cy="50" r="4.5" fill="#a78bfa" filter="url(#atomGlow)">
+          <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="3.1s" repeatCount="indefinite" />
+        </circle>
+      </g>
+      {/* Ring 3 — 120° */}
+      <g transform="rotate(120 50 50)">
+        <ellipse cx="50" cy="50" rx="44" ry="15" fill="none" stroke="#f59e0b" strokeWidth="1.4" opacity="0.8" />
+        <circle cx="94" cy="50" r="4.5" fill="#fbbf24" filter="url(#atomGlow)">
+          <animateTransform attributeName="transform" type="rotate" from="360 50 50" to="0 50 50" dur="2.7s" repeatCount="indefinite" />
+        </circle>
+      </g>
+      {/* Nucleus */}
+      <circle cx="50" cy="50" r="12" fill="url(#nucGrad)" filter="url(#atomGlow)" />
+      {label && (
+        <text x="50" y="54" textAnchor="middle" fontSize="8" fill="white" fontWeight="bold" fontFamily="system-ui,sans-serif">
+          {label}
+        </text>
+      )}
+    </svg>
+  )
+}
+
+/* ─── CSS Pendulum ──────────────────────────────────────────────── */
+function PendulumAnim() {
+  return (
+    <div style={{ position: 'relative', width: 160, height: 210, display: 'flex', justifyContent: 'center' }}>
+      <div style={{ position: 'absolute', top: 8, left: '50%', width: 16, height: 16, borderRadius: '50%', background: '#475569', transform: 'translateX(-50%)', zIndex: 2 }} />
+      <div style={{ position: 'absolute', top: 16, left: '50%', transformOrigin: '0 0', animation: 'pendulumSwing 2.4s ease-in-out infinite', marginLeft: -1 }}>
+        <div style={{ width: 2, height: 130, background: 'linear-gradient(180deg,#475569,#7c3aed)' }} />
+        <div style={{
+          width: 44, height: 44, borderRadius: '50%', marginLeft: -21, marginTop: -2,
+          background: 'radial-gradient(circle at 35% 32%, #93c5fd, #1d4ed8)',
+          boxShadow: '0 0 24px rgba(96,165,250,0.9), 0 0 48px rgba(59,130,246,0.4)',
+        }} />
       </div>
-      {g.progress > 0 ? (
-        <div>
-          <div className="flex justify-between text-xs text-gray-500 mb-1">
-            <span>{g.progress}% yakunlangan</span>
-          </div>
-          <div className="h-1 rounded-full bg-gray-800 overflow-hidden">
-            <div
-              className="h-full rounded-full fill-bar"
-              style={{ width: `${g.progress}%`, background: `linear-gradient(90deg, ${g.color}, ${g.color}88)` }}
-            />
+      {/* Shadow */}
+      <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: 40, height: 6, borderRadius: '50%', background: 'rgba(96,165,250,0.2)', animation: 'pendulumShadow 2.4s ease-in-out infinite' }} />
+    </div>
+  )
+}
+
+/* ─── Chat Bubbles ──────────────────────────────────────────────── */
+function ChatAnim() {
+  const [step, setStep] = useState(0)
+  useEffect(() => { const iv = setInterval(() => setStep(s => (s + 1) % 4), 2200); return () => clearInterval(iv) }, [])
+  const msgs = [
+    { role: 'u', t: "Nyuton qonuni nima?" },
+    { role: 'a', t: "F = ma — kuch, massa va tezlanish." },
+    { role: 'u', t: "Misol berasizmi?" },
+    { role: 'a', t: "2 kg, 3 m/s² → F = 6 N ✓" },
+  ]
+  return (
+    <div style={{ width: 270 }}>
+      {msgs.slice(0, step + 1).map((m, i) => (
+        <div key={i} style={{ display: 'flex', justifyContent: m.role === 'u' ? 'flex-end' : 'flex-start', marginBottom: 10, animation: 'chatIn 0.35s ease' }}>
+          <div style={{
+            maxWidth: '82%', padding: '9px 14px', fontSize: 13, lineHeight: 1.45,
+            borderRadius: m.role === 'u' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+            background: m.role === 'u' ? 'rgba(59,130,246,0.25)' : 'rgba(124,58,237,0.2)',
+            border: `1px solid ${m.role === 'u' ? 'rgba(59,130,246,0.4)' : 'rgba(124,58,237,0.4)'}`,
+            color: '#e2e8f0',
+          }}>
+            {m.t}
           </div>
         </div>
-      ) : (
-        <span className="text-xs text-gray-500">Boshlanmagan</span>
+      ))}
+      {step < 4 && (
+        <div style={{ display: 'flex', gap: 4, paddingLeft: 4 }}>
+          {[0, 150, 300].map(d => (
+            <div key={d} style={{ width: 6, height: 6, borderRadius: '50%', background: '#7c3aed', animation: `typing 1s ${d}ms ease-in-out infinite` }} />
+          ))}
+        </div>
       )}
     </div>
   )
 }
 
-/* ── Features ── */
-const FEATURES = [
-  { icon: BookOpen, title: 'Interaktiv darslar',   desc: '3D modellar va animatsiyalar bilan o\'rganing', color: '#00D4FF', bg: 'rgba(0,212,255,0.08)'    },
-  { icon: Zap,      title: 'Aqlli testlar',         desc: 'Sizning bilimingizni moslashuvchan baholaydi', color: '#8B5CF6', bg: 'rgba(139,92,246,0.08)'  },
-  { icon: Bot,      title: 'AI yordamchi',          desc: 'Har qanday savolga darhol javob oling',        color: '#FFB347', bg: 'rgba(255,179,71,0.08)'   },
-  { icon: Trophy,   title: 'Yutuq va sertifikatlar',desc: 'Har bir bosqichni yakunlab, sertifikat oling', color: '#34D399', bg: 'rgba(52,211,153,0.08)'   },
-]
-
-/* ── AI Chat preview messages ── */
-const CHAT = [
-  { from: 'ai',   text: 'Salom! Men FizikaAI yordamchisiman. Fizika bo\'yicha qanday savolingiz bor? 🤔' },
-  { from: 'user', text: 'Nyutonning ikkinchi qonunini tushuntira olasizmi?' },
-  { from: 'ai',   text: 'Albatta! Nyutonning 2-qonuni: F = ma\n\nBu qonun aytadiki — jismga ta\'sir etuvchi kuch uning massasi va tezlanishi ko\'paytmasiga teng.' },
-  { from: 'user', text: 'Rasm bilan ko\'rsatib bera olasizmi?' },
-  { from: 'ai',   text: 'Albatta! Animatsiyali misolni ochmoqchiman... 🎯' },
-]
-
-/* ── Stars background (CSS) ── */
-function Stars() {
+/* ─── Quiz Anim ─────────────────────────────────────────────────── */
+function QuizAnim() {
+  const [qi, setQi] = useState(0)
+  useEffect(() => { const iv = setInterval(() => setQi(i => (i + 1) % 3), 2800); return () => clearInterval(iv) }, [])
+  const qs = [
+    { q: "F = ma da 'a' nima?", opts: ['Massa', 'Tezlanish', 'Tezlik'], ans: 1 },
+    { q: "Yorug'lik tezligi?", opts: ['300 000 km/s', '150 000 km/s', '3 000 km/s'], ans: 0 },
+    { q: "E = mc² — kim kashf etgan?", opts: ['Nyuton', 'Faradey', 'Einstein'], ans: 2 },
+  ]
+  const cur = qs[qi]
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden">
-      {Array.from({ length: 60 }).map((_, i) => (
-        <div key={i} className="absolute rounded-full bg-white"
-          style={{
-            width: `${1 + Math.random() * 2}px`, height: `${1 + Math.random() * 2}px`,
-            left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`,
-            opacity: 0.3 + Math.random() * 0.5,
-            animation: `twinkle ${2 + Math.random() * 3}s ${Math.random() * 2}s ease-in-out infinite`,
-          }}
-        />
+    <div style={{ width: 280, background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: 20, padding: '24px 20px' }}>
+      <div style={{ color: '#34d399', fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 10 }}>Savol {qi + 1} / 3</div>
+      <div style={{ color: 'white', fontWeight: 600, fontSize: 14, marginBottom: 16, lineHeight: 1.5, minHeight: 42 }}>{cur.q}</div>
+      {cur.opts.map((o, i) => (
+        <div key={i} style={{
+          padding: '8px 12px', borderRadius: 10, marginBottom: 7, fontSize: 13, cursor: 'default',
+          background: i === cur.ans ? 'rgba(52,211,153,0.15)' : 'rgba(255,255,255,0.04)',
+          border: `1px solid ${i === cur.ans ? 'rgba(52,211,153,0.45)' : 'rgba(255,255,255,0.07)'}`,
+          color: i === cur.ans ? '#34d399' : '#94a3b8',
+          transition: 'all 0.3s',
+          display: 'flex', alignItems: 'center', gap: 8,
+        }}>
+          <span style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${i === cur.ans ? '#34d399' : '#374151'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, flexShrink: 0, color: '#34d399' }}>
+            {i === cur.ans ? '✓' : ''}
+          </span>
+          {o}
+        </div>
       ))}
     </div>
   )
 }
 
-/* ── Stat item ── */
-function StatItem({ target, suffix, label }: { target: number; suffix: string; label: string }) {
-  const { val, elRef } = useCounter(target)
+
+/* ─── Badge ─────────────────────────────────────────────────────── */
+function Badge({ text, color }: { text: string; color: string }) {
   return (
-    <div ref={elRef} className="text-center">
-      <div className="text-4xl font-black grad-cyan-purple">
-        {val.toLocaleString()}{suffix}
-      </div>
-      <div className="mt-1 text-sm text-gray-400">{label}</div>
+    <div className="lg-badge" style={{ display: 'inline-block', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 3, color, marginBottom: 16, padding: '5px 14px', borderColor: `${color}50` }}>
+      {text}
     </div>
   )
 }
 
-/* ════════════════════════════════════════════════════════════════════════════ */
-export default function HomePage() {
+/* ═══════════════════════════════════════════════════════════════ */
+/*  LANDING PAGE  — horizontal slides                             */
+/* ═══════════════════════════════════════════════════════════════ */
+const TOTAL = 7
+const LS_KEY = 'fizika-slide'
+
+export default function LandingPage() {
+  useAuthRedirect()
+  const { displayed: typed, done: typeDone } = useTypewriterOnce('Fizikani yangicha his qiling')
+  const [vis,   setVis]   = useState(false)
+  const [slide, setSlide] = useState(0)
+  const lock = useRef(false)
+
+  useEffect(() => { const t = setTimeout(() => setVis(true), 150); return () => clearTimeout(t) }, [])
+
+  /* ── Restore from localStorage ── */
+  useEffect(() => {
+    try {
+      const n = parseInt(localStorage.getItem(LS_KEY) ?? '0', 10)
+      if (!isNaN(n) && n >= 0 && n < TOTAL) setSlide(n)
+    } catch {}
+  }, [])
+
+  /* ── Persist to localStorage ── */
+  useEffect(() => {
+    try { localStorage.setItem(LS_KEY, String(slide)) } catch {}
+  }, [slide])
+
+  /* ── Navigation ── */
+  const go = useCallback((d: 1 | -1) => {
+    if (lock.current) return
+    lock.current = true
+    setSlide(s => Math.max(0, Math.min(TOTAL - 1, s + d)))
+    setTimeout(() => { lock.current = false }, 680)
+  }, [])
+
+  const goTo = useCallback((i: number) => {
+    if (lock.current) return
+    lock.current = true
+    setSlide(Math.max(0, Math.min(TOTAL - 1, i)))
+    setTimeout(() => { lock.current = false }, 680)
+  }, [])
+
+  /* ── Keyboard ── */
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      if (['ArrowRight', 'ArrowDown', ' '].includes(e.key)) { e.preventDefault(); go(1) }
+      if (['ArrowLeft',  'ArrowUp'].includes(e.key))         { e.preventDefault(); go(-1) }
+    }
+    window.addEventListener('keydown', h)
+    return () => window.removeEventListener('keydown', h)
+  }, [go])
+
+  /* ── Wheel ── */
+  useEffect(() => {
+    const h = (e: WheelEvent) => {
+      e.preventDefault()
+      go(e.deltaY > 0 || e.deltaX > 0 ? 1 : -1)
+    }
+    window.addEventListener('wheel', h, { passive: false })
+    return () => window.removeEventListener('wheel', h)
+  }, [go])
+
+  /* ── Touch ── */
+  const tx = useRef(0); const ty = useRef(0)
+
   return (
-    <div className="relative overflow-x-hidden">
+    <>
+      {/* ── Global CSS ── */}
+      <style>{`
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{background:#050510}
+        @keyframes pendulumSwing{0%,100%{transform:rotate(-32deg)}50%{transform:rotate(32deg)}}
+        @keyframes pendulumShadow{0%,100%{transform:translateX(-80%) scaleX(0.5);opacity:0.4}50%{transform:translateX(80%) scaleX(1.2);opacity:0.15}}
+        @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+        @keyframes floatSlow{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-8px) rotate(180deg)}}
+        @keyframes glow{0%,100%{opacity:.25;transform:scale(1)}50%{opacity:.55;transform:scale(1.12)}}
+        @keyframes ringCW{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+        @keyframes ringCCW{from{transform:rotate(0deg)}to{transform:rotate(-360deg)}}
+        @keyframes blink{50%{opacity:0}}
+        @keyframes pulsate{0%,100%{box-shadow:0 0 24px rgba(124,58,237,.5),0 0 48px rgba(59,130,246,.2)}50%{box-shadow:0 0 50px rgba(124,58,237,.9),0 0 90px rgba(59,130,246,.5)}}
+        @keyframes chatIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes typing{0%,80%,100%{transform:scale(1);opacity:.4}40%{transform:scale(1.4);opacity:1}}
+        @keyframes zoomBg{0%,100%{transform:scale(1) translateX(0)}33%{transform:scale(1.06) translateX(-12px)}66%{transform:scale(1.09) translateX(12px)}}
+        @keyframes shimmer{0%{background-position:200% center}100%{background-position:-200% center}}
+        @keyframes scrollDot{0%{transform:translateY(0);opacity:1}80%{transform:translateY(14px);opacity:0}100%{transform:translateY(0);opacity:0}}
+        @keyframes chevron{0%,100%{opacity:0;transform:rotate(45deg) translate(-4px,-4px)}50%{opacity:1;transform:rotate(45deg) translate(0,0)}}
+        /* ── Gradient text CSS classes (inline style conflict yo'qotish) ── */
+        .gt-title{background-image:linear-gradient(135deg,#f1f5f9 10%,#c4b5fd 50%,#60a5fa 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .gt-gold{background-image:linear-gradient(135deg,#fde68a 0%,#f59e0b 40%,#fbbf24 70%,#fde68a 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 3s linear infinite;filter:drop-shadow(0 0 20px rgba(245,158,11,.5))}
+        .gt-shior{background-image:linear-gradient(90deg,#f59e0b,#a78bfa,#60a5fa,#f59e0b);background-size:300% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 5s linear infinite}
+        .gt-scroll{background-image:linear-gradient(90deg,#f59e0b,#fbbf24);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 8px rgba(245,158,11,.7))}
+        .gt-nav{background-image:linear-gradient(90deg,#7c3aed,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .gt-sec-blue{background-image:linear-gradient(90deg,#60a5fa,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .gt-sec-purple{background-image:linear-gradient(90deg,#a78bfa,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .gt-sec-gold{background-image:linear-gradient(90deg,#f59e0b,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .gt-sec-green{background-image:linear-gradient(90deg,#34d399,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .gt-sec-sci{background-image:linear-gradient(90deg,#a78bfa,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .gt-cta{background-image:linear-gradient(135deg,white 20%,#a78bfa 60%,#60a5fa 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .gt-counter{-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .gt-stats-blue{background-image:linear-gradient(135deg,#3b82f6,white);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .gt-stats-purple{background-image:linear-gradient(135deg,#7c3aed,white);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .gt-stats-gold{background-image:linear-gradient(135deg,#f59e0b,white);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .gt-stats-green{background-image:linear-gradient(135deg,#34d399,white);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .gt-c-gold{background-image:linear-gradient(135deg,#f59e0b,white);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .gt-c-blue{background-image:linear-gradient(135deg,#60a5fa,white);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .gt-c-green{background-image:linear-gradient(135deg,#34d399,white);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .gt-c-purple{background-image:linear-gradient(135deg,#a78bfa,white);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .gt-c-orange{background-image:linear-gradient(135deg,#f97316,white);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .cursor-span{animation:blink 1s step-end infinite;color:#a78bfa;-webkit-text-fill-color:#a78bfa}
+        .atom-hover:hover>svg{filter:drop-shadow(0 0 14px #f59e0b) drop-shadow(0 0 28px rgba(124,58,237,.7))}
 
-      {/* ── HERO ── */}
-      <section className="relative min-h-screen flex items-end overflow-hidden">
-        {/* Background image + aurora */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#050510] via-[#0a0a2e] to-[#050510]">
-          <img
-            src="/hero-beruniy.png" alt=""
-            className="absolute inset-0 h-full w-full object-cover object-center"
-            style={{ filter: 'brightness(0.55) saturate(1.1)' }}
-          />
-          <div className="aurora-bg absolute inset-0 opacity-50" />
-          <Stars />
-          {/* Qorong'i overlay — matn o'qilishi uchun */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#050510] via-[#050510]/40 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#050510]/70 via-transparent to-transparent" />
+        /* ════ LIQUID GLASS ════ */
+        /* Base glass */
+        .lg{
+          backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+          border-radius:50px;
+          transition:transform .22s ease,box-shadow .22s ease,filter .22s ease;
+        }
+        /* Tugmalar */
+        .lg-btn{
+          background:linear-gradient(160deg,rgba(255,255,255,0.13) 0%,rgba(255,255,255,0.04) 100%);
+          border:1px solid rgba(255,255,255,0.22);
+          box-shadow:0 8px 32px rgba(0,0,0,0.45),inset 0 2px 0 rgba(255,255,255,0.28),inset 0 -2px 0 rgba(0,0,0,0.28),0 0 0 1px rgba(255,255,255,0.06);
+          color:white;cursor:pointer;font-weight:700;
+        }
+        .lg-btn:hover{transform:translateY(-4px) scale(1.02);filter:brightness(1.18);box-shadow:0 16px 48px rgba(0,0,0,0.55),inset 0 2px 0 rgba(255,255,255,0.35),inset 0 -2px 0 rgba(0,0,0,0.3),0 0 32px rgba(124,58,237,.4)}
+        .lg-btn:active{transform:translateY(-1px) scale(0.99)}
+        /* Primary (binafsha-ko'k) */
+        .lg-primary{
+          background:linear-gradient(160deg,rgba(124,58,237,0.55) 0%,rgba(59,130,246,0.45) 100%);
+          border:1px solid rgba(124,58,237,0.55);
+          box-shadow:0 8px 36px rgba(124,58,237,0.4),inset 0 2px 0 rgba(167,139,250,0.4),inset 0 -2px 0 rgba(0,0,0,0.3);
+        }
+        .lg-primary:hover{box-shadow:0 16px 56px rgba(124,58,237,0.6),inset 0 2px 0 rgba(167,139,250,0.5),0 0 60px rgba(124,58,237,.5)!important}
+        /* Secondary (shaffof) */
+        .lg-secondary{
+          background:linear-gradient(160deg,rgba(255,255,255,0.09) 0%,rgba(255,255,255,0.03) 100%);
+          border:1px solid rgba(255,255,255,0.2);
+          box-shadow:0 8px 32px rgba(0,0,0,0.4),inset 0 2px 0 rgba(255,255,255,0.2),inset 0 -2px 0 rgba(0,0,0,0.2);
+        }
+        /* Kartochkalar */
+        .lg-card{
+          backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+          background:linear-gradient(145deg,rgba(255,255,255,0.08) 0%,rgba(255,255,255,0.02) 100%);
+          border:1px solid rgba(255,255,255,0.12);
+          box-shadow:0 8px 32px rgba(0,0,0,0.35),inset 0 2px 0 rgba(255,255,255,0.15),inset 0 -1px 0 rgba(0,0,0,0.2);
+          border-radius:20px;
+          transition:transform .3s ease,box-shadow .3s ease;
+        }
+        .lg-card:hover{transform:translateY(-8px) scale(1.02);box-shadow:0 24px 60px rgba(0,0,0,0.5),inset 0 2px 0 rgba(255,255,255,0.2)}
+        /* Rangli kartochkalar */
+        .lg-card-blue{background:linear-gradient(145deg,rgba(59,130,246,.22) 0%,rgba(96,165,250,.08) 100%);border:1px solid rgba(96,165,250,.35);box-shadow:0 8px 32px rgba(59,130,246,.2),inset 0 2px 0 rgba(96,165,250,.3),inset 0 -1px 0 rgba(0,0,0,.3)}
+        .lg-card-purple{background:linear-gradient(145deg,rgba(124,58,237,.22) 0%,rgba(167,139,250,.08) 100%);border:1px solid rgba(124,58,237,.4);box-shadow:0 8px 32px rgba(124,58,237,.2),inset 0 2px 0 rgba(167,139,250,.3),inset 0 -1px 0 rgba(0,0,0,.3)}
+        .lg-card-green{background:linear-gradient(145deg,rgba(52,211,153,.18) 0%,rgba(16,185,129,.06) 100%);border:1px solid rgba(52,211,153,.35);box-shadow:0 8px 32px rgba(52,211,153,.15),inset 0 2px 0 rgba(52,211,153,.25),inset 0 -1px 0 rgba(0,0,0,.3)}
+        .lg-card-gold{background:linear-gradient(145deg,rgba(245,158,11,.2) 0%,rgba(251,191,36,.06) 100%);border:1px solid rgba(245,158,11,.35);box-shadow:0 8px 32px rgba(245,158,11,.18),inset 0 2px 0 rgba(251,191,36,.3),inset 0 -1px 0 rgba(0,0,0,.3)}
+        .lg-card-red{background:linear-gradient(145deg,rgba(239,68,68,.18) 0%,rgba(248,113,113,.06) 100%);border:1px solid rgba(239,68,68,.35);box-shadow:0 8px 32px rgba(239,68,68,.15),inset 0 2px 0 rgba(248,113,113,.25)}
+        .lg-card-orange{background:linear-gradient(145deg,rgba(249,115,22,.18) 0%,rgba(251,146,60,.06) 100%);border:1px solid rgba(249,115,22,.35);box-shadow:0 8px 32px rgba(249,115,22,.15),inset 0 2px 0 rgba(251,146,60,.25)}
+        /* Statistika */
+        .lg-stat{backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);background:linear-gradient(145deg,rgba(255,255,255,.07) 0%,rgba(255,255,255,.02) 100%);border:1px solid rgba(255,255,255,.12);box-shadow:0 8px 32px rgba(0,0,0,.3),inset 0 2px 0 rgba(255,255,255,.14),inset 0 -1px 0 rgba(0,0,0,.2);border-radius:24px;padding:32px 20px;text-align:center;transition:transform .3s,box-shadow .3s}
+        .lg-stat:hover{transform:translateY(-6px);box-shadow:0 20px 50px rgba(0,0,0,.45),inset 0 2px 0 rgba(255,255,255,.18)}
+        /* Nav glass */
+        .lg-nav{backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);background:rgba(5,5,16,0.65);border-bottom:1px solid rgba(255,255,255,0.09);box-shadow:0 4px 24px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.08)}
+        /* Badge glass */
+        .lg-badge{backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.16);box-shadow:inset 0 1px 0 rgba(255,255,255,0.2),0 4px 12px rgba(0,0,0,0.25);border-radius:20px}
+
+        .card-hover{transition:transform .35s,box-shadow .35s}
+        .card-hover:hover{transform:translateY(-10px) scale(1.03);box-shadow:0 24px 64px rgba(124,58,237,.3)!important}
+        .btn-primary{transition:transform .2s,box-shadow .2s}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(124,58,237,.6)!important}
+        @media(max-width:768px){
+          .two-col{flex-direction:column!important;gap:40px!important}
+          .two-col-rev{flex-direction:column!important;gap:40px!important}
+          .hero-h1{font-size:clamp(34px,9vw,60px)!important}
+          .stats-grid{grid-template-columns:repeat(2,1fr)!important}
+        }
+      `}</style>
+
+      {/* ── NAV ──────────────────────────────────────────────────── */}
+      <nav className="lg-nav" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200, padding: '14px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 34, height: 34, borderRadius: 9, background: 'linear-gradient(135deg,#7c3aed,#3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, boxShadow: '0 0 14px rgba(124,58,237,.5)' }}>⚛️</div>
+          <span style={{ color: 'white', fontWeight: 900, fontSize: 19, letterSpacing: -0.5 }}>
+            Fizika <span className="gt-nav">AI</span>
+          </span>
         </div>
-
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 pb-20 pt-32">
-          <div className="max-w-2xl slide-up">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-4 py-1.5 text-xs font-semibold text-cyan-300 uppercase tracking-widest">
-              <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
-              O'zbekiston №1 fizika platformasi
-            </div>
-            <h1 className="text-5xl md:text-6xl font-black leading-tight text-white mb-6">
-              Fizikani{' '}
-              <span className="grad-cyan-purple">yangicha</span>
-              <br />o&apos;rgan, kashf et!
-            </h1>
-            <p className="text-lg text-gray-300 mb-8 leading-relaxed">
-              AI yordamchi, 3D animatsiyalar, interaktiv testlar — hammasi bir joyda.
-              7-sinfdan kvant fizikasigacha.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <ShimmerBtn
-                href="/courses"
-                className="bg-gradient-to-r from-cyan-500 to-blue-600 text-base px-8 py-3.5"
-                style={{ boxShadow: '0 0 30px rgba(0,212,255,0.4)' } as React.CSSProperties}
-              >
-                Bepul boshlash <ChevronRight className="h-4 w-4" />
-              </ShimmerBtn>
-              <ShimmerBtn
-                href="/simulations"
-                className="glass border border-white/10 text-base px-8 py-3.5"
-              >
-                <Play className="h-4 w-4 text-cyan-400" /> Demo ko&apos;rish
-              </ShimmerBtn>
-            </div>
+        {/* Atom login tugmasi */}
+        <Link href="/login" style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }} className="atom-hover">
+          <div style={{ cursor: 'pointer', position: 'relative' }}>
+            <AtomSVG size={68} label="Kirish" />
           </div>
-        </div>
-      </section>
+        </Link>
+      </nav>
 
-      {/* ── GRADE SELECTION ── */}
-      <section className="relative py-20 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-3 flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
-            <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest">Sinflar bo&apos;yicha</span>
-          </div>
-          <h2 className="text-4xl font-black text-white mb-2">Sinf va mavzuingizni tanlang</h2>
-          <p className="text-gray-400 mb-10">Har bir sinf uchun maxsus tayyorlangan darslar, animatsiyalar va interaktiv testlar</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            {GRADES.map((g, i) => <GradeCard key={g.id} g={g} delay={i * 80} />)}
-          </div>
-        </div>
-      </section>
+      {/* ── HORIZONTAL SLIDES ────────────────────────────────────── */}
+      <div
+        style={{ position: 'fixed', top: 64, left: 0, right: 0, bottom: 0, overflow: 'hidden', zIndex: 10 }}
+        onTouchStart={e => { tx.current = e.touches[0].clientX; ty.current = e.touches[0].clientY }}
+        onTouchEnd={e => {
+          const dx = tx.current - e.changedTouches[0].clientX
+          const dy = ty.current - e.changedTouches[0].clientY
+          if (Math.abs(dx) > Math.abs(dy) * 1.2 && Math.abs(dx) > 45) go(dx > 0 ? 1 : -1)
+        }}
+      >
+        {/* Strip */}
+        <div style={{
+          display: 'flex', height: '100%',
+          width: `${TOTAL * 100}vw`,
+          transform: `translateX(calc(-${slide} * 100vw))`,
+          transition: 'transform 0.65s cubic-bezier(0.77,0,0.18,1)',
+          willChange: 'transform',
+        }}>
 
-      {/* ── STATS ── */}
-      <section className="py-16 px-6">
-        <div className="max-w-4xl mx-auto glass rounded-3xl p-10 neon-border-cyan">
-          <div className="grid grid-cols-3 gap-8 divide-x divide-gray-800">
-            <StatItem target={10000} suffix="+" label="foydalanuvchi" />
-            <StatItem target={500}   suffix="+" label="darslar" />
-            <StatItem target={98}    suffix="%" label="muvaffaqiyat" />
-          </div>
-        </div>
-      </section>
-
-      {/* ── FEATURES ── */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-black text-white text-center mb-3">Nima uchun FizikaAI?</h2>
-          <p className="text-gray-400 text-center mb-12">Zamonaviy texnologiyalar bilan fizikani o&apos;rganish</p>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {FEATURES.map(({ icon: Icon, title, desc, color, bg }, i) => (
-              <div key={title}
-                className={`slide-up glass rounded-2xl p-6 flex flex-col gap-4 group hover:-translate-y-2 transition-all duration-300 cursor-pointer`}
-                style={{ animationDelay: `${i * 100}ms`, border: `1px solid ${color}22` }}
-              >
-                <div className="h-12 w-12 rounded-xl flex items-center justify-center" style={{ background: bg }}>
-                  <Icon className="h-6 w-6" style={{ color }} />
+          {/* ── SLIDE 0: Hero ── */}
+          <div style={{ width: '100vw', flexShrink: 0, height: '100%', overflowY: 'auto', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(145deg,#050510 0%,#0a0f1e 45%,#120829 75%,#0a0f1e 100%)' }}>
+            <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', padding: '40px 24px', maxWidth: 900, width: '100%' }}>
+              <div style={{ opacity: vis ? 1 : 0, transform: vis ? 'none' : 'translateY(-20px)', transition: 'all 1s ease 0s', marginBottom: 28 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 16 }}>
+                  <div style={{ height: 1, width: 60, background: 'linear-gradient(90deg,transparent,#f59e0b)' }} />
+                  <span style={{ color: '#f59e0b', fontSize: 13, fontWeight: 700, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.7 }}>Xush kelibsiz</span>
+                  <div style={{ height: 1, width: 60, background: 'linear-gradient(90deg,#f59e0b,transparent)' }} />
                 </div>
-                <div>
-                  <h3 className="font-bold text-white mb-1">{title}</h3>
-                  <p className="text-sm text-gray-400 leading-relaxed">{desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── AI SECTION ── */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left text */}
-          <div className="slide-up">
-            <div className="mb-3 flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-purple-400 animate-pulse" />
-              <span className="text-xs font-bold text-purple-400 uppercase tracking-widest">AI Yordamchi</span>
-            </div>
-            <h2 className="text-4xl font-black text-white mb-4 leading-tight">
-              Sun&apos;iy intellekt —<br />
-              <span className="grad-cyan-purple">shaxsiy o&apos;qituvchingiz</span>
-            </h2>
-            <p className="text-gray-400 mb-6 leading-relaxed">
-              Har qanday fizika savolingizga 24/7 javob oling. AI yordamchi sizning o&apos;qish uslubingizga moslashadi.
-            </p>
-            <ul className="space-y-3 mb-8">
-              {[
-                'Har qanday mavzu bo\'yicha izoh so\'rang',
-                'Masalalarni bosqichma-bosqich yeching',
-                'Formula va kontsepsiyalarni tushunib oling',
-                'Shaxsiy o\'quv rejasi tuzing',
-                'O\'zbek va rus tillarida muloqot',
-              ].map((t) => (
-                <li key={t} className="flex items-start gap-2 text-sm text-gray-300">
-                  <CheckCircle className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
-                  {t}
-                </li>
-              ))}
-            </ul>
-            <div className="flex gap-2 flex-wrap">
-              {['GPT-4 asosida', '24/7 faol', "O'zbek tilida"].map((b) => (
-                <span key={b} className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-xs text-cyan-300">{b}</span>
-              ))}
-            </div>
-          </div>
-
-          {/* Right: chat preview */}
-          <div className="slide-up-d2">
-            <div className="glass rounded-2xl p-4 neon-border-purple">
-              {/* Chat header */}
-              <div className="flex items-center gap-3 border-b border-gray-800 pb-3 mb-4">
-                <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center text-lg">🤖</div>
-                <div>
-                  <p className="font-semibold text-white text-sm">FizikaAI Yordamchi</p>
-                  <p className="text-xs text-gray-400">Sun&apos;iy intellekt asosida</p>
-                </div>
-                <span className="ml-auto flex items-center gap-1 text-xs text-green-400">
-                  <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" /> Faol
-                </span>
-              </div>
-              {/* Messages */}
-              <div className="space-y-3 max-h-64 overflow-hidden">
-                {CHAT.map((m, i) => (
-                  <div key={i} className={`bubble-in flex ${m.from === 'user' ? 'justify-end' : 'justify-start'}`}
-                    style={{ animationDelay: `${i * 150}ms` }}>
-                    <div className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed whitespace-pre-line ${
-                      m.from === 'user'
-                        ? 'bg-blue-600/80 text-white rounded-br-sm'
-                        : 'glass-blue text-gray-200 rounded-bl-sm'
-                    }`}>
-                      {m.text}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {/* Input */}
-              <div className="mt-4 flex gap-2">
-                <input
-                  className="flex-1 rounded-xl border border-gray-700 bg-gray-900/60 px-4 py-2.5 text-sm text-gray-400 neon-input"
-                  placeholder="Savolingizni yozing..."
-                  readOnly
-                />
-                <ShimmerBtn className="bg-gradient-to-r from-cyan-500 to-blue-600 !px-4 !py-2.5 text-sm">
-                  ↑ Yuborish
-                </ShimmerBtn>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── MOBILE APP ── */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left */}
-          <div className="slide-up">
-            <div className="mb-3 flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-xs font-bold text-green-400 uppercase tracking-widest">Mobil ilova</span>
-            </div>
-            <h2 className="text-4xl font-black text-white leading-tight mb-6">
-              Mobil ilovamiz bilan<br />har doim birga bo&apos;ling!
-            </h2>
-            <ul className="space-y-3 mb-8">
-              {[
-                "Darslarni istalgan joyda o'rganing",
-                "O'zgarishlar va natijalarni kuzating",
-                "AI yordamchi bilan savollar javob oling",
-                "Offline rejimda ham foydalaning",
-              ].map((t) => (
-                <li key={t} className="flex items-center gap-2 text-sm text-gray-300">
-                  <CheckCircle className="h-4 w-4 text-green-400 shrink-0" /> {t}
-                </li>
-              ))}
-            </ul>
-            <div className="flex gap-3 flex-wrap">
-              {[
-                { label: 'Google Play', icon: '▶', sub: 'YUKLAB OLISH' },
-                { label: 'App Store',   icon: '🍎', sub: 'YUKLAB OLISH' },
-              ].map((s) => (
-                <button key={s.label}
-                  className="flex items-center gap-3 glass rounded-xl px-5 py-3 border border-gray-700 hover:border-gray-500 transition-colors">
-                  <span className="text-xl">{s.icon}</span>
-                  <div className="text-left">
-                    <p className="text-xs text-gray-500">{s.sub}</p>
-                    <p className="font-semibold text-white text-sm">{s.label}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Right: phone mockup */}
-          <div className="flex justify-center slide-up-d2">
-            <div className="relative w-64 rounded-[2.5rem] glass border border-gray-700 p-3 shadow-2xl"
-              style={{ boxShadow: '0 0 60px rgba(0,212,255,0.10)' }}>
-              <div className="rounded-[2rem] bg-[#080820] overflow-hidden">
-                {/* Status bar */}
-                <div className="flex justify-between px-5 py-3 text-xs text-gray-400">
-                  <span>FizikaAI</span>
-                  <Smartphone className="h-3 w-3" />
-                </div>
-                {/* Content */}
-                <div className="px-4 pb-5 space-y-3">
-                  <p className="font-bold text-white text-sm">Salom, O&apos;quvchi! 👋</p>
-                  <div className="glass rounded-xl p-3">
-                    <p className="text-xs text-cyan-400 font-bold mb-1">⚡ Davom etish</p>
-                    <p className="text-white text-xs font-semibold">Nyutonning 1-qonuni</p>
-                    <div className="mt-2 h-1 rounded-full bg-gray-700">
-                      <div className="h-full w-3/5 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500" />
-                    </div>
-                    <p className="text-xs text-gray-400 mt-1">60% yakunlangan</p>
-                  </div>
-                  <div className="glass rounded-xl p-3">
-                    <p className="text-xs text-green-400 font-bold mb-1">🏆 Test natijasi</p>
-                    <p className="text-2xl font-black text-green-400 text-center">A&apos;lo!</p>
-                    <p className="text-xl font-black text-green-400 text-center">90%</p>
-                    <p className="text-xs text-gray-400 text-center mt-1">Kinematika testi</p>
-                  </div>
+                <div className="gt-gold" style={{ fontSize: 'clamp(32px,5vw,58px)', fontWeight: 900, letterSpacing: -1, lineHeight: 1.1 }}>
+                  Assalomu Alaykum!&nbsp;👋
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── FOOTER ── */}
-      <footer className="border-t border-gray-800/50 py-16 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
-            {/* Logo + desc */}
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="h-8 w-8 ro
-                unded-lg bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-sm">⚛️</div>
-                <span className="font-black text-white text-lg">Fizika <span className="text-cyan-400">AI</span></span>
-              </div>
-              <p className="text-sm text-gray-400 leading-relaxed">
-                Fizikani o&apos;rganish uchun eng yaxshi platforma. Bilim ol, kashf et va kelajakka qadam qo&apos;y!
+              <h1 className="hero-h1 gt-title" style={{ fontSize: 'clamp(40px,6.5vw,76px)', fontWeight: 900, lineHeight: 1.08, marginBottom: 24, opacity: vis ? 1 : 0, transform: vis ? 'none' : 'translateY(32px)', transition: 'all .9s ease .2s', minHeight: '1.2em' }}>
+                {typed}<span className="cursor-span" style={{ visibility: typeDone ? 'hidden' : 'visible' }}>|</span>
+              </h1>
+              <p className="gt-shior" style={{ fontSize: 'clamp(15px,2vw,20px)', marginBottom: 40, fontStyle: 'italic', opacity: typeDone ? 1 : 0, transform: typeDone ? 'translateY(0)' : 'translateY(16px)', transition: 'opacity 1s ease, transform 1s ease' }}>
+                &quot;Har bir savol — yangi kashfiyotning boshlanishi&quot;
               </p>
-              <div className="flex gap-2 mt-4">
-                {['→', '▶', '📷', '💬'].map((ic, i) => (
-                  <button key={i} className="h-8 w-8 glass rounded-lg flex items-center justify-center text-xs text-gray-400 hover:text-white hover:border-gray-600 border border-gray-800 transition-colors">
-                    {ic}
-                  </button>
-                ))}
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, animation: 'float 5s ease-in-out infinite', opacity: vis ? 1 : 0, transition: 'opacity .9s ease .5s' }}>
+                <AtomSVG size={150} />
               </div>
-            </div>
-
-            {/* Nav */}
-            <div>
-              <h4 className="font-bold text-white mb-4">Navigatsiya</h4>
-              <ul className="space-y-2">
-                {['Bosh sahifa','Kurslar','Testlar','AI Yordamchi','Biz haqimizda'].map((l) => (
-                  <li key={l}><Link href="/" className="text-sm text-gray-400 hover:text-cyan-400 transition-colors">{l}</Link></li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Yordam */}
-            <div>
-              <h4 className="font-bold text-white mb-4">Yordam</h4>
-              <ul className="space-y-2">
-                {['FAQ','Qo\'llanma','Aloqa','Maxfiylik siyosati','Foydalanish shartlari'].map((l) => (
-                  <li key={l}><Link href="/" className="text-sm text-gray-400 hover:text-cyan-400 transition-colors">{l}</Link></li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Aloqa + newsletter */}
-            <div>
-              <h4 className="font-bold text-white mb-4">Aloqa</h4>
-              <ul className="space-y-2 mb-6">
-                <li className="flex items-center gap-2 text-sm text-gray-400"><span>📞</span> +998 90 123 45 67</li>
-                <li className="flex items-center gap-2 text-sm text-gray-400"><span>✉</span> info@fizikaai.uz</li>
-                <li className="flex items-center gap-2 text-sm text-gray-400"><span>📍</span> Toshkent, O&apos;zbekiston</li>
-              </ul>
-              <p className="text-xs font-bold text-white mb-2">Yangiliklardan xabardor bo&apos;ling</p>
-              <div className="flex gap-2">
-                <input
-                  className="flex-1 rounded-xl border border-gray-700 bg-gray-900 px-3 py-2 text-xs text-white placeholder-gray-500 neon-input"
-                  placeholder="Email manzilingiz..."
-                />
-                <button className="rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-3 py-2 text-xs font-bold text-white">
-                  Obuna
-                </button>
+              {/* Right-arrow indicator */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 24, animation: 'float 2.2s ease-in-out infinite' }}>
+                <span className="gt-scroll" style={{ fontSize: 11, fontWeight: 800, letterSpacing: 4, textTransform: 'uppercase' }}>Oldinga suring</span>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {[0, 1, 2].map(i => (
+                    <div key={i} style={{ width: 10, height: 10, borderRight: '2.5px solid #f59e0b', borderBottom: '2.5px solid #f59e0b', transform: 'rotate(-45deg)', boxShadow: '2px 2px 6px rgba(245,158,11,0.5)', animation: `chevron 1.4s ${i * 180}ms ease-in-out infinite` }} />
+                  ))}
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="border-t border-gray-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p className="text-xs text-gray-500">© 2024 FizikaAI. Barcha huquqlar himoyalangan.</p>
-            <div className="flex gap-3">
-              {['→','▶','📷','💬'].map((ic, i) => (
-                <button key={i} className="h-7 w-7 glass rounded-md flex items-center justify-center text-xs text-gray-500 hover:text-white border border-gray-800 hover:border-gray-600 transition-colors">{ic}</button>
-              ))}
+          {/* ── SLIDE 1: 3D Simulatsiyalar ── */}
+          <div style={{ width: '100vw', flexShrink: 0, height: '100%', overflowY: 'auto', background: 'linear-gradient(180deg,#0a0f1e 0%,#0d1428 100%)', display: 'flex', alignItems: 'center' }}>
+            <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '40px 40px' }}>
+              <div className="two-col" style={{ display: 'flex', alignItems: 'center', gap: 72 }}>
+                <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+                  <div style={{ position: 'relative' }}>
+                    <div style={{ position: 'absolute', inset: -20, borderRadius: '50%', background: 'radial-gradient(ellipse,rgba(59,130,246,.18),transparent)', animation: 'glow 3.5s ease-in-out infinite' }} />
+                    <PendulumAnim />
+                  </div>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <Badge text="3D SIMULATSIYALAR" color="#3b82f6" />
+                  <h2 style={{ fontSize: 'clamp(26px,3.8vw,46px)', fontWeight: 900, color: 'white', lineHeight: 1.18, marginBottom: 18 }}>🔬 3D Interaktiv<br /><span className="gt-sec-blue">Simulatsiyalar</span></h2>
+                  <p style={{ color: '#94a3b8', fontSize: 17, lineHeight: 1.7, marginBottom: 32 }}>100+ fizika hodisasini real vaqtda 3D muhitda kuzating, o&apos;zgartiring va tushunib oling.</p>
+                  <div style={{ display: 'flex', gap: 36 }}>
+                    {[{ n: 100, s: '+', l: 'Simulatsiya', c: '#f59e0b' }, { n: 5, s: ' soha', l: "Bo'lim", c: '#60a5fa' }].map(x => (
+                      <div key={x.l} style={{ textAlign: 'center' }}>
+                        <div className="gt-counter" style={{ fontSize: 38, fontWeight: 900, backgroundImage: `linear-gradient(135deg,${x.c},white)` }}><AnimCounter to={x.n} suffix={x.s} /></div>
+                        <div style={{ color: '#64748b', fontSize: 12, marginTop: 3 }}>{x.l}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </footer>
-    </div>
+
+          {/* ── SLIDE 2: AI Tutor ── */}
+          <div style={{ width: '100vw', flexShrink: 0, height: '100%', overflowY: 'auto', background: 'linear-gradient(180deg,#0d1428 0%,#120829 100%)', display: 'flex', alignItems: 'center' }}>
+            <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '40px 40px' }}>
+              <div className="two-col-rev" style={{ display: 'flex', alignItems: 'center', gap: 72, flexDirection: 'row-reverse' }}>
+                <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+                  <div style={{ background: 'rgba(124,58,237,.07)', border: '1px solid rgba(124,58,237,.22)', borderRadius: 22, padding: '28px 24px', boxShadow: '0 0 50px rgba(124,58,237,.14)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,.06)' }}>
+                      <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(124,58,237,.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>🤖</div>
+                      <span style={{ color: '#a78bfa', fontWeight: 700, fontSize: 13 }}>AI Fizika O&apos;qituvchisi</span>
+                    </div>
+                    <ChatAnim />
+                  </div>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <Badge text="AI O'QITUVCHI" color="#7c3aed" />
+                  <h2 style={{ fontSize: 'clamp(26px,3.8vw,46px)', fontWeight: 900, color: 'white', lineHeight: 1.18, marginBottom: 18 }}>🤖 Sun&apos;iy intellekt<br /><span className="gt-sec-purple">o&apos;qituvchingiz</span></h2>
+                  <p style={{ color: '#94a3b8', fontSize: 17, lineHeight: 1.7, marginBottom: 24 }}>Claude AI yordamida 24/7 savollaringizga javob oling. Har qanday fizika masalasini bosqichma-bosqich tushuntiramiz.</p>
+                  {['⚡ Real vaqtda javob', '📐 Formulalar bilan tushuntirish', "🌍 O'zbek tilida", '🔢 Masala yechimlari'].map((f, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, color: '#cbd5e1', fontSize: 15 }}>
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#7c3aed', flexShrink: 0 }} />{f}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── SLIDE 3: Kurslar ── */}
+          <div style={{ width: '100vw', flexShrink: 0, height: '100%', overflowY: 'auto', background: 'rgba(5,5,16,0.95)', display: 'flex', alignItems: 'center' }}>
+            <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '40px 40px' }}>
+              <div style={{ textAlign: 'center', marginBottom: 32 }}>
+                <Badge text="KURSLAR" color="#f59e0b" />
+                <h2 style={{ fontSize: 'clamp(26px,3.8vw,46px)', fontWeight: 900, color: 'white' }}>📚 <span className="gt-sec-gold">500+ dars va mashqlar</span></h2>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 18 }}>
+                {[
+                  { icon: '⚙️', name: 'Mexanika', n: 120, c: '#3b82f6', p: 88 },
+                  { icon: '⚡', name: 'Elektr va Magnit', n: 95, c: '#7c3aed', p: 72 },
+                  { icon: '🌊', name: "To'lqin va Optika", n: 80, c: '#f59e0b', p: 60 },
+                  { icon: '🔥', name: 'Termodinamika', n: 75, c: '#ef4444', p: 55 },
+                  { icon: '⚛️', name: 'Kvant Fizika', n: 65, c: '#34d399', p: 45 },
+                  { icon: '🌌', name: 'Nisbiylik', n: 40, c: '#f97316', p: 28 },
+                ].map(x => (
+                  <div key={x.name} className="lg-card" style={{ borderColor: 'rgba(255,255,255,0.15)', padding: '20px 16px', background: 'rgba(10,15,40,0.55)' }}>
+                    <div style={{ fontSize: 32, marginBottom: 10 }}>{x.icon}</div>
+                    <div style={{ fontWeight: 700, color: 'white', fontSize: 14, marginBottom: 4 }}>{x.name}</div>
+                    <div style={{ color: '#cbd5e1', fontSize: 12, marginBottom: 12 }}>{x.n} ta dars</div>
+                    <div style={{ height: 4, background: 'rgba(255,255,255,.08)', borderRadius: 4, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', borderRadius: 4, width: `${x.p}%`, background: `linear-gradient(90deg,${x.c},${x.c}aa)`, boxShadow: `0 0 8px ${x.c}80` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* ── SLIDE 4: Testlar ── */}
+          <div style={{ width: '100vw', flexShrink: 0, height: '100%', overflowY: 'auto', background: 'linear-gradient(180deg,#080d20 0%,#0a0f1e 100%)', display: 'flex', alignItems: 'center' }}>
+            <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '40px 40px' }}>
+              <div className="two-col" style={{ display: 'flex', alignItems: 'center', gap: 72 }}>
+                <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}><QuizAnim /></div>
+                <div style={{ flex: 1 }}>
+                  <Badge text="TESTLAR" color="#34d399" />
+                  <h2 style={{ fontSize: 'clamp(26px,3.8vw,46px)', fontWeight: 900, color: 'white', lineHeight: 1.18, marginBottom: 18 }}>✅ Bilimingizni<br /><span className="gt-sec-green">sinab ko&apos;ring</span></h2>
+                  <p style={{ color: '#94a3b8', fontSize: 17, lineHeight: 1.7, marginBottom: 24 }}>1000+ test savoli bilan bilimingizni baholang. Zaif tomonlarni aniqlab, maqsadli o&apos;qing.</p>
+                  <div style={{ display: 'flex', gap: 32 }}>
+                    {[{ n: 1000, s: '+', l: 'Savol', c: '#34d399' }, { n: 98, s: '%', l: "To'g'ri javob", c: '#60a5fa' }].map(x => (
+                      <div key={x.l}>
+                        <div className="gt-counter" style={{ fontSize: 36, fontWeight: 900, backgroundImage: `linear-gradient(135deg,${x.c},white)` }}><AnimCounter to={x.n} suffix={x.s} /></div>
+                        <div style={{ color: '#64748b', fontSize: 12, marginTop: 3 }}>{x.l}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── SLIDE 5: Kashfiyotlar ── */}
+          <div style={{ width: '100vw', flexShrink: 0, height: '100%', overflowY: 'auto', background: 'linear-gradient(180deg,#0a0f1e 0%,#12082a 100%)', display: 'flex', alignItems: 'center' }}>
+            <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '40px 40px' }}>
+              <div style={{ textAlign: 'center', marginBottom: 36 }}>
+                <Badge text="KASHFIYOTLAR" color="#a78bfa" />
+                <h2 style={{ fontSize: 'clamp(26px,3.8vw,46px)', fontWeight: 900, color: 'white' }}>🔭 Fizika tarixi va <span className="gt-sec-sci">buyuk olimlar</span></h2>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 24, flexWrap: 'wrap' }}>
+                {[
+                  { name: 'Galiley', y: '1564–1642', e: '🔭', c: '#f59e0b', f: 'Teleskop, erkin tushish' },
+                  { name: 'Nyuton',  y: '1643–1727', e: '🍎', c: '#3b82f6', f: 'Tortishish, F=ma' },
+                  { name: 'Einstein',y: '1879–1955', e: '⚛️', c: '#7c3aed', f: 'E=mc², nisbiylik' },
+                  { name: 'Faradey', y: '1791–1867', e: '⚡', c: '#34d399', f: 'Elektromagnit induksiya' },
+                  { name: 'Kyuri',   y: '1867–1934', e: '☢️', c: '#f97316', f: 'Radioaktivlik' },
+                ].map(s => (
+                  <div key={s.name} className="lg-card" style={{ textAlign: 'center', padding: '28px 20px', borderRadius: 22, borderColor: `${s.c}35`, width: 165, background: `linear-gradient(145deg,${s.c}18 0%,${s.c}06 100%)` }}>
+                    <div style={{ width: 72, height: 72, borderRadius: '50%', margin: '0 auto 14px', background: `radial-gradient(circle,${s.c}30,${s.c}08)`, border: `2px solid ${s.c}50`, boxShadow: `0 0 16px ${s.c}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 34, animation: 'floatSlow 6s ease-in-out infinite' }}>{s.e}</div>
+                    <div style={{ fontWeight: 800, color: 'white', fontSize: 15, marginBottom: 4 }}>{s.name}</div>
+                    <div style={{ color: '#475569', fontSize: 11, marginBottom: 8 }}>{s.y}</div>
+                    <div style={{ color: '#64748b', fontSize: 11, lineHeight: 1.45 }}>{s.f}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* ── SLIDE 6: Statistika + CTA ── */}
+          <div style={{ width: '100vw', flexShrink: 0, height: '100%', overflowY: 'auto', background: 'linear-gradient(180deg,#050510 0%,#0a0820 100%)', display: 'flex', alignItems: 'center' }}>
+            <div style={{ maxWidth: 1000, margin: '0 auto', width: '100%', padding: '40px 24px' }}>
+              <h2 style={{ textAlign: 'center', fontSize: 'clamp(22px,3.5vw,38px)', fontWeight: 900, color: 'white', marginBottom: 36 }}>Raqamlarda platforma</h2>
+              <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 24, marginBottom: 56 }}>
+                {[
+                  { n: 10000, s: '+', l: "O'quvchi",    e: '👥', c: '#3b82f6' },
+                  { n: 500,   s: '+', l: 'Dars',         e: '📚', c: '#7c3aed' },
+                  { n: 100,   s: '+', l: 'Simulatsiya',  e: '🔬', c: '#f59e0b' },
+                  { n: 98,    s: '%', l: 'Muvaffaqiyat', e: '✅', c: '#34d399' },
+                ].map(x => (
+                  <div key={x.l} className="lg-stat" style={{ borderColor: `${x.c}30`, background: `linear-gradient(145deg,${x.c}14 0%,${x.c}04 100%)`, boxShadow: `0 8px 32px ${x.c}20,inset 0 2px 0 ${x.c}30` }}>
+                    <div style={{ fontSize: 36, marginBottom: 8 }}>{x.e}</div>
+                    <div className="gt-counter" style={{ fontSize: 'clamp(28px,4vw,48px)', fontWeight: 900, backgroundImage: `linear-gradient(135deg,${x.c},white)`, lineHeight: 1 }}><AnimCounter to={x.n} suffix={x.s} /></div>
+                    <div style={{ color: '#64748b', fontWeight: 700, fontSize: 13, marginTop: 6 }}>{x.l}</div>
+                  </div>
+                ))}
+              </div>
+              {/* CTA */}
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24, animation: 'float 4s ease-in-out infinite' }}><AtomSVG size={110} /></div>
+                <h2 style={{ fontSize: 'clamp(28px,4.5vw,56px)', fontWeight: 900, marginBottom: 14, lineHeight: 1.1 }}>Hoziroq boshlang!</h2>
+                <p style={{ color: '#64748b', fontSize: 17, marginBottom: 28, lineHeight: 1.6 }}>Fizika olamiga yangicha ko&apos;z bilan qarang — minglab o&apos;quvchilar allaqachon boshlagan</p>
+                <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 20 }}>
+                  <Link href="/register" style={{ textDecoration: 'none' }}>
+                    <button className="lg lg-btn lg-primary" style={{ padding: '16px 48px', fontSize: 18, fontWeight: 900, border: 'none', animation: 'pulsate 3.5s ease-in-out infinite' }}>🚀 Bepul ro&apos;yxatdan o&apos;ting</button>
+                  </Link>
+                  <Link href="/login" style={{ textDecoration: 'none' }}>
+                    <button className="lg lg-btn lg-secondary" style={{ padding: '16px 48px', fontSize: 18, fontWeight: 800 }}>Kirish</button>
+                  </Link>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 20, flexWrap: 'wrap' }}>
+                  {["✓ Bepul ro'yxatdan o'tish", '✓ Kredit karta talab qilinmaydi', '✓ Istalgan vaqt bekor qilish'].map(t => (
+                    <span key={t} style={{ color: '#475569', fontSize: 13 }}>{t}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>{/* /strip */}
+      </div>{/* /slide-container */}
+
+      {/* ── Nav dots ── */}
+      <div style={{ position: 'fixed', bottom: 18, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 8, zIndex: 300, alignItems: 'center' }}>
+        {Array.from({ length: TOTAL }).map((_, i) => (
+          <button key={i} onClick={() => goTo(i)} style={{
+            width: slide === i ? 28 : 8, height: 8, borderRadius: 4,
+            background: slide === i ? '#f59e0b' : 'rgba(255,255,255,0.22)',
+            border: 'none', cursor: 'pointer', padding: 0,
+            transition: 'all 0.3s ease', outline: 'none',
+          }} />
+        ))}
+      </div>
+
+      {/* ── Prev arrow ── */}
+      {slide > 0 && (
+        <button onClick={() => go(-1)} style={{ position: 'fixed', left: 14, top: '50%', transform: 'translateY(-50%)', width: 44, height: 44, borderRadius: '50%', background: 'rgba(10,10,30,0.72)', border: '1px solid rgba(255,255,255,0.14)', color: 'white', fontSize: 26, cursor: 'pointer', zIndex: 300, backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>‹</button>
+      )}
+
+      {/* ── Next arrow ── */}
+      {slide < TOTAL - 1 && (
+        <button onClick={() => go(1)} style={{ position: 'fixed', right: 14, top: '50%', transform: 'translateY(-50%)', width: 44, height: 44, borderRadius: '50%', background: 'rgba(10,10,30,0.72)', border: '1px solid rgba(255,255,255,0.14)', color: 'white', fontSize: 26, cursor: 'pointer', zIndex: 300, backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>›</button>
+      )}
+    </>
   )
 }

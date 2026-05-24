@@ -6,7 +6,7 @@ import { testsApi } from '@/lib/api'
 import { useRequireAuth } from '@/hooks/useRequireAuth'
 import { QuizAttempt } from '@/types'
 import {
-  Trophy, XCircle, CheckCircle2, RotateCcw,
+  XCircle, CheckCircle2, RotateCcw,
   ChevronDown, ChevronRight, Loader2,
 } from 'lucide-react'
 import clsx from 'clsx'
@@ -43,7 +43,6 @@ function AnswerReview({ answer }: { answer: QuizAttempt['answers'][number] }) {
   const [open, setOpen] = useState(false)
 
   const correctIds   = new Set(answer.correct_choices.map((c) => c.id))
-  const chosenIds    = new Set(answer.chosen_choices.map((c) => c.id))
   const isCorrect    = (
     answer.chosen_choices.length === answer.correct_choices.length &&
     answer.chosen_choices.every((c) => correctIds.has(c.id))

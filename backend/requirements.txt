@@ -1,22 +1,27 @@
-# Core
-Django>=5.1,<5.2
-Pillow>=10.0
+# ── Core ──────────────────────────────────────────────────────────────────────
+Django>=6.0,<7.0
+Pillow>=12.0
 
-# API
-djangorestframework>=3.15
-djangorestframework-simplejwt>=5.3
-django-cors-headers>=4.3
+# ── API ───────────────────────────────────────────────────────────────────────
+djangorestframework>=3.17
+djangorestframework-simplejwt>=5.5
+django-cors-headers>=4.9
 
-# Database
+# ── Database ──────────────────────────────────────────────────────────────────
 dj-database-url>=2.1
-psycopg2-binary>=2.9
 
-# Production server
-gunicorn>=21.2
+# ── Security ──────────────────────────────────────────────────────────────────
+bcrypt>=5.0
+
+# ── Config ────────────────────────────────────────────────────────────────────
+python-decouple>=3.8
+
+# ── Production server ─────────────────────────────────────────────────────────
+gunicorn>=26.0
 whitenoise>=6.6
 
-# AI
+# ── AI ────────────────────────────────────────────────────────────────────────
 anthropic>=0.34
 
-# Utils
-python-decouple>=3.8
+# ── Utils ─────────────────────────────────────────────────────────────────────
+requests>=2.31

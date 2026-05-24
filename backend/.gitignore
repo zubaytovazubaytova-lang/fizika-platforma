@@ -1,4 +1,4 @@
-﻿# Python
+# Python
 __pycache__/
 *.py[cod]
 *.pyo
@@ -17,14 +17,30 @@ env/
 *.log
 local_settings.py
 db.sqlite3
-media/
 staticfiles/
 
-# Environment
+# Muhit o'zgaruvchilari (HECH QACHON git ga qo'shilmasin)
 .env
 .env.local
 .env.production
+.env.*
+
+# Loglar
+logs/
+*.log
+
+# Backup
+backup/*.sqlite3
+
+# Media (ixtiyoriy — production da CDN ga ko'chiriladi)
+media/
 
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

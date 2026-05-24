@@ -1,17 +1,20 @@
 'use client'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { useRef, useState, useEffect } from 'react'
-import { BookOpen, TestTube2, Bot, Atom, User, LogOut, Settings, ChevronDown, Globe } from 'lucide-react'
+import { BookOpen, TestTube2, Bot, Atom, User, LogOut, Settings, ChevronDown, Globe, BookMarked, Telescope, ShieldCheck, FlaskConical, Sigma, Ruler, Library } from 'lucide-react'
 import clsx from 'clsx'
 import { useAuthStore } from '@/store/auth'
 import EnergyLine from '@/components/effects/EnergyLine'
 
 const navLinks = [
-  { href: '/courses',     label: 'Kurslar',       icon: BookOpen  },
-  { href: '/tests',       label: 'Testlar',        icon: TestTube2 },
-  { href: '/simulations', label: '3D',             icon: Atom      },
-  { href: '/ai-tutor',   label: 'AI Tutor',       icon: Bot       },
+  { href: '/courses',     label: 'Kurslar',    icon: BookOpen   },
+  { href: '/darsliklar',  label: 'Darsliklar', icon: BookMarked },
+  { href: '/tests',       label: 'Testlar',    icon: TestTube2  },
+  { href: '/simulations',  label: '3D',          icon: Atom       },
+  { href: '/kashfiyotlar', label: 'Kashfiyot',  icon: Telescope  },
+  { href: '/ai-tutor',     label: 'AI Tutor',   icon: Bot        },
 ]
 
 const LANGS = [
@@ -19,6 +22,116 @@ const LANGS = [
   { code: 'RU', label: 'Русский', flag: '🇷🇺' },
   { code: 'EN', label: 'English', flag: '🇬🇧' },
 ]
+
+/* ── Ma'lumotnoma dropdown ── */
+const REF_ITEMS = [
+  {
+    href: '/formulalar',
+    label: 'Formulalar',
+    sub: 'Fizika formulalari to\'plami',
+    icon: FlaskConical,
+    color: '#60a5fa',
+    glow: 'rgba(96,165,250,0.15)',
+  },
+  {
+    href: '/fizik-kattaliklar',
+    label: 'Fizik kattaliklar',
+    sub: 'Belgilar va o\'lchov birliklari',
+    icon: Sigma,
+    color: '#34d399',
+    glow: 'rgba(52,211,153,0.15)',
+  },
+  {
+    href: '/fizik-birliklar',
+    label: 'Fizik birliklar',
+    sub: 'SI va boshqa sistemalar',
+    icon: Ruler,
+    color: '#a78bfa',
+    glow: 'rgba(167,139,250,0.15)',
+  },
+]
+
+function RefDropdown() {
+  const pathname = usePathname()
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  const isActive = REF_ITEMS.some(i => pathname.startsWith(i.href))
+
+  useEffect(() => {
+    const h = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
+  }, [])
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen(v => !v)}
+        className={clsx(
+          'flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-medium transition-all',
+          isActive || open
+            ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/25'
+            : 'text-gray-400 hover:bg-gray-800/60 hover:text-white'
+        )}
+        style={(isActive || open) ? { boxShadow: '0 0 10px rgba(0,212,255,0.12)' } : {}}
+      >
+        <Library className="h-4 w-4" />
+        Ma&apos;lumotnoma
+        <ChevronDown className={clsx('h-3 w-3 text-gray-500 transition-transform duration-200', open && 'rotate-180')} />
+      </button>
+
+      {open && (
+        <div
+          className="absolute left-0 top-full mt-2 w-64 overflow-hidden rounded-2xl border border-gray-700/50 py-2 shadow-2xl"
+          style={{
+            background: 'rgba(6,6,20,0.96)',
+            backdropFilter: 'blur(24px)',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,212,255,0.06)',
+          }}
+        >
+          {/* Header */}
+          <div className="px-4 pb-2 mb-1 border-b border-white/[0.05]">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-600">Fizika ma&apos;lumotnomasi</p>
+          </div>
+
+          {REF_ITEMS.map(({ href, label, sub, icon: Icon, color, glow }) => {
+            const active = pathname.startsWith(href)
+            return (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 mx-2 rounded-xl px-3 py-2.5 transition-all group"
+                style={{
+                  background: active ? glow : 'transparent',
+                  border: `1px solid ${active ? color + '30' : 'transparent'}`,
+                }}
+                onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = glow }}
+                onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+              >
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl"
+                  style={{ background: color + '15', border: `1px solid ${color}25` }}>
+                  <Icon className="h-4 w-4" style={{ color }} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-white leading-none">{label}</p>
+                  <p className="text-xs text-gray-500 mt-0.5 leading-none">{sub}</p>
+                </div>
+                {active && (
+                  <span className="ml-auto h-1.5 w-1.5 rounded-full shrink-0 animate-pulse"
+                    style={{ background: color }} />
+                )}
+              </Link>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
 
 /* ── Language selector ── */
 function LangMenu() {
@@ -123,7 +236,7 @@ function UserMenu() {
       <button onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-2 rounded-xl border border-gray-700/60 bg-gray-900/60 px-3 py-1.5 text-sm hover:border-gray-500 transition-all">
         {user.avatar
-          ? <img src={user.avatar} alt="" className="h-7 w-7 rounded-full object-cover" />
+          ? <Image src={user.avatar} alt="" width={28} height={28} unoptimized className="h-7 w-7 rounded-full object-cover" />
           : <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 text-xs font-bold text-white">{initials}</span>
         }
         <span className="max-w-[100px] truncate font-medium text-white">{user.first_name || user.username}</span>
@@ -151,6 +264,12 @@ function UserMenu() {
               className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800/60 hover:text-white transition-colors">
               <Settings className="h-4 w-4 text-gray-500" /> Sozlamalar
             </Link>
+            {(user.is_staff || user.role === 'admin') && (
+              <Link href="/admin/darsliklar" onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-cyan-400 hover:bg-cyan-900/20 hover:text-cyan-300 transition-colors">
+                <ShieldCheck className="h-4 w-4" /> Admin panel
+              </Link>
+            )}
           </div>
           <div className="border-t border-gray-800/60 py-1">
             <button onClick={handleLogout}
@@ -166,6 +285,8 @@ function UserMenu() {
 
 export default function Navbar() {
   const pathname = usePathname()
+
+  if (pathname === '/login' || pathname === '/register') return null
 
   return (
     <nav className="sticky top-0 z-50 bg-[#050510]/85 backdrop-blur-xl border-b border-gray-800/40">
@@ -192,6 +313,7 @@ export default function Navbar() {
               <Icon className="h-4 w-4" /> {label}
             </Link>
           ))}
+          <RefDropdown />
         </div>
 
         {/* Right: lang + user */}

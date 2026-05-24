@@ -5,9 +5,11 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
 function getStoredAuth(): { accessToken?: string; refreshToken?: string } {
   if (typeof window === 'undefined') return {}
   try {
-    const raw = localStorage.getItem('fizika-auth')
-    if (!raw) return {}
-    return JSON.parse(raw)?.state ?? {}
+    const rawLocal = localStorage.getItem('fizika-auth')
+    if (rawLocal) return JSON.parse(rawLocal)?.state ?? {}
+    const rawSession = sessionStorage.getItem('fizika-auth')
+    if (rawSession) return JSON.parse(rawSession)?.state ?? {}
+    return {}
   } catch {
     return {}
   }
@@ -16,11 +18,17 @@ function getStoredAuth(): { accessToken?: string; refreshToken?: string } {
 function setStoredTokens(access: string, refresh?: string) {
   if (typeof window === 'undefined') return
   try {
-    const raw = localStorage.getItem('fizika-auth')
+    // Determine where the store is kept (localStorage if remembered, otherwise sessionStorage)
+    const existsInLocal = !!localStorage.getItem('fizika-auth')
+    const existsInSession = !!sessionStorage.getItem('fizika-auth')
+    const remember = localStorage.getItem('fizika-auth-remember') === '1'
+    const storage = existsInLocal ? localStorage : (existsInSession ? sessionStorage : (remember ? localStorage : sessionStorage))
+
+    const raw = storage.getItem('fizika-auth')
     const parsed = raw ? JSON.parse(raw) : { state: {}, version: 0 }
     parsed.state.accessToken = access
     if (refresh) parsed.state.refreshToken = refresh
-    localStorage.setItem('fizika-auth', JSON.stringify(parsed))
+    storage.setItem('fizika-auth', JSON.stringify(parsed))
   } catch { /* ignore */ }
 }
 
@@ -45,10 +53,14 @@ api.interceptors.response.use(
       if (refreshToken) {
         try {
           const { data } = await axios.post(`${BASE_URL}/auth/token/refresh/`, { refresh: refreshToken })
-          setStoredTokens(data.access)
+          setStoredTokens(data.access, data.refresh)
+          // Cookie ni ham yangilash (middleware uchun)
+          document.cookie = 'fizika-access=1; path=/; max-age=86400; SameSite=Lax'
           original.headers.Authorization = `Bearer ${data.access}`
           return api(original)
         } catch {
+          // Refresh ham eskirgan — cookie tozalab login ga
+          document.cookie = 'fizika-access=; path=/; max-age=0; SameSite=Lax'
           window.location.href = '/login'
         }
       }
@@ -63,6 +75,10 @@ export default api
 export const authApi = {
   login: (username: string, password: string) =>
     api.post('/auth/login/', { username, password }),
+  sendOtp: (phone: string) =>
+    api.post('/auth/send-code/', { phone }),
+  verifyOtp: (phone: string, code: string) =>
+    api.post('/auth/verify-code/', { phone, code }),
   register: (data: object) =>
     api.post('/auth/register/', data),
   logout: (refresh: string) =>
@@ -98,6 +114,27 @@ export const testsApi = {
     api.post(`/tests/${id}/submit/`, { answers }),
   attempts: () => api.get('/tests/attempts/'),
   attemptDetail: (id: number) => api.get(`/tests/attempts/${id}/`),
+}
+
+// Darsliklar
+export const darsliklarApi = {
+  list: (search?: string) => api.get('/darsliklar/', { params: search ? { search } : {} }),
+  create: (data: FormData) => api.post('/darsliklar/', data, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+  update: (id: number, data: FormData) => api.patch(`/darsliklar/${id}/`, data, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+  remove: (id: number) => api.delete(`/darsliklar/${id}/`),
+}
+
+// Referenslar
+export const referenslarApi = {
+  formulalar:  (kategoriya?: string) =>
+    api.get('/referenslar/formulalar/', { params: kategoriya ? { kategoriya } : {} }),
+  kattaliklar: () => api.get('/referenslar/kattaliklar/'),
+  birliklar:   (sistema?: string) =>
+    api.get('/referenslar/birliklar/', { params: sistema ? { sistema } : {} }),
 }
 
 // AI Tutor

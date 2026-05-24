@@ -17,6 +17,7 @@ const MODE_INSTRUCTIONS: Record<string, string> = {
   simple: "Sodda, tushunarli tilda izohla. 8-11 sinf o'quvchilari uchun moslashtirilgan. Texnik terminlarni tushuntir.",
   deep:   "To'liq ilmiy tushuntirish ber. Matematika derivatsiyalari va formulalarni to'liq yoz. Fizika qonunlarini chuqur izohla.",
   exam:   "Imtihon uchun tayyorla: test savollari, masalalar va yechimlar bilan tushuntir. Xatolarni oldini olish uchun maslahatlar ber.",
+  electric_field: "Sen hozir foydalanuvchi 3D elektr maydon simulatsiyasini ko'rayotgan vaqt fizika o'qituvchisissan. Simulatsiyada ikkita zaryad (musbat va manfiy) ko'rsatilgan, maydon chiziqlari animatsiya bilan ko'rinadi. Savollarga qisqa (1-3 jumla), sodda va o'zbek tilida javob ber. Formulalar kerak bo'lsa $F=kq1q2/r²$ kabi inline yoz. Zarrachalar, maydon, kuch va potensial haqida tushuntir.",
 }
 
 export const runtime = 'nodejs'

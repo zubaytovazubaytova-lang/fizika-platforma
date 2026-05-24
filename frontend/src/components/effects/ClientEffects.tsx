@@ -1,14 +1,14 @@
 'use client'
 import dynamic from 'next/dynamic'
+import ContentGuard from '@/components/protection/ContentGuard'
 
-const SolarSystemBg  = dynamic(() => import('./SolarSystemBg'),  { ssr: false })
 const PageTransition = dynamic(() => import('./PageTransition'), { ssr: false })
 
 export default function ClientEffects() {
   return (
     <>
-      <SolarSystemBg />
       <PageTransition />
+      <ContentGuard />
     </>
   )
 }

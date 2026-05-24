@@ -1,11 +1,12 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { coursesApi, testsApi } from '@/lib/api'
 import { useRequireAuth } from '@/hooks/useRequireAuth'
 import { Enrollment, QuizAttempt } from '@/types'
 import {
-  User, BookOpen, Trophy, Settings, Clock,
+  BookOpen, Trophy, Settings, Clock,
   CheckCircle2, XCircle, ChevronRight, Loader2,
   GraduationCap, BarChart3,
 } from 'lucide-react'
@@ -76,7 +77,7 @@ export default function ProfilePage() {
               {/* Avatar */}
               <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border-4 border-gray-900 bg-gradient-to-br from-blue-600 to-purple-600 text-2xl font-bold text-white">
                 {user.avatar
-                  ? <img src={user.avatar} alt={user.username} className="h-full w-full rounded-2xl object-cover" />
+                  ? <Image src={user.avatar} alt={user.username} width={80} height={80} unoptimized className="h-full w-full rounded-2xl object-cover" />
                   : (user.first_name?.[0] ?? user.username[0]).toUpperCase()
                 }
               </div>
@@ -165,7 +166,7 @@ export default function ProfilePage() {
                   {/* Thumbnail */}
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-blue-900 to-purple-900">
                     {enr.course.thumbnail
-                      ? <img src={enr.course.thumbnail} alt="" className="h-full w-full object-cover" />
+                      ? <Image src={enr.course.thumbnail} alt="" width={48} height={48} unoptimized className="h-full w-full object-cover" />
                       : <BookOpen className="h-6 w-6 text-blue-300 opacity-60" />
                     }
                   </div>

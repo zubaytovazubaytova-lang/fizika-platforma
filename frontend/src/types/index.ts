@@ -10,6 +10,7 @@ export interface User {
   bio: string
   phone: string
   date_joined: string
+  is_staff: boolean
 }
 
 export interface Category {
@@ -32,16 +33,25 @@ export interface Video {
   transcript: string
 }
 
+export interface Slide {
+  id: number
+  title: string
+  content: string
+  image: string | null
+  order: number
+}
+
 export interface Lesson {
   id: number
   title: string
   content: string
-  lesson_type: 'text' | 'video' | 'mixed'
+  lesson_type: 'text' | 'video' | 'slide' | 'mixed'
   order: number
   is_free_preview: boolean
   has_video: boolean
   total_duration_seconds: number
   videos: Video[]
+  slides: Slide[]
   created_at: string
 }
 

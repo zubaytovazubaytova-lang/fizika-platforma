@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { authApi } from '@/lib/api'
 import { useAuthStore } from '@/store/auth'
@@ -38,11 +38,11 @@ export default function SettingsPage() {
 
   // Profile form
   const [form, setForm] = useState({
-    first_name: '',
-    last_name:  '',
-    email:      '',
-    bio:        '',
-    phone:      '',
+    first_name: user?.first_name ?? '',
+    last_name:  user?.last_name  ?? '',
+    email:      user?.email      ?? '',
+    bio:        user?.bio        ?? '',
+    phone:      user?.phone      ?? '',
   })
   const [saving,    setSaving]    = useState(false)
   const [profileOk, setProfileOk] = useState<string | null>(null)
@@ -59,17 +59,6 @@ export default function SettingsPage() {
   const [pwdSaving, setPwdSaving] = useState(false)
   const [pwdOk,  setPwdOk]  = useState<string | null>(null)
   const [pwdErr, setPwdErr] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!user) return
-    setForm({
-      first_name: user.first_name ?? '',
-      last_name:  user.last_name  ?? '',
-      email:      user.email      ?? '',
-      bio:        user.bio        ?? '',
-      phone:      user.phone      ?? '',
-    })
-  }, [user])
 
   async function handleSaveProfile(e: { preventDefault(): void }) {
     e.preventDefault()

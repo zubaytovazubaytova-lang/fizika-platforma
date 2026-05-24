@@ -1,8 +1,7 @@
+from decouple import config, Csv
 from .base import *
 
-DEBUG = True
-
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+DEBUG = config('DEBUG', default=True, cast=bool)
 
 DATABASES = {
     'default': {
@@ -11,9 +10,12 @@ DATABASES = {
     }
 }
 
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-]
+CORS_ALLOWED_ORIGINS = config(
+    'CORS_ALLOWED_ORIGINS',
+    default='http://localhost:3000,http://127.0.0.1:3000',
+    cast=Csv(),
+)
 
-CORS_ALLOW_CREDENTIALS = True
+# Dev da batafsil xato sahifasi
+if DEBUG:
+    INSTALLED_APPS += ['django.contrib.admindocs']

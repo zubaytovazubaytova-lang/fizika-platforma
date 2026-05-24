@@ -38,7 +38,6 @@ export default function PageTransition() {
         onComplete: () => { el.style.pointerEvents = 'none' },
       }
     )
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])
 
   return (

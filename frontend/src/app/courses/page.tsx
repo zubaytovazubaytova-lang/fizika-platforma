@@ -1,196 +1,388 @@
 'use client'
-import { useEffect, useState } from 'react'
-import { coursesApi } from '@/lib/api'
-import { Course, Category } from '@/types'
+import { useState } from 'react'
 import Link from 'next/link'
-import { BookOpen, Clock, User, Video, Search, SlidersHorizontal } from 'lucide-react'
-import clsx from 'clsx'
+import { ChevronRight, BookOpen, Zap, Star } from 'lucide-react'
 
-const LEVELS = [
-  { value: '',             label: 'Barchasi'      },
-  { value: 'beginner',     label: 'Boshlang\'ich' },
-  { value: 'intermediate', label: 'O\'rta'        },
-  { value: 'advanced',     label: 'Yuqori'        },
+/* ── 15 ta fizika bo'limi ── */
+const SECTIONS = [
+  {
+    id: 1,
+    name: 'Kinematika',
+    icon: '🏃',
+    color: '#00D4FF',
+    desc: "Jismlar harakati: tezlik, tezlanish va yo'l hisoblash qonunlari.",
+    lessons: 18,
+    diff: 'easy',
+    has3D: true,
+    tags: ['harakat', 'tezlik', 'vaqt'],
+  },
+  {
+    id: 2,
+    name: 'Dinamika',
+    icon: '⚙️',
+    color: '#8B5CF6',
+    desc: "Kuch va massa o'rtasidagi bog'liqlik, Nyuton qonunlari.",
+    lessons: 22,
+    diff: 'medium',
+    has3D: true,
+    tags: ['kuch', 'massa', 'tezlanish'],
+  },
+  {
+    id: 3,
+    name: 'Saqlanish qonunlari',
+    icon: '♾️',
+    color: '#34D399',
+    desc: "Energiya, impuls va moment saqlanish qonunlari.",
+    lessons: 16,
+    diff: 'medium',
+    has3D: true,
+    tags: ['energiya', 'impuls', 'moment'],
+  },
+  {
+    id: 4,
+    name: 'Statika',
+    icon: '⚖️',
+    color: '#FFB347',
+    desc: "Muvozanat sharoitlari, tayanch reaksiyalari va arpalar.",
+    lessons: 14,
+    diff: 'easy',
+    has3D: false,
+    tags: ['muvozanat', 'bosim', 'tayanch'],
+  },
+  {
+    id: 5,
+    name: 'Suyuqlik va gazlar mexanikasi',
+    icon: '💧',
+    color: '#3B82F6',
+    desc: "Gidrostatika, Bernulli qonuni, suyuqlik oqimi.",
+    lessons: 20,
+    diff: 'medium',
+    has3D: true,
+    tags: ['bosim', 'oqim', 'gidrostatika'],
+  },
+  {
+    id: 6,
+    name: 'Mexanik tebranishlar',
+    icon: '〰️',
+    color: '#EC4899',
+    desc: "Mayatnik, rezonans, garmonik tebranishlar va to'lqinlar.",
+    lessons: 17,
+    diff: 'medium',
+    has3D: true,
+    tags: ['amplituda', 'chastota', 'rezonans'],
+  },
+  {
+    id: 7,
+    name: 'Molekulyar fizika',
+    icon: '🔬',
+    color: '#06B6D4',
+    desc: "Molekulalar harakati, diffuziya, ideal gaz modeli.",
+    lessons: 15,
+    diff: 'medium',
+    has3D: true,
+    tags: ['molekula', 'diffuziya', 'temperatur'],
+  },
+  {
+    id: 8,
+    name: 'Termodinamika',
+    icon: '🌡️',
+    color: '#F97316',
+    desc: "Issiqlik mashinalari, entropiya va termodinamika qonunlari.",
+    lessons: 19,
+    diff: 'hard',
+    has3D: false,
+    tags: ['issiqlik', 'entropiya', 'ish'],
+  },
+  {
+    id: 9,
+    name: 'Elektrostatika',
+    icon: '⚡',
+    color: '#EAB308',
+    desc: "Elektr zaryadlar, Kulon qonuni, elektr maydon va potentsial.",
+    lessons: 21,
+    diff: 'hard',
+    has3D: true,
+    tags: ['zaryad', 'maydon', 'potentsial'],
+  },
+  {
+    id: 10,
+    name: "O'zgarmas tok",
+    icon: '🔋',
+    color: '#10B981',
+    desc: "Om va Kirxgof qonunlari, zanjir hisoblash, quvvat.",
+    lessons: 23,
+    diff: 'medium',
+    has3D: false,
+    tags: ['tok', 'kuchlanish', 'qarshilik'],
+  },
+  {
+    id: 11,
+    name: "Turli muhitlarda elektr toki",
+    icon: '💡',
+    color: '#A78BFA',
+    desc: "Metallarda, gazlarda, suyuqliklarda va yarim o'tkazgichlarda tok.",
+    lessons: 16,
+    diff: 'hard',
+    has3D: true,
+    tags: ['plazma', 'elektroliz', 'yarimo\'tkazgich'],
+  },
+  {
+    id: 12,
+    name: 'Magnetizm',
+    icon: '🧲',
+    color: '#EF4444',
+    desc: "Magnit maydon, induksiya, elektromagnit tebranishlar.",
+    lessons: 18,
+    diff: 'hard',
+    has3D: true,
+    tags: ['magnet', 'induksiya', 'Lorents'],
+  },
+  {
+    id: 13,
+    name: 'Optika',
+    icon: '🔭',
+    color: '#F59E0B',
+    desc: "Nur tarqalishi, linzalar, interferensiya va difraksiya.",
+    lessons: 24,
+    diff: 'medium',
+    has3D: true,
+    tags: ['linza', 'interferensiya', 'nur'],
+  },
+  {
+    id: 14,
+    name: 'Atom va yadro fizikasi',
+    icon: '⚛️',
+    color: '#6366F1',
+    desc: "Atom modeli, radioaktivlik, yadroviy reaksiyalar.",
+    lessons: 26,
+    diff: 'hard',
+    has3D: true,
+    tags: ['proton', 'neytron', 'radioaktivlik'],
+  },
+  {
+    id: 15,
+    name: 'Astronomiya',
+    icon: '🌌',
+    color: '#8B5CF6',
+    desc: "Quyosh sistemasi, yulduzlar evolyutsiyasi, kosmologiya.",
+    lessons: 20,
+    diff: 'medium',
+    has3D: true,
+    tags: ['galaktika', 'yulduz', 'kosmologiya'],
+  },
 ]
 
-const LEVEL_COLOR: Record<string, string> = {
-  beginner:     'text-green-400 bg-green-900/30',
-  intermediate: 'text-yellow-400 bg-yellow-900/30',
-  advanced:     'text-red-400 bg-red-900/30',
+const DIFF: Record<string, { label: string; color: string }> = {
+  easy:   { label: 'Oson',   color: '#34D399' },
+  medium: { label: "O'rta",  color: '#FFB347' },
+  hard:   { label: 'Qiyin',  color: '#EF4444' },
 }
 
-function CourseCard({ course }: { course: Course }) {
-  const mins = course.total_duration_minutes ?? 0
-  const duration = mins >= 60 ? `${Math.floor(mins / 60)}s ${mins % 60}d` : `${mins} daq`
+/* ── Kurs kartochkasi ── */
+function CourseCard({ s, idx }: { s: typeof SECTIONS[number]; idx: number }) {
+  const [hov, setHov] = useState(false)
+  const diff = DIFF[s.diff]
 
   return (
-    <Link
-      href={`/courses/${course.id}`}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-gray-800 bg-gray-900 transition-all hover:border-gray-600 hover:shadow-lg hover:shadow-blue-900/10"
+    <div
+      className="flex flex-col rounded-2xl overflow-hidden cursor-pointer"
+      style={{
+        animationDelay: `${idx * 50}ms`,
+        background: hov
+          ? `linear-gradient(145deg, ${s.color}18 0%, rgba(5,5,20,0.95) 100%)`
+          : 'rgba(8,8,25,0.75)',
+        border: `1px solid ${hov ? s.color + '55' : 'rgba(255,255,255,0.07)'}`,
+        boxShadow: hov
+          ? `0 0 40px ${s.color}22, 0 0 80px ${s.color}0a, 0 12px 40px rgba(0,0,0,0.6)`
+          : '0 4px 20px rgba(0,0,0,0.35)',
+        transform: hov ? 'translateY(-6px) scale(1.015)' : 'translateY(0) scale(1)',
+        transition: 'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',
+        backdropFilter: 'blur(16px)',
+      }}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
     >
-      {/* Thumbnail */}
-      <div className="relative h-40 overflow-hidden bg-gradient-to-br from-blue-900 to-purple-900">
-        {course.thumbnail
-          ? <img src={course.thumbnail} alt={course.title} className="h-full w-full object-cover" />
-          : <BookOpen className="absolute left-1/2 top-1/2 h-12 w-12 -translate-x-1/2 -translate-y-1/2 text-blue-300 opacity-40" />
-        }
-        {course.is_free && (
-          <span className="absolute right-3 top-3 rounded-full bg-green-600/90 px-2 py-0.5 text-xs font-medium text-white">
-            Bepul
-          </span>
-        )}
-      </div>
+      {/* Top stripe */}
+      <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${s.color}, transparent)` }} />
 
-      <div className="flex flex-1 flex-col p-5">
-        {/* Meta */}
-        <div className="mb-2 flex items-center gap-2">
-          {course.category && (
-            <span className="text-xs font-medium text-blue-400">{course.category.name}</span>
-          )}
-          {course.level && (
-            <span className={clsx('rounded-full px-2 py-0.5 text-xs', LEVEL_COLOR[course.level])}>
-              {LEVELS.find((l) => l.value === course.level)?.label}
+      <div className="flex flex-col gap-4 p-5 flex-1">
+        {/* Icon + badges */}
+        <div className="flex items-start justify-between">
+          <div
+            className="h-14 w-14 rounded-2xl flex items-center justify-center text-3xl select-none"
+            style={{
+              background: `${s.color}18`,
+              border: `1px solid ${s.color}30`,
+              boxShadow: hov ? `0 0 20px ${s.color}35` : 'none',
+              transition: 'box-shadow 0.3s',
+            }}
+          >
+            {s.icon}
+          </div>
+          <div className="flex flex-col items-end gap-1.5">
+            <span
+              className="rounded-full px-2.5 py-0.5 text-xs font-bold"
+              style={{ background: `${diff.color}18`, color: diff.color, border: `1px solid ${diff.color}30` }}
+            >
+              {diff.label}
             </span>
-          )}
-        </div>
-
-        <h3 className="mb-2 line-clamp-2 font-semibold text-white group-hover:text-blue-300 transition-colors">
-          {course.title}
-        </h3>
-        <p className="mb-4 line-clamp-2 flex-1 text-sm text-gray-400">{course.description}</p>
-
-        {/* Footer */}
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-gray-800 pt-3 text-xs text-gray-500">
-          <span className="flex items-center gap-1">
-            <User className="h-3 w-3" />
-            {course.teacher?.full_name ?? course.teacher?.username}
-          </span>
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1">
-              <Video className="h-3 w-3" />
-              {course.video_count ?? 0}
-            </span>
-            <span className="flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              {duration}
-            </span>
+            {s.has3D && (
+              <span
+                className="rounded-full px-2 py-0.5 text-xs font-bold flex items-center gap-1"
+                style={{ background: 'rgba(99,102,241,0.18)', color: '#818CF8', border: '1px solid rgba(99,102,241,0.3)' }}
+              >
+                <Zap className="h-2.5 w-2.5" />
+                3D
+              </span>
+            )}
           </div>
         </div>
+
+        {/* Name + desc */}
+        <div className="flex-1">
+          <h3 className="font-black text-white text-base mb-1.5 leading-snug">{s.name}</h3>
+          <p className="text-xs text-gray-400 leading-relaxed line-clamp-2">{s.desc}</p>
+        </div>
+
+        {/* Tags */}
+        <div className="flex flex-wrap gap-1.5">
+          {s.tags.slice(0, 3).map((tag) => (
+            <span
+              key={tag}
+              className="rounded-lg px-2 py-0.5 text-xs text-gray-500"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+
+        {/* Lessons count */}
+        <div className="flex items-center gap-1.5 text-xs text-gray-500">
+          <BookOpen className="h-3.5 w-3.5" style={{ color: s.color }} />
+          <span>{s.lessons} ta dars</span>
+          <span className="mx-1 text-gray-700">•</span>
+          <Star className="h-3 w-3 text-yellow-500/60" />
+          <span>Interaktiv</span>
+        </div>
+
+        {/* CTA button */}
+        <Link
+          href={`/courses/${s.id}`}
+          className="mt-auto flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition-all duration-200"
+          style={{
+            background: hov
+              ? `linear-gradient(135deg, ${s.color}, ${s.color}bb)`
+              : `${s.color}18`,
+            color: hov ? '#000' : s.color,
+            border: `1px solid ${s.color}40`,
+            boxShadow: hov ? `0 4px 20px ${s.color}40` : 'none',
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          Boshlash
+          <ChevronRight className="h-4 w-4" />
+        </Link>
       </div>
-    </Link>
+    </div>
   )
 }
 
+/* ── Asosiy sahifa ── */
 export default function CoursesPage() {
-  const [courses, setCourses]       = useState<Course[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
-  const [loading, setLoading]       = useState(true)
-  const [search, setSearch]         = useState('')
-  const [level, setLevel]           = useState('')
-  const [category, setCategory]     = useState('')
+  const [search, setSearch] = useState('')
+  const [diffFilter, setDiffFilter] = useState('')
 
-  useEffect(() => {
-    coursesApi.categories().then((r) => setCategories(r.data)).catch(() => {})
-  }, [])
-
-  useEffect(() => {
-    setLoading(true)
-    const params: Record<string, string> = {}
-    if (search)   params.search   = search
-    if (level)    params.level    = level
-    if (category) params.category = category
-
-    coursesApi.list(params)
-      .then((r) => { setCourses(r.data.results ?? r.data); setLoading(false) })
-      .catch(() => setLoading(false))
-  }, [search, level, category])
+  const filtered = SECTIONS.filter((s) => {
+    const q = search.toLowerCase()
+    const matchSearch = s.name.toLowerCase().includes(q) || s.desc.toLowerCase().includes(q)
+    const matchDiff = diffFilter ? s.diff === diffFilter : true
+    return matchSearch && matchDiff
+  })
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10">
+    <div
+      className="min-h-screen px-4 py-10"
+      style={{
+        background: 'radial-gradient(ellipse 80% 60% at 50% -10%, rgba(139,92,246,0.08) 0%, transparent 60%), #020208',
+      }}
+    >
+      <div className="mx-auto max-w-7xl">
 
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Kurslar</h1>
-        <p className="mt-1 text-gray-400">Fizika fanini chuqur o&apos;rganing</p>
-      </div>
-
-      {/* Filterlar */}
-      <div className="mb-8 flex flex-wrap items-center gap-3">
-        {/* Qidiruv */}
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Kurs qidirish..."
-            className="w-full rounded-xl border border-gray-700 bg-gray-900 py-2.5 pl-9 pr-4 text-sm text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none"
-          />
+        {/* Header */}
+        <div className="mb-10 slide-up text-center">
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
+            <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest">O&apos;quv dasturi</span>
+            <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
+          </div>
+          <h1 className="text-4xl sm:text-5xl font-black text-white mb-3">
+            Fizika{' '}
+            <span style={{ background: 'linear-gradient(90deg,#00D4FF,#8B5CF6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              Bo&apos;limlari
+            </span>
+          </h1>
+          <p className="text-gray-400 max-w-xl mx-auto">
+            15 ta asosiy bo&apos;lim, 3D animatsiyalar va interaktiv darslar bilan fizikani o&apos;rganing
+          </p>
         </div>
 
-        {/* Daraja */}
-        <div className="flex items-center gap-1.5">
-          <SlidersHorizontal className="h-4 w-4 text-gray-500" />
-          {LEVELS.map((l) => (
-            <button
-              key={l.value}
-              onClick={() => setLevel(l.value)}
-              className={clsx(
-                'rounded-lg px-3 py-2 text-sm transition-colors',
-                level === l.value
-                  ? 'bg-blue-600 text-white'
-                  : 'border border-gray-700 text-gray-400 hover:border-gray-500 hover:text-white'
-              )}
+        {/* Stats */}
+        <div className="mb-8 grid grid-cols-3 gap-4 slide-up-d1">
+          {[
+            { label: "Jami bo'lim",    value: SECTIONS.length,                                   color: '#00D4FF' },
+            { label: '3D animatsiya',  value: SECTIONS.filter((s) => s.has3D).length,            color: '#8B5CF6' },
+            { label: 'Jami darslar',   value: SECTIONS.reduce((a, s) => a + s.lessons, 0),       color: '#34D399' },
+          ].map(({ label, value, color }) => (
+            <div
+              key={label}
+              className="rounded-2xl p-4 text-center"
+              style={{ background: 'rgba(8,8,25,0.7)', border: `1px solid ${color}20`, backdropFilter: 'blur(12px)' }}
             >
-              {l.label}
+              <div className="text-2xl font-black" style={{ color }}>{value}</div>
+              <div className="text-xs text-gray-500 mt-0.5">{label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Filters */}
+        <div className="mb-8 flex flex-wrap gap-3 slide-up-d2">
+          <div className="relative flex-1 min-w-[220px]">
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Bo'lim qidirish..."
+              className="w-full rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 transition-all outline-none"
+              style={{ background: 'rgba(8,8,25,0.8)', border: '1px solid rgba(255,255,255,0.1)' }}
+            />
+          </div>
+          {(['', 'easy', 'medium', 'hard'] as const).map((d) => (
+            <button
+              key={d}
+              onClick={() => setDiffFilter(d)}
+              className="rounded-xl px-4 py-2.5 text-sm font-medium transition-all"
+              style={{
+                background: diffFilter === d ? 'rgba(0,212,255,0.15)' : 'rgba(8,8,25,0.7)',
+                border: `1px solid ${diffFilter === d ? 'rgba(0,212,255,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                color: diffFilter === d ? '#00D4FF' : '#6b7280',
+              }}
+            >
+              {d === '' ? 'Barchasi' : DIFF[d]?.label}
             </button>
           ))}
         </div>
 
-        {/* Kategoriya */}
-        {categories.length > 0 && (
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="rounded-xl border border-gray-700 bg-gray-900 px-3 py-2.5 text-sm text-gray-300 focus:border-blue-500 focus:outline-none"
-          >
-            <option value="">Barcha kategoriya</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.slug}>{c.name}</option>
-            ))}
-          </select>
-        )}
-      </div>
-
-      {/* Kurslar */}
-      {loading ? (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-64 animate-pulse rounded-2xl bg-gray-800" />
-          ))}
-        </div>
-      ) : courses.length === 0 ? (
-        <div className="py-24 text-center">
-          <BookOpen className="mx-auto mb-4 h-12 w-12 text-gray-700" />
-          <p className="text-gray-400">Kurs topilmadi</p>
-          {(search || level || category) && (
-            <button
-              onClick={() => { setSearch(''); setLevel(''); setCategory('') }}
-              className="mt-3 text-sm text-blue-400 hover:underline"
-            >
-              Filtrlarni tozalash
-            </button>
-          )}
-        </div>
-      ) : (
-        <>
-          <p className="mb-4 text-sm text-gray-500">{courses.length} ta kurs topildi</p>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {courses.map((course) => (
-              <CourseCard key={course.id} course={course} />
+        {/* Grid */}
+        {filtered.length === 0 ? (
+          <div className="py-32 text-center text-gray-600">Bo&apos;lim topilmadi</div>
+        ) : (
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 slide-up-d2">
+            {filtered.map((s, i) => (
+              <CourseCard key={s.id} s={s} idx={i} />
             ))}
           </div>
-        </>
-      )}
+        )}
+      </div>
     </div>
   )
 }

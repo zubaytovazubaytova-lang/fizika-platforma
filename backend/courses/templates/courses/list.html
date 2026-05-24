@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <title>Kurslar ro'yxati</title>
+</head>
+<body>
+    <h1>Kurslar</h1>
+    {% if courses %}
+        <ul>
+            {% for course in courses %}
+                <li>
+                    <a href="{% url 'courses:detail' course.pk %}">{{ course.title }}</a>
+                    {% if course.teacher %} - {{ course.teacher.get_full_name }}{% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Hozircha hech qanday kurs mavjud emas.</p>
+    {% endif %}
+</body>
+</html>

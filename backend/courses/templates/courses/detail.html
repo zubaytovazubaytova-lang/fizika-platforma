@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ course.title }}</title>
+</head>
+<body>
+    <h1>{{ course.title }}</h1>
+    <p>{{ course.description }}</p>
+
+    {% if is_enrolled %}
+        <p>Siz bu kursga yozilgansiz.</p>
+    {% else %}
+        <form method="post" action="{% url 'courses:enroll' course.pk %}">
+            {% csrf_token %}
+            <button type="submit">Kursga yozilish</button>
+        </form>
+    {% endif %}
+
+    <h2>Modullar</h2>
+    {% if modules %}
+        <ul>
+            {% for module in modules %}
+                <li>
+                    {{ module.title }}
+                    <ul>
+                        {% for lesson in module.lessons.all %}
+                            <li><a href="{% url 'courses:lesson' lesson.pk %}">{{ lesson.title }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Modullar mavjud emas.</p>
+    {% endif %}
+</body>
+</html>

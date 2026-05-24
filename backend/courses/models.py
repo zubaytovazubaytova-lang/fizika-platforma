@@ -95,6 +95,7 @@ class Lesson(models.Model):
     class LessonType(models.TextChoices):
         TEXT  = 'text',  'Matn darsi'
         VIDEO = 'video', 'Video dars'
+        SLIDE = 'slide', 'Slayd darsi'
         MIXED = 'mixed', 'Aralash (matn + video)'
 
     topic           = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name='lessons')
@@ -227,3 +228,20 @@ class LessonProgress(models.Model):
     def __str__(self):
         status = 'bajarildi' if self.completed else 'jarayonda'
         return f"{self.student.username} — {self.lesson.title} ({status})"
+
+
+class Slide(models.Model):
+    """Slayd — dars ichidagi bitta slayd (sarlavha + matn + rasm)"""
+    lesson  = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='slides')
+    title   = models.CharField(max_length=200, blank=True, verbose_name='Sarlavha')
+    content = models.TextField(blank=True, verbose_name='Matn / formula (Markdown)')
+    image   = models.ImageField(upload_to='slides/', blank=True, null=True, verbose_name='Rasm')
+    order   = models.PositiveIntegerField(default=0, verbose_name='Tartib')
+
+    class Meta:
+        verbose_name        = 'Slayd'
+        verbose_name_plural = 'Slaydlar'
+        ordering            = ['order']
+
+    def __str__(self):
+        return f"{self.lesson.title} › Slayd {self.order + 1}: {self.title or '—'}"

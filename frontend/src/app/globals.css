@@ -1,160 +1,326 @@
 @import "tailwindcss";
 
-/* Oq flash oldini olish — JS yuklanguncha ham qorong'i fon */
-html {
-  background: #050510;
-}
+/* ══════════════════════════════════════════════════════════════
+   GLOBAL PURPLE THEME — Barcha sahifalar uchun
+══════════════════════════════════════════════════════════════ */
 
 :root {
-  --background: #050510;
-  --foreground: #e8e8f0;
+  --bg-base:    #0a0014;
+  --bg-mid:     #1a0533;
+  --bg-deep:    #2d0a6b;
+  --purple-1:   #7c3aed;
+  --purple-2:   #a855f7;
+  --purple-3:   #4f46e5;
+  --foreground: rgba(255,255,255,0.92);
 }
 
-html,
-body {
-  background: #050510 !important;
+html {
+  background: #070d2a !important;
+  color-scheme: dark;
+}
+
+html, body {
+  background: transparent !important;
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
 }
 
-/* Canvas fade-in */
+/* ── ANIMATSION FON KEYFRAMES ────────────────────────────────── */
+@keyframes ab-blob1 {
+  0%,100% { transform: translate(0,0) scale(1); }
+  25%  { transform: translate(6vw, 4vh) scale(1.12); }
+  50%  { transform: translate(-4vw, 8vh) scale(0.92); }
+  75%  { transform: translate(3vw,-5vh) scale(1.06); }
+}
+@keyframes ab-blob2 {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33%  { transform: translate(-7vw, 5vh) scale(1.18); }
+  66%  { transform: translate(5vw,-6vh) scale(0.88); }
+}
+@keyframes ab-blob3 {
+  0%,100% { transform: translate(0,0) scale(1.1); }
+  50%  { transform: translate(8vw, 6vh) scale(0.85); }
+}
+@keyframes ab-blob4 {
+  0%,100% { transform: translate(0,0) scale(0.95); }
+  40%  { transform: translate(-5vw,-4vh) scale(1.15); }
+  80%  { transform: translate(6vw, 3vh) scale(0.9); }
+}
+@keyframes ab-blob5 {
+  0%,100% { transform: translate(0,0) scale(1); }
+  30%  { transform: translate(4vw,-7vh) scale(1.2); }
+  70%  { transform: translate(-6vw, 5vh) scale(0.85); }
+}
+@keyframes ab-star {
+  0%,100% { opacity: 0.15; transform: scale(1); }
+  50%  { opacity: 1; transform: scale(1.8); }
+}
+@keyframes ab-particle {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 0.9; }
+  80%  { opacity: 0.5; }
+  100% { transform: translateY(-35vh) rotate(400deg); opacity: 0; }
+}
+@keyframes ab-orbit {
+  from { transform: rotate(0deg) translateX(var(--r,30px)) rotate(0deg); }
+  to   { transform: rotate(360deg) translateX(var(--r,30px)) rotate(-360deg); }
+}
+@keyframes ab-orbit-rev {
+  from { transform: rotate(0deg) translateX(var(--r,30px)) rotate(0deg); }
+  to   { transform: rotate(-360deg) translateX(var(--r,30px)) rotate(360deg); }
+}
+@keyframes ab-atom-float {
+  0%,100% { transform: translateY(0px) rotate(0deg); }
+  50%  { transform: translateY(-14px) rotate(3deg); }
+}
+@keyframes ab-formula {
+  0%,100% { transform: translateY(0) translateX(0); opacity: 0.06; }
+  30%  { opacity: 0.13; }
+  60%  { transform: translateY(-18px) translateX(8px); opacity: 0.07; }
+}
+@keyframes ab-wave {
+  0%   { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -400; }
+}
+@keyframes ab-pulse-ring {
+  0%   { transform: scale(0.8); opacity: 0.6; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+
+/* ── GLASSMORPHISM ───────────────────────────────────────────── */
+.glass {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+}
+.glass-card {
+  background: rgba(124,58,237,0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(124,58,237,0.25);
+  border-radius: 20px;
+  box-shadow:
+    0 8px 32px rgba(0,0,0,0.4),
+    inset 0 2px 0 rgba(255,255,255,0.1),
+    inset 0 -1px 0 rgba(0,0,0,0.2);
+}
+
+/* ── NAVIGATSIYA ─────────────────────────────────────────────── */
+nav.sticky, nav[class*="sticky"] {
+  background: rgba(10,0,20,0.82) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-bottom: 1px solid rgba(124,58,237,0.22) !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4), inset 0 -1px 0 rgba(124,58,237,0.1) !important;
+}
+
+/* ── TAILWIND OVERRIDE — Oq/kulrang fonlarni binafsha qilish ── */
+.bg-gray-50,
+.bg-gray-100,
+.bg-gray-200 {
+  background: transparent !important;
+}
+
+.bg-white {
+  background: rgba(124,58,237,0.08) !important;
+}
+
+
+/* Karta borderlar */
+.border-gray-100 { border-color: rgba(255,255,255,0.1) !important; }
+.border-gray-200 { border-color: rgba(255,255,255,0.12) !important; }
+.border-gray-700 { border-color: rgba(255,255,255,0.1) !important; }
+.border-gray-800 { border-color: rgba(124,58,237,0.2) !important; }
+
+/* Matn ranglari */
+.text-gray-900  { color: #ffffff !important; }
+.text-gray-800  { color: rgba(255,255,255,0.95) !important; }
+.text-gray-700  { color: rgba(255,255,255,0.8) !important; }
+.text-gray-600  { color: rgba(255,255,255,0.6) !important; }
+.text-gray-500  { color: rgba(255,255,255,0.5) !important; }
+.text-gray-400  { color: rgba(255,255,255,0.4) !important; }
+.text-gray-300  { color: rgba(255,255,255,0.7) !important; }
+
+/* Shadow override */
+.shadow-sm { box-shadow: 0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08) !important; }
+
+/* ── INPUT MAYDONLAR ─────────────────────────────────────────── */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+textarea,
+select {
+  background: rgba(255,255,255,0.05) !important;
+  border-color: rgba(255,255,255,0.15) !important;
+  color: white !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+input::placeholder,
+textarea::placeholder {
+  color: rgba(255,255,255,0.3) !important;
+}
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: rgba(124,58,237,0.6) !important;
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.18), 0 0 20px rgba(124,58,237,0.12) !important;
+  outline: none !important;
+}
+.focus\:border-blue-500:focus {
+  border-color: rgba(124,58,237,0.6) !important;
+}
+.focus\:ring-2:focus {
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.2) !important;
+}
+.focus\:ring-blue-100:focus {
+  --tw-ring-color: rgba(124,58,237,0.2) !important;
+}
+
+/* ── TUGMALAR ────────────────────────────────────────────────── */
+/* Blue primary tugmalar → purple gradient */
+button[style*="1a56db"],
+button[style*="2563eb"],
+a[style*="1a56db"] button,
+button.bg-blue-500,
+button.bg-blue-600,
+button.bg-cyan-600 {
+  background: linear-gradient(135deg, #7c3aed, #a855f7) !important;
+  border-color: rgba(168,85,247,0.5) !important;
+  box-shadow: 0 0 24px rgba(124,58,237,0.4), inset 0 1px 0 rgba(255,255,255,0.2) !important;
+}
+
+/* ── KARTOCHKALAR ────────────────────────────────────────────── */
+.rounded-2xl,
+.rounded-xl {
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3) !important;
+}
+
+/* ── QORA FON ELEMENTLAR ─────────────────────────────────────── */
+.bg-\[\#050510\],
+.bg-\[\#0a0a1a\],
+.bg-gray-900 {
+  background: rgba(10,0,20,0.85) !important;
+  backdrop-filter: blur(12px);
+}
+.bg-\[\#08081a\] {
+  background: rgba(10,0,20,0.9) !important;
+}
+
+/* ── ERROR/SUCCESS RANGLARI ──────────────────────────────────── */
+.bg-red-50  { background: rgba(239,68,68,0.12) !important; }
+.bg-amber-50 { background: rgba(245,158,11,0.1) !important; }
+
+/* ── BLUE → PURPLE OVERRIDE ──────────────────────────────────── */
+.text-blue-600  { color: #a855f7 !important; }
+.text-blue-700  { color: #9333ea !important; }
+.text-blue-400  { color: #c084fc !important; }
+.text-cyan-400  { color: #a855f7 !important; }
+.border-blue-500 { border-color: rgba(168,85,247,0.6) !important; }
+.focus\:border-blue-500:focus { border-color: rgba(168,85,247,0.6) !important; }
+
+/* ── FOTER ───────────────────────────────────────────────────── */
+footer {
+  background: rgba(10,0,20,0.9) !important;
+  border-top-color: rgba(124,58,237,0.2) !important;
+}
+
+/* ── MAVJUD ANIMATSIYALAR (o'zgarmaydi) ─────────────────────── */
 @keyframes canvas-fadein {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
-
-/* ── Energy line flow ── */
 @keyframes energy-flow {
   from { transform: translateX(-100%); }
   to   { transform: translateX(100vw); }
 }
-/* ── Wormhole ring spin ── */
 @keyframes spin {
   from { transform: translate(-50%, -50%) rotate(0deg); }
   to   { transform: translate(-50%, -50%) rotate(360deg); }
 }
-/* ── Neon pulse ── */
 @keyframes neon-pulse {
   0%, 100% { opacity: 1; }
-  50%       { opacity: 0.55; }
+  50%      { opacity: 0.55; }
 }
-/* ── Float up ── */
 @keyframes float-up {
   0%   { transform: translateY(0px);   opacity: 1; }
   100% { transform: translateY(-40px); opacity: 0; }
 }
-/* ── Particle appear ── */
 @keyframes particle-in {
   from { transform: scale(0) rotate(-180deg); opacity: 0; }
   to   { transform: scale(1) rotate(0deg);    opacity: 1; }
 }
-
-/* ── Aurora (hero fon) ── */
 @keyframes aurora {
   0%   { background-position: 0%   50%; filter: hue-rotate(0deg);  }
   50%  { background-position: 100% 50%; filter: hue-rotate(25deg); }
   100% { background-position: 0%   50%; filter: hue-rotate(0deg);  }
 }
 .aurora-bg {
-  background: linear-gradient(
-    135deg,
-    rgba(0,212,255,0.15)  0%,
-    rgba(139,92,246,0.20) 30%,
-    rgba(0,212,255,0.10)  60%,
-    rgba(34,197,94,0.12)  80%,
-    rgba(139,92,246,0.15) 100%
+  background: linear-gradient(135deg,
+    rgba(124,58,237,0.2) 0%, rgba(79,70,229,0.25) 30%,
+    rgba(124,58,237,0.15) 60%, rgba(109,40,217,0.2) 100%
   );
   background-size: 400% 400%;
   animation: aurora 8s ease infinite;
 }
-
-/* ── Shimmer button ── */
 @keyframes shimmer {
   0%   { background-position: -200% center; }
   100% { background-position:  200% center; }
 }
 .shimmer {
-  background: linear-gradient(90deg,
-    transparent 0%, rgba(255,255,255,0.18) 50%, transparent 100%
-  );
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.18) 50%, transparent 100%);
   background-size: 200% auto;
   animation: shimmer 2.2s linear infinite;
 }
-
-/* ── Ripple ── */
-@keyframes ripple {
-  to { transform: scale(4); opacity: 0; }
-}
-
-/* ── Slide up (sahifa elementlari) ── */
+@keyframes ripple { to { transform: scale(4); opacity: 0; } }
 @keyframes slide-up {
   from { opacity: 0; transform: translateY(28px); }
   to   { opacity: 1; transform: translateY(0);    }
 }
-.slide-up        { animation: slide-up 0.55s ease both; }
-.slide-up-d1     { animation: slide-up 0.55s 0.1s ease both; }
-.slide-up-d2     { animation: slide-up 0.55s 0.2s ease both; }
-.slide-up-d3     { animation: slide-up 0.55s 0.3s ease both; }
-.slide-up-d4     { animation: slide-up 0.55s 0.4s ease both; }
-
-/* ── Typing cursor ── */
+.slide-up    { animation: slide-up 0.55s ease both; }
+.slide-up-d1 { animation: slide-up 0.55s 0.1s ease both; }
+.slide-up-d2 { animation: slide-up 0.55s 0.2s ease both; }
+.slide-up-d3 { animation: slide-up 0.55s 0.3s ease both; }
+.slide-up-d4 { animation: slide-up 0.55s 0.4s ease both; }
 @keyframes blink {
   0%, 100% { opacity: 1; }
-  50%       { opacity: 0; }
+  50%      { opacity: 0; }
 }
 .typing-cursor::after {
   content: '|';
   animation: blink 1s step-end infinite;
-  color: #00D4FF;
+  color: #a855f7;
   margin-left: 2px;
 }
-
-/* ── Bubble pop (AI xabarlar) ── */
 @keyframes bubble-in {
   from { opacity: 0; transform: scale(0.85) translateY(8px); }
-  to   { opacity: 1; transform: scale(1)    translateY(0);   }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 .bubble-in { animation: bubble-in 0.3s cubic-bezier(0.34,1.56,0.64,1) both; }
-
-/* ── Neon border glow ── */
-.neon-border-cyan   { box-shadow: 0 0 0 1px #00D4FF44, 0 0 16px #00D4FF22; }
-.neon-border-purple { box-shadow: 0 0 0 1px #8B5CF644, 0 0 16px #8B5CF622; }
+.neon-border-cyan   { box-shadow: 0 0 0 1px rgba(124,58,237,0.44), 0 0 16px rgba(124,58,237,0.22); }
+.neon-border-purple { box-shadow: 0 0 0 1px rgba(168,85,247,0.44), 0 0 16px rgba(168,85,247,0.22); }
 .neon-border-gold   { box-shadow: 0 0 0 1px #FFB34744, 0 0 16px #FFB34722; }
-
-/* ── Glassmorphism ── */
-.glass {
-  background: rgba(10, 10, 30, 0.65);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255,255,255,0.08);
-}
 .glass-blue {
-  background: rgba(0, 30, 60, 0.50);
+  background: rgba(79,46,237,0.2);
   backdrop-filter: blur(14px);
-  border: 1px solid rgba(0,212,255,0.15);
+  border: 1px solid rgba(124,58,237,0.25);
 }
-
-/* ── Counter ── */
 @keyframes count-up {
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
-/* ── Progress bar fill ── */
-@keyframes fill-bar {
-  from { width: 0; }
-}
+@keyframes fill-bar { from { width: 0; } }
 .fill-bar { animation: fill-bar 1.2s cubic-bezier(0.4,0,0.2,1) both; }
-
-/* ── Star twinkle ── */
 @keyframes twinkle {
   0%, 100% { opacity: 0.3; transform: scale(1);   }
-  50%       { opacity: 1;   transform: scale(1.3); }
+  50%      { opacity: 1;   transform: scale(1.3); }
 }
-
-/* ── Gradient text ── */
 .grad-cyan-purple {
-  background: linear-gradient(135deg, #00D4FF, #8B5CF6);
+  background: linear-gradient(135deg, #a855f7, #7c3aed);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -165,12 +331,8 @@ body {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
-
-/* ── Neon input focus ── */
-input:focus, textarea:focus {
-  outline: none;
-}
 .neon-input:focus {
-  border-color: #00D4FF !important;
-  box-shadow: 0 0 0 2px rgba(0,212,255,0.20), 0 0 20px rgba(0,212,255,0.12);
+  border-color: #a855f7 !important;
+  box-shadow: 0 0 0 2px rgba(168,85,247,0.25), 0 0 20px rgba(168,85,247,0.15) !important;
 }
+@keyframes fill-bar { from { width: 0; } }

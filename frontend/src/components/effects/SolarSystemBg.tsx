@@ -146,7 +146,7 @@ export default function SolarSystemBg() {
     const isMobile = window.innerWidth < 768
 
     /* ── Renderer ── */
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference:'high-performance' })
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference:'high-performance', preserveDrawingBuffer: true })
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1 : 1.5))
     renderer.setSize(window.innerWidth, window.innerHeight)
     renderer.toneMapping = THREE.ACESFilmicToneMapping

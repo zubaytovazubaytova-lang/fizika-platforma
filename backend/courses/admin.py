@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Category, Course, Topic, Lesson, Video, Enrollment, LessonProgress
+from .models import Category, Course, Topic, Lesson, Video, Slide, Enrollment, LessonProgress
 
 
 class TopicInline(admin.TabularInline):
@@ -21,6 +21,13 @@ class VideoInline(admin.TabularInline):
     model = Video
     extra = 1
     fields = ('title', 'source', 'video_url', 'duration_seconds', 'order')
+    ordering = ('order',)
+
+
+class SlideInline(admin.StackedInline):
+    model   = Slide
+    extra   = 1
+    fields  = ('title', 'content', 'image', 'order')
     ordering = ('order',)
 
 
@@ -66,7 +73,7 @@ class LessonAdmin(admin.ModelAdmin):
     list_filter = ('lesson_type', 'is_free_preview', 'topic__course')
     search_fields = ('title', 'topic__title')
     ordering = ('topic__course', 'topic__order', 'order')
-    inlines = [VideoInline]
+    inlines = [VideoInline, SlideInline]
 
     def has_video(self, obj):
         return obj.videos.exists()

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Category, Course, Topic, Lesson, Video, Enrollment, LessonProgress
+from .models import Category, Course, Topic, Lesson, Video, Slide, Enrollment, LessonProgress
 from users.serializers import UserPublicSerializer
 
 
@@ -22,8 +22,15 @@ class VideoSerializer(serializers.ModelSerializer):
         )
 
 
+class SlideSerializer(serializers.ModelSerializer):
+    class Meta:
+        model  = Slide
+        fields = ('id', 'title', 'content', 'image', 'order')
+
+
 class LessonSerializer(serializers.ModelSerializer):
     videos           = VideoSerializer(many=True, read_only=True)
+    slides           = SlideSerializer(many=True, read_only=True)
     has_video        = serializers.ReadOnlyField()
     total_duration_seconds = serializers.ReadOnlyField()
 
@@ -33,7 +40,7 @@ class LessonSerializer(serializers.ModelSerializer):
             'id', 'title', 'content', 'lesson_type',
             'order', 'is_free_preview',
             'has_video', 'total_duration_seconds',
-            'videos', 'created_at',
+            'videos', 'slides', 'created_at',
         )
 
 
