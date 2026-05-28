@@ -137,9 +137,6 @@
       <button onclick="showPage('darsliklar')" id="tab-darsliklar" class="nav-tab" style="padding:8px 18px;border-radius:8px;border:none;font-size:14px;color:#94a3b8;">
         <i class="fas fa-book-open" style="margin-right:6px;"></i>Darsliklar
       </button>
-      <button onclick="openSoarGaz()" id="tab-soargaz" class="nav-tab" style="padding:8px 18px;border-radius:8px;border:none;font-size:14px;color:#94a3b8;">
-        <i class="fas fa-fire" style="margin-right:6px;"></i>SOAR GAZ
-      </button>
     </div>
 
   </div>
@@ -180,18 +177,21 @@
         </div>
       </div>
 
-      <!-- SOAR GAZ Card -->
-      <div class="home-card" onclick="openSoarGaz()">
-        <div class="icon-wrap" style="background:linear-gradient(135deg,#f59e0b,#f97316);">🔥</div>
-        <h2 style="font-size:22px;font-weight:800;color:#f8fafc;margin:0 0 10px;">SOAR GAZ</h2>
-        <p style="color:#94a3b8;font-size:15px;margin:0 0 20px;">Gaz tizimlarini loyihalashtirish, montaj, servis va uskunalar xaridi</p>
+
+      <!-- Fizika AI Card -->
+      <div class="home-card" onclick="window.location.href='fizika-ai.html'" style="border-color:rgba(139,92,246,0.35);position:relative;overflow:hidden;">
+        <div style="position:absolute;top:12px;right:12px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:0.5px;">AI</div>
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at top right,rgba(139,92,246,0.08),transparent 70%);pointer-events:none;"></div>
+        <div class="icon-wrap" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);">🤖</div>
+        <h2 style="font-size:22px;font-weight:800;color:#f8fafc;margin:0 0 10px;">Fizika AI</h2>
+        <p style="color:#94a3b8;font-size:15px;margin:0 0 20px;">Sun'iy intellekt yordamida fizika masalalarini yechish va o'rganish</p>
         <div style="display:flex;flex-wrap:wrap;gap:8px;">
-          <span class="stat-badge"><i class="fas fa-drafting-compass" style="color:#f59e0b;"></i> Loyiha</span>
-          <span class="stat-badge"><i class="fas fa-tools" style="color:#10b981;"></i> Montaj</span>
-          <span class="stat-badge"><i class="fas fa-wrench" style="color:#3b82f6;"></i> Servis</span>
+          <span class="stat-badge"><i class="fas fa-robot" style="color:#a855f7;"></i> AI Tutor</span>
+          <span class="stat-badge"><i class="fas fa-flask" style="color:#06b6d4;"></i> Simulyator</span>
+          <span class="stat-badge"><i class="fas fa-graduation-cap" style="color:#10b981;"></i> Testlar</span>
         </div>
         <div style="margin-top:20px;">
-          <span style="color:#f59e0b;font-weight:600;font-size:14px;">Ochish <i class="fas fa-arrow-right" style="margin-left:4px;"></i></span>
+          <span style="color:#a855f7;font-weight:600;font-size:14px;">Ochish <i class="fas fa-arrow-right" style="margin-left:4px;"></i></span>
         </div>
       </div>
 
@@ -573,9 +573,6 @@
     window.scrollTo(0, 0);
   }
 
-  function openSoarGaz() {
-    window.open('soar-gaz/index.html', '_blank');
-  }
 
   // Open PDF
   function openPdf(path) {
