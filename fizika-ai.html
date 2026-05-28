@@ -6,414 +6,648 @@
   <title>Fizika AI — Fizikani yangicha his qiling</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-    html, body { height: 100%; overflow: hidden; }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }
+    html { scroll-behavior: smooth; }
+    body { background:#07091a; color:#e2e8f0; overflow-x:hidden; }
 
-    body {
-      background: radial-gradient(ellipse at 20% 50%, #0d1b3e 0%, #0a0f1e 50%, #0d0a1f 100%);
-      color: #e2e8f0;
+    /* ===== BG WATERMARK ===== */
+    .bg-watermark {
+      position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none;
     }
-
-    /* Stars background */
-    .stars {
-      position: fixed; inset: 0; z-index: 0; overflow: hidden;
-    }
-    .star {
-      position: absolute;
-      background: #fff;
-      border-radius: 50%;
-      animation: twinkle var(--d) ease-in-out infinite alternate;
-    }
-    @keyframes twinkle {
-      from { opacity: 0.1; transform: scale(0.8); }
-      to   { opacity: 0.9; transform: scale(1.2); }
+    .wm-text {
+      position:absolute; font-size:clamp(60px,8vw,120px); font-weight:900;
+      color:rgba(139,92,246,0.04); white-space:nowrap; user-select:none;
+      letter-spacing:20px;
     }
 
-    /* ===== TOP NAV ===== */
-    .top-nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      padding: 16px 24px;
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .logo {
-      display: flex; align-items: center; gap: 10px;
-    }
-    .logo-icon {
-      width: 38px; height: 38px;
-      background: linear-gradient(135deg, #7c3aed, #a855f7);
-      border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px; font-weight: 900; color: #fff;
-    }
-    .logo-text {
-      font-size: 18px; font-weight: 800; color: #f8fafc;
-    }
-    .logo-text span { color: #a855f7; }
+    /* Stars */
+    .stars-layer { position:fixed; inset:0; z-index:1; pointer-events:none; }
+    .star { position:absolute; border-radius:50%; background:#fff; }
 
-    /* ===== SLIDES ===== */
-    .slides-wrap {
-      position: relative; z-index: 10;
-      height: 100vh;
-      display: flex; align-items: center; justify-content: center;
+    /* ===== NAV ===== */
+    nav {
+      position:fixed; top:0; left:0; right:0; z-index:100;
+      padding:0 40px; height:64px;
+      display:flex; align-items:center; justify-content:space-between;
+      background:rgba(7,9,26,0.85); backdrop-filter:blur(14px);
+      border-bottom:1px solid rgba(255,255,255,0.06);
     }
-    .slide {
-      position: absolute; inset: 0;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      padding: 20px;
-      opacity: 0;
-      transform: translateX(60px);
-      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-      pointer-events: none;
+    .nav-logo { display:flex; align-items:center; gap:10px; }
+    .nav-logo-icon {
+      width:36px; height:36px; border-radius:10px;
+      background:linear-gradient(135deg,#7c3aed,#a855f7);
+      display:flex; align-items:center; justify-content:center; font-size:18px;
     }
-    .slide.active {
-      opacity: 1; transform: translateX(0);
-      pointer-events: all;
+    .nav-logo-text { font-size:17px; font-weight:800; color:#f8fafc; }
+    .nav-logo-text span { color:#a855f7; }
+    .nav-atom-icon { font-size:26px; filter:drop-shadow(0 0 8px #f59e0b); }
+    .nav-links { display:flex; gap:28px; list-style:none; }
+    .nav-links a { color:#94a3b8; text-decoration:none; font-size:14px; font-weight:500; transition:color .2s; }
+    .nav-links a:hover { color:#f8fafc; }
+    .nav-cta {
+      padding:8px 20px; border-radius:10px;
+      background:linear-gradient(135deg,#7c3aed,#a855f7);
+      color:#fff; font-size:13px; font-weight:700;
+      border:none; cursor:pointer; transition:opacity .2s;
     }
-    .slide.prev {
-      opacity: 0; transform: translateX(-60px);
-    }
+    .nav-cta:hover { opacity:0.85; }
 
-    /* Slide 1 — Welcome */
-    .badge-welcome {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: rgba(245,158,11,0.12);
-      border: 1px solid rgba(245,158,11,0.35);
-      border-radius: 20px; padding: 6px 18px;
-      font-size: 12px; font-weight: 700; color: #f59e0b;
-      letter-spacing: 2px;
-      margin-bottom: 24px;
-    }
-    .badge-welcome::before, .badge-welcome::after {
-      content: '——'; opacity: 0.5; font-size: 10px;
-    }
-    .slide-title-main {
-      font-size: clamp(36px, 6vw, 64px);
-      font-weight: 900; color: #f59e0b;
-      text-align: center; line-height: 1.1;
-      margin-bottom: 16px;
-    }
-    .slide-subtitle {
-      font-size: clamp(28px, 5vw, 52px);
-      font-weight: 900; color: #f8fafc;
-      text-align: center; line-height: 1.1;
-    }
+    /* ===== SECTION BASE ===== */
+    section { position:relative; z-index:10; }
 
-    /* Slide 2 — Quote */
-    .quote-text {
-      font-size: clamp(16px, 2.5vw, 22px);
-      font-style: italic; color: #94a3b8;
-      text-align: center; max-width: 540px;
-      line-height: 1.6;
+    /* ===== HERO ===== */
+    #hero {
+      min-height:100vh;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      text-align:center; padding:100px 20px 60px;
     }
-    .quote-text::before { content: '"'; }
-    .quote-text::after { content: '"'; }
+    .hero-badge {
+      display:inline-flex; align-items:center; gap:8px;
+      background:rgba(139,92,246,0.12); border:1px solid rgba(139,92,246,0.35);
+      border-radius:20px; padding:5px 16px;
+      font-size:11px; font-weight:700; color:#a78bfa; letter-spacing:2px;
+      margin-bottom:24px;
+    }
+    .hero-title {
+      font-size:clamp(36px,6vw,72px); font-weight:900; line-height:1.1;
+      color:#f8fafc; margin-bottom:20px;
+    }
+    .hero-title .purple { color:#a855f7; }
+    .hero-sub {
+      font-size:clamp(16px,2vw,20px); color:#64748b; max-width:500px;
+      line-height:1.6; margin-bottom:40px;
+    }
+    .hero-btns { display:flex; gap:14px; flex-wrap:wrap; justify-content:center; margin-bottom:70px; }
+    .btn-primary {
+      padding:14px 32px; border-radius:12px;
+      background:linear-gradient(135deg,#7c3aed,#a855f7);
+      color:#fff; font-size:15px; font-weight:700; border:none; cursor:pointer;
+      box-shadow:0 8px 24px rgba(139,92,246,0.4);
+      transition:transform .2s, box-shadow .2s;
+      display:inline-flex; align-items:center; gap:8px;
+    }
+    .btn-primary:hover { transform:translateY(-2px); box-shadow:0 12px 32px rgba(139,92,246,0.5); }
+    .btn-outline {
+      padding:14px 32px; border-radius:12px;
+      background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15);
+      color:#f8fafc; font-size:15px; font-weight:700; cursor:pointer;
+      transition:background .2s;
+    }
+    .btn-outline:hover { background:rgba(255,255,255,0.1); }
 
-    /* Slide 3 — Atom */
-    .atom-wrap {
-      position: relative;
-      width: 220px; height: 220px;
-      display: flex; align-items: center; justify-content: center;
+    /* Hero atom */
+    .hero-atom { position:relative; width:200px; height:200px; margin:0 auto 20px; }
+    .h-nucleus {
+      position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+      width:44px; height:44px; border-radius:50%;
+      background:radial-gradient(circle,#fbbf24,#f59e0b);
+      box-shadow:0 0 28px rgba(245,158,11,0.6), 0 0 56px rgba(245,158,11,0.25);
+      z-index:2;
     }
-    .nucleus {
-      width: 48px; height: 48px;
-      background: radial-gradient(circle, #fbbf24, #f59e0b);
-      border-radius: 50%;
-      box-shadow: 0 0 30px rgba(245,158,11,0.6), 0 0 60px rgba(245,158,11,0.3);
-      z-index: 2;
+    .h-orbit {
+      position:absolute; top:50%; left:50%; border-radius:50%; border:2px solid;
     }
-    .orbit {
-      position: absolute;
-      border-radius: 50%;
-      border: 2px solid;
-    }
-    .orbit-1 {
-      width: 130px; height: 70px;
-      border-color: rgba(168,85,247,0.7);
-      transform: rotate(0deg);
-      animation: orbit-spin 2.5s linear infinite;
-    }
-    .orbit-2 {
-      width: 160px; height: 80px;
-      border-color: rgba(59,130,246,0.6);
-      transform: rotate(60deg);
-      animation: orbit-spin 3.2s linear infinite reverse;
-    }
-    .orbit-3 {
-      width: 190px; height: 95px;
-      border-color: rgba(245,158,11,0.5);
-      transform: rotate(120deg);
-      animation: orbit-spin 4s linear infinite;
-    }
-    .electron {
-      position: absolute;
-      width: 12px; height: 12px;
-      border-radius: 50%;
-    }
-    @keyframes orbit-spin {
-      from { transform: rotate(var(--start, 0deg)); }
-      to   { transform: rotate(calc(var(--start, 0deg) + 360deg)); }
-    }
-    /* electrons are placed on the orbits */
-    .e1 { top: -6px; left: calc(50% - 6px); background: #a855f7; box-shadow: 0 0 8px #a855f7; }
-    .e2 { top: -6px; left: calc(50% - 6px); background: #3b82f6; box-shadow: 0 0 8px #3b82f6; }
-    .e3 { top: -6px; left: calc(50% - 6px); background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
+    .h-orbit-1 { width:120px; height:60px; margin-top:-30px; margin-left:-60px; border-color:rgba(168,85,247,0.7); animation:ospin 2.4s linear infinite; }
+    .h-orbit-2 { width:148px; height:74px; margin-top:-37px; margin-left:-74px; border-color:rgba(59,130,246,0.6); animation:ospin 3s linear infinite reverse; transform-origin:center; }
+    .h-orbit-3 { width:176px; height:88px; margin-top:-44px; margin-left:-88px; border-color:rgba(245,158,11,0.5); animation:ospin 3.8s linear infinite; }
+    @keyframes ospin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+    .h-e { position:absolute; top:-7px; left:calc(50% - 7px); width:14px; height:14px; border-radius:50%; }
+    .h-e1 { background:#a855f7; box-shadow:0 0 8px #a855f7; }
+    .h-e2 { background:#3b82f6; box-shadow:0 0 8px #3b82f6; }
+    .h-e3 { background:#f59e0b; box-shadow:0 0 8px #f59e0b; }
 
-    /* Slide 4 — CTA */
     .scroll-hint {
-      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      display:flex; flex-direction:column; align-items:center; gap:6px;
+      color:#475569; font-size:11px; font-weight:700; letter-spacing:2px;
     }
-    .scroll-label {
-      font-size: 12px; font-weight: 700; color: #f59e0b;
-      letter-spacing: 3px;
+    .scroll-arrow { animation:bounce 1.5s ease-in-out infinite; }
+    @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(6px)} }
+
+    /* ===== SECTION COMMON ===== */
+    .sec-inner { max-width:1100px; margin:0 auto; padding:100px 40px; }
+    .sec-badge {
+      display:inline-block; padding:5px 14px; border-radius:20px;
+      border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05);
+      font-size:11px; font-weight:700; color:#94a3b8; letter-spacing:2px;
+      margin-bottom:32px;
     }
-    .wave-svg {
-      animation: wave-float 1.5s ease-in-out infinite alternate;
+    .sec-title { font-size:clamp(28px,4vw,52px); font-weight:900; line-height:1.15; margin-bottom:16px; }
+    .sec-desc { font-size:16px; color:#64748b; line-height:1.7; max-width:500px; margin-bottom:36px; }
+    .stat-row { display:flex; gap:40px; flex-wrap:wrap; }
+    .stat-val { font-size:clamp(32px,4vw,52px); font-weight:900; }
+    .stat-lbl { font-size:13px; color:#64748b; margin-top:2px; }
+
+    /* Two-col layout */
+    .two-col { display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:center; }
+    .two-col.rev { direction:rtl; }
+    .two-col.rev > * { direction:ltr; }
+    @media(max-width:768px) { .two-col { grid-template-columns:1fr; gap:40px; } .two-col.rev { direction:ltr; } }
+
+    /* ===== PENDULUM ===== */
+    .pendulum-wrap {
+      display:flex; align-items:flex-start; justify-content:center;
+      height:300px; position:relative;
     }
-    @keyframes wave-float {
-      from { transform: translateY(0); }
-      to   { transform: translateY(6px); }
+    .pendulum-svg { overflow:visible; }
+
+    /* ===== AI CHAT DEMO ===== */
+    .chat-box {
+      background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1);
+      border-radius:20px; padding:20px; max-width:340px;
+    }
+    .chat-header {
+      display:flex; align-items:center; gap:10px; margin-bottom:16px;
+      padding-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.08);
+    }
+    .chat-avatar { width:32px; height:32px; border-radius:10px; background:linear-gradient(135deg,#7c3aed,#a855f7); display:flex; align-items:center; justify-content:center; font-size:16px; }
+    .chat-name { font-weight:700; font-size:14px; color:#f8fafc; }
+    .chat-msg { margin-bottom:10px; }
+    .chat-bubble {
+      display:inline-block; padding:10px 14px; border-radius:12px;
+      font-size:13px; line-height:1.5; max-width:90%;
+    }
+    .cb-user { background:rgba(139,92,246,0.25); color:#e2e8f0; float:right; border-bottom-right-radius:4px; }
+    .cb-ai { background:rgba(255,255,255,0.08); color:#cbd5e1; border-bottom-left-radius:4px; }
+    .chat-typing { display:flex; gap:4px; padding:8px 14px; background:rgba(255,255,255,0.08); border-radius:12px; display:inline-flex; border-bottom-left-radius:4px; }
+    .dot-t { width:6px; height:6px; border-radius:50%; background:#64748b; animation:dot-blink 1.2s ease-in-out infinite; }
+    .dot-t:nth-child(2) { animation-delay:.2s; }
+    .dot-t:nth-child(3) { animation-delay:.4s; }
+    @keyframes dot-blink { 0%,80%,100%{opacity:.3} 40%{opacity:1} }
+    .clearfix::after { content:''; display:table; clear:both; }
+
+    /* ===== AI FEATURES ===== */
+    .ai-features { list-style:none; margin-top:20px; display:flex; flex-direction:column; gap:10px; }
+    .ai-feat {
+      display:flex; align-items:center; gap:10px;
+      font-size:14px; color:#94a3b8;
+    }
+    .ai-feat::before { content:''; width:6px; height:6px; border-radius:50%; background:#a855f7; flex-shrink:0; }
+
+    /* ===== COURSES ===== */
+    .courses-header { text-align:center; margin-bottom:48px; }
+    .courses-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:16px; }
+    .course-card {
+      background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
+      border-radius:20px; padding:24px 20px;
+      cursor:pointer; transition:all .25s;
+    }
+    .course-card:hover { background:rgba(255,255,255,0.07); transform:translateY(-3px); }
+    .course-icon { font-size:32px; margin-bottom:14px; display:block; }
+    .course-name { font-size:15px; font-weight:700; color:#f1f5f9; margin-bottom:4px; }
+    .course-count { font-size:12px; color:#64748b; margin-bottom:14px; }
+    .course-bar { height:3px; border-radius:2px; background:rgba(255,255,255,0.08); overflow:hidden; }
+    .course-bar-fill { height:100%; border-radius:2px; }
+
+    /* ===== QUIZ DEMO ===== */
+    .quiz-box {
+      background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1);
+      border-radius:20px; padding:24px; max-width:340px;
+    }
+    .quiz-progress { font-size:11px; font-weight:700; color:#10b981; letter-spacing:1px; margin-bottom:10px; }
+    .quiz-q { font-size:15px; font-weight:600; color:#f1f5f9; margin-bottom:18px; }
+    .quiz-options { display:flex; flex-direction:column; gap:8px; }
+    .quiz-opt {
+      padding:10px 14px; border-radius:10px;
+      border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.04);
+      font-size:13px; color:#94a3b8; display:flex; align-items:center; gap:10px;
+      cursor:pointer; transition:all .15s;
+    }
+    .quiz-opt.correct { background:rgba(16,185,129,0.15); border-color:#10b981; color:#f1f5f9; }
+    .quiz-opt-circle { width:18px; height:18px; border-radius:50%; border:2px solid rgba(255,255,255,0.2); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:10px; }
+    .quiz-opt.correct .quiz-opt-circle { border-color:#10b981; background:#10b981; color:#fff; }
+
+    /* ===== SCIENTISTS ===== */
+    .scientists-header { text-align:center; margin-bottom:48px; }
+    .scientists-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:16px; }
+    .sci-card {
+      background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
+      border-radius:20px; padding:24px 16px; text-align:center;
+      cursor:pointer; transition:all .25s;
+    }
+    .sci-card:hover { transform:translateY(-4px); }
+    .sci-icon-wrap {
+      width:64px; height:64px; border-radius:50%; margin:0 auto 14px;
+      display:flex; align-items:center; justify-content:center; font-size:28px;
+      border:2px solid;
+    }
+    .sci-name { font-size:15px; font-weight:700; color:#f1f5f9; margin-bottom:3px; }
+    .sci-years { font-size:11px; color:#64748b; margin-bottom:6px; }
+    .sci-desc { font-size:12px; color:#94a3b8; }
+
+    /* ===== STATS SECTION ===== */
+    #stats {
+      background:linear-gradient(135deg,rgba(139,92,246,0.15),rgba(59,130,246,0.1));
+      border-top:1px solid rgba(255,255,255,0.06);
+      border-bottom:1px solid rgba(255,255,255,0.06);
+    }
+    .stats-title { text-align:center; font-size:clamp(24px,3vw,42px); font-weight:900; color:#f8fafc; margin-bottom:48px; }
+    .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:20px; }
+    .stat-card {
+      background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1);
+      border-radius:20px; padding:32px 24px; text-align:center;
+    }
+    .stat-emoji { font-size:36px; margin-bottom:12px; display:block; }
+    .stat-num { font-size:clamp(32px,4vw,52px); font-weight:900; }
+    .stat-label { font-size:13px; color:#64748b; margin-top:4px; }
+
+    /* ===== CTA ===== */
+    #cta {
+      text-align:center; padding:120px 40px;
+      position:relative; z-index:10;
+    }
+    .cta-atom { margin:0 auto 32px; width:120px; height:120px; position:relative; }
+    .cta-n { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:32px; height:32px; border-radius:50%; background:radial-gradient(circle,#fbbf24,#f59e0b); box-shadow:0 0 20px rgba(245,158,11,0.6); }
+    .cta-o1 { position:absolute; top:50%; left:50%; width:80px; height:40px; margin-top:-20px; margin-left:-40px; border:2px solid rgba(168,85,247,0.7); border-radius:50%; animation:ospin 2s linear infinite; }
+    .cta-o2 { position:absolute; top:50%; left:50%; width:100px; height:50px; margin-top:-25px; margin-left:-50px; border:2px solid rgba(59,130,246,0.6); border-radius:50%; animation:ospin 2.8s linear infinite reverse; }
+    .cta-o3 { position:absolute; top:50%; left:50%; width:118px; height:59px; margin-top:-29.5px; margin-left:-59px; border:2px solid rgba(245,158,11,0.5); border-radius:50%; animation:ospin 3.6s linear infinite; }
+    .cta-title { font-size:clamp(36px,5vw,64px); font-weight:900; color:#f8fafc; margin-bottom:14px; }
+    .cta-sub { font-size:16px; color:#64748b; max-width:460px; margin:0 auto 36px; line-height:1.7; }
+    .cta-btns { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-bottom:24px; }
+    .cta-note { display:flex; gap:24px; justify-content:center; flex-wrap:wrap; }
+    .cta-note span { font-size:12px; color:#475569; }
+    .cta-note span::before { content:'✓ '; color:#10b981; }
+
+    /* ===== FOOTER ===== */
+    footer {
+      border-top:1px solid rgba(255,255,255,0.06);
+      padding:24px 40px; text-align:center;
+      font-size:13px; color:#334155;
+      position:relative; z-index:10;
     }
 
-    /* ===== DOTS ===== */
-    .dots {
-      position: fixed; bottom: 32px; left: 50%;
-      transform: translateX(-50%);
-      display: flex; gap: 10px; z-index: 100;
-    }
-    .dot {
-      width: 8px; height: 8px;
-      border-radius: 4px;
-      background: rgba(255,255,255,0.25);
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-    .dot.active {
-      width: 28px;
-      background: #f59e0b;
-    }
-
-    /* ===== NEXT BUTTON ===== */
-    .btn-next {
-      position: fixed; right: 28px; top: 50%; transform: translateY(-50%);
-      z-index: 100;
-      width: 44px; height: 44px;
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer;
-      transition: all 0.2s;
-      color: #f8fafc; font-size: 18px;
-    }
-    .btn-next:hover { background: rgba(245,158,11,0.3); border-color: #f59e0b; }
-
-    .btn-back {
-      position: fixed; left: 28px; top: 50%; transform: translateY(-50%);
-      z-index: 100;
-      width: 44px; height: 44px;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer;
-      transition: all 0.2s;
-      color: #64748b; font-size: 18px;
-    }
-    .btn-back:hover { background: rgba(255,255,255,0.12); color: #f8fafc; }
-    .btn-back.hidden { display: none; }
-
-    /* ===== ENTER BUTTON (last slide) ===== */
-    .btn-enter {
-      margin-top: 40px;
-      padding: 14px 40px;
-      background: linear-gradient(135deg, #7c3aed, #a855f7);
-      border: none; border-radius: 14px;
-      color: #fff; font-size: 16px; font-weight: 700;
-      cursor: pointer;
-      box-shadow: 0 8px 24px rgba(139,92,246,0.4);
-      transition: all 0.25s;
-      display: flex; align-items: center; gap: 10px;
-    }
-    .btn-enter:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 32px rgba(139,92,246,0.5);
-    }
-
-    /* Atom icon in top-right nav */
-    .nav-atom {
-      width: 42px; height: 42px;
-      background: linear-gradient(135deg, #f59e0b22, #f97316
-22);
-      border: 1px solid rgba(245,158,11,0.3);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px;
-    }
-
-    /* Features grid on last slide */
-    .features {
-      display: flex; flex-wrap: wrap; gap: 12px;
-      justify-content: center; margin-top: 28px; max-width: 560px;
-    }
-    .feat {
-      display: flex; align-items: center; gap: 8px;
-      background: rgba(255,255,255,0.07);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 12px; padding: 8px 16px;
-      font-size: 13px; font-weight: 500; color: #cbd5e1;
+    /* Responsive nav */
+    @media(max-width:768px) {
+      nav { padding:0 20px; }
+      .nav-links { display:none; }
+      .sec-inner { padding:80px 20px; }
     }
   </style>
 </head>
 <body>
 
-<!-- Stars -->
-<div class="stars" id="stars"></div>
+<!-- BG Watermark -->
+<div class="bg-watermark" id="watermark"></div>
 
-<!-- Top Nav -->
-<nav class="top-nav">
-  <div class="logo">
-    <div class="logo-icon">⚛</div>
-    <span class="logo-text">Fizika <span>AI</span></span>
+<!-- Stars -->
+<div class="stars-layer" id="stars"></div>
+
+<!-- ===== NAV ===== -->
+<nav>
+  <div class="nav-logo">
+    <div class="nav-logo-icon">⚛</div>
+    <span class="nav-logo-text">Fizika <span>AI</span></span>
   </div>
-  <div class="nav-atom">⚛️</div>
+  <ul class="nav-links">
+    <li><a href="#simulations">Simulatsiyalar</a></li>
+    <li><a href="#ai-tutor">AI Tutor</a></li>
+    <li><a href="#courses">Kurslar</a></li>
+    <li><a href="#tests">Testlar</a></li>
+  </ul>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <span class="nav-atom-icon">⚛️</span>
+  </div>
 </nav>
 
-<!-- Slides -->
-<div class="slides-wrap">
-
-  <!-- Slide 0 — Xush kelibsiz -->
-  <div class="slide active" id="slide-0">
-    <div class="badge-welcome">XUSH KELIBSIZ</div>
-    <div class="slide-title-main">Assalomu Alaykum! 👋</div>
-    <div class="slide-subtitle">Fizikani yangicha his qiling</div>
+<!-- ===== HERO ===== -->
+<section id="hero">
+  <div class="hero-badge">⚛ FIZIKA AI PLATFORMASI</div>
+  <h1 class="hero-title">
+    Fizikani <span class="purple">yangicha</span><br/>his qiling
+  </h1>
+  <p class="hero-sub">
+    Sun'iy intellekt, 3D simulatsiyalar va interaktiv darslar — barchasi bir joyda
+  </p>
+  <div class="hero-btns">
+    <button class="btn-primary" onclick="document.getElementById('cta').scrollIntoView({behavior:'smooth'})">
+      🚀 Bepul ro'yxatdan o'ting
+    </button>
+    <button class="btn-outline" onclick="document.getElementById('simulations').scrollIntoView({behavior:'smooth'})">
+      Ko'proq bilish
+    </button>
   </div>
 
-  <!-- Slide 1 — Quote -->
-  <div class="slide" id="slide-1">
-    <div class="quote-text">Har bir savol — yangi kashfiyotning boshlanishi</div>
+  <!-- Atom -->
+  <div class="hero-atom">
+    <div class="h-nucleus"></div>
+    <div class="h-orbit h-orbit-1"><div class="h-e h-e1"></div></div>
+    <div class="h-orbit h-orbit-2"><div class="h-e h-e2"></div></div>
+    <div class="h-orbit h-orbit-3"><div class="h-e h-e3"></div></div>
   </div>
 
-  <!-- Slide 2 — Atom animation -->
-  <div class="slide" id="slide-2">
-    <div class="atom-wrap">
-      <div class="nucleus"></div>
-      <div class="orbit orbit-1" style="--start:0deg;">
-        <div class="electron e1"></div>
+  <div class="scroll-hint">
+    <span>PASTGA SURING</span>
+    <span class="scroll-arrow">⌄⌄</span>
+  </div>
+</section>
+
+<!-- ===== 3D SIMULATSIYALAR ===== -->
+<section id="simulations">
+  <div class="sec-inner">
+    <div class="two-col">
+      <!-- Pendulum visual -->
+      <div style="display:flex;align-items:center;justify-content:center;">
+        <svg id="pendulum-svg" width="260" height="320" style="overflow:visible;">
+          <line id="p-rod" x1="130" y1="30" x2="130" y2="230" stroke="rgba(168,85,247,0.6)" stroke-width="2"/>
+          <circle cx="130" cy="30" r="5" fill="rgba(255,255,255,0.3)"/>
+          <circle id="p-ball" cx="130" cy="230" r="22" fill="#3b82f6"
+            style="filter:drop-shadow(0 0 12px rgba(59,130,246,0.7))"/>
+        </svg>
       </div>
-      <div class="orbit orbit-2" style="--start:60deg;">
-        <div class="electron e2"></div>
-      </div>
-      <div class="orbit orbit-3" style="--start:120deg;">
-        <div class="electron e3"></div>
+      <!-- Text -->
+      <div>
+        <div class="sec-badge">3D SIMULATSIYALAR</div>
+        <h2 class="sec-title">🔬 <strong>3D Interaktiv</strong><br/><span style="color:#a855f7;">Simulatsiyalar</span></h2>
+        <p class="sec-desc">100+ fizika hodisasini real vaqtda 3D muhitda kuzating, o'zgartiring va tushunib oling.</p>
+        <div class="stat-row">
+          <div>
+            <div class="stat-val" style="color:#f59e0b;">100+</div>
+            <div class="stat-lbl">Simulatsiya</div>
+          </div>
+          <div>
+            <div class="stat-val" style="color:#a855f7;">5 soha</div>
+            <div class="stat-lbl">Bo'lim</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
+</section>
 
-  <!-- Slide 3 — Oldinga suring / CTA -->
-  <div class="slide" id="slide-3">
-    <div class="scroll-hint">
-      <div class="scroll-label">OLDINGA SURING</div>
-      <svg class="wave-svg" width="48" height="20" viewBox="0 0 48 20" fill="none">
-        <path d="M2 10 Q8 2 14 10 Q20 18 26 10 Q32 2 38 10 Q44 18 46 14" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-      </svg>
+<!-- ===== AI O'QITUVCHI ===== -->
+<section id="ai-tutor">
+  <div class="sec-inner">
+    <div class="two-col rev">
+      <!-- Text -->
+      <div>
+        <div class="sec-badge">AI O'QITUVCHI</div>
+        <h2 class="sec-title">🤖 <strong>Sun'iy intellekt</strong><br/><span style="color:#a855f7;">o'qituvchingiz</span></h2>
+        <p class="sec-desc">Claude AI yordamida 24/7 savollaringizga javob oling. Har qanday fizika masalasini bosqichma-bosqich tushuntiramiz.</p>
+        <ul class="ai-features">
+          <li class="ai-feat">Real vaqtda javob</li>
+          <li class="ai-feat">Formulalar bilan tushuntirish</li>
+          <li class="ai-feat">O'zbek tilida</li>
+          <li class="ai-feat">Masala yechimlari</li>
+        </ul>
+      </div>
+      <!-- Chat demo -->
+      <div style="display:flex;justify-content:center;">
+        <div class="chat-box">
+          <div class="chat-header">
+            <div class="chat-avatar">🤖</div>
+            <div class="chat-name">AI Fizika O'qituvchisi</div>
+          </div>
+          <div class="chat-msg clearfix">
+            <div class="chat-bubble cb-user">Nyuton qonuni nima?</div>
+          </div>
+          <div class="chat-msg" style="margin-top:10px;">
+            <div class="chat-bubble cb-ai">F = ma — kuch, massa va tezlanish.</div>
+          </div>
+          <div style="margin-top:10px;">
+            <div class="chat-typing">
+              <div class="dot-t"></div><div class="dot-t"></div><div class="dot-t"></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
+</section>
 
-  <!-- Slide 4 — Kirish -->
-  <div class="slide" id="slide-4">
-    <div style="text-align:center;">
-      <div style="font-size:clamp(28px,5vw,48px);font-weight:900;color:#f8fafc;margin-bottom:12px;">Tayyor! 🚀</div>
-      <div style="font-size:16px;color:#94a3b8;max-width:480px;margin:0 auto;">
-        Sun'iy intellekt yordamida fizika masalalarini yechish, simulatsiyalar va testlar
+<!-- ===== KURSLAR ===== -->
+<section id="courses">
+  <div class="sec-inner">
+    <div class="courses-header">
+      <div class="sec-badge">KURSLAR</div>
+      <h2 class="sec-title">📚 <strong>500+</strong> dars va <span style="color:#f59e0b;">mashqlar</span></h2>
+    </div>
+    <div class="courses-grid">
+      <div class="course-card">
+        <span class="course-icon">⚙️</span>
+        <div class="course-name">Mexanika</div>
+        <div class="course-count">120 ta dars</div>
+        <div class="course-bar"><div class="course-bar-fill" style="width:85%;background:linear-gradient(90deg,#3b82f6,#60a5fa);"></div></div>
       </div>
-      <div class="features">
-        <div class="feat">🤖 AI Tutor</div>
-        <div class="feat">⚗️ Simulyator</div>
-        <div class="feat">📝 Testlar</div>
-        <div class="feat">📚 Darsliklar</div>
+      <div class="course-card">
+        <span class="course-icon">⚡</span>
+        <div class="course-name">Elektr va Magnit</div>
+        <div class="course-count">95 ta dars</div>
+        <div class="course-bar"><div class="course-bar-fill" style="width:70%;background:linear-gradient(90deg,#8b5cf6,#a855f7);"></div></div>
       </div>
-      <button class="btn-enter" onclick="window.location.href='index.html'">
-        Platformaga kirish →
-      </button>
+      <div class="course-card">
+        <span class="course-icon">🌊</span>
+        <div class="course-name">To'lqin va Optika</div>
+        <div class="course-count">80 ta dars</div>
+        <div class="course-bar"><div class="course-bar-fill" style="width:60%;background:linear-gradient(90deg,#f59e0b,#fbbf24);"></div></div>
+      </div>
+      <div class="course-card">
+        <span class="course-icon">🔥</span>
+        <div class="course-name">Termodinamika</div>
+        <div class="course-count">75 ta dars</div>
+        <div class="course-bar"><div class="course-bar-fill" style="width:55%;background:linear-gradient(90deg,#ef4444,#f97316);"></div></div>
+      </div>
+      <div class="course-card">
+        <span class="course-icon">⚛️</span>
+        <div class="course-name">Kvant Fizika</div>
+        <div class="course-count">65 ta dars</div>
+        <div class="course-bar"><div class="course-bar-fill" style="width:45%;background:linear-gradient(90deg,#10b981,#34d399);"></div></div>
+      </div>
+      <div class="course-card">
+        <span class="course-icon">🌌</span>
+        <div class="course-name">Nisbiylik</div>
+        <div class="course-count">40 ta dars</div>
+        <div class="course-bar"><div class="course-bar-fill" style="width:30%;background:linear-gradient(90deg,#f59e0b,#84cc16);"></div></div>
+      </div>
     </div>
   </div>
+</section>
 
-</div>
+<!-- ===== TESTLAR ===== -->
+<section id="tests">
+  <div class="sec-inner">
+    <div class="two-col">
+      <!-- Quiz demo -->
+      <div style="display:flex;justify-content:center;">
+        <div class="quiz-box">
+          <div class="quiz-progress">SAVOL 3 / 3</div>
+          <div class="quiz-q">E = mc² — kim kashf etgan?</div>
+          <div class="quiz-options">
+            <div class="quiz-opt">
+              <div class="quiz-opt-circle"></div> Nyuton
+            </div>
+            <div class="quiz-opt">
+              <div class="quiz-opt-circle"></div> Faradey
+            </div>
+            <div class="quiz-opt correct">
+              <div class="quiz-opt-circle">✓</div> Einstein
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Text -->
+      <div>
+        <div class="sec-badge">TESTLAR</div>
+        <h2 class="sec-title">✅ <strong>Bilimingizni</strong><br/><span style="color:#10b981;">sinab ko'ring</span></h2>
+        <p class="sec-desc">1000+ test savoli bilan bilimingizni baholang. Zaif tomonlarni aniqlab, maqsadli o'qing.</p>
+        <div class="stat-row">
+          <div>
+            <div class="stat-val" style="color:#10b981;">1000+</div>
+            <div class="stat-lbl">Savol</div>
+          </div>
+          <div>
+            <div class="stat-val" style="color:#3b82f6;">98%</div>
+            <div class="stat-lbl">To'g'ri javob</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-<!-- Nav buttons -->
-<button class="btn-back hidden" id="btn-back" onclick="changeSlide(-1)">‹</button>
-<button class="btn-next" id="btn-next" onclick="changeSlide(1)">›</button>
+<!-- ===== OLIMLAR ===== -->
+<section id="scientists">
+  <div class="sec-inner">
+    <div class="scientists-header">
+      <div class="sec-badge">FIZIKA TARIXI</div>
+      <h2 class="sec-title">🔭 Fizika tarixi va <span style="color:#a855f7;">buyuk</span> <span style="color:#f59e0b;">olimlar</span></h2>
+    </div>
+    <div class="scientists-grid">
+      <div class="sci-card" style="border-color:rgba(245,158,11,0.2);">
+        <div class="sci-icon-wrap" style="border-color:rgba(245,158,11,0.4);background:rgba(245,158,11,0.08);">🔭</div>
+        <div class="sci-name">Galiley</div>
+        <div class="sci-years">1564–1642</div>
+        <div class="sci-desc">Teleskop, erkin tushish</div>
+      </div>
+      <div class="sci-card" style="border-color:rgba(59,130,246,0.2);">
+        <div class="sci-icon-wrap" style="border-color:rgba(59,130,246,0.4);background:rgba(59,130,246,0.08);">🍎</div>
+        <div class="sci-name">Nyuton</div>
+        <div class="sci-years">1643–1727</div>
+        <div class="sci-desc">Tortishish, F=ma</div>
+      </div>
+      <div class="sci-card" style="border-color:rgba(139,92,246,0.3);background:rgba(139,92,246,0.06);">
+        <div class="sci-icon-wrap" style="border-color:rgba(139,92,246,0.5);background:rgba(139,92,246,0.12);">⚛️</div>
+        <div class="sci-name">Einstein</div>
+        <div class="sci-years">1879–1955</div>
+        <div class="sci-desc">E=mc², nisbiylik</div>
+      </div>
+      <div class="sci-card" style="border-color:rgba(16,185,129,0.2);">
+        <div class="sci-icon-wrap" style="border-color:rgba(16,185,129,0.4);background:rgba(16,185,129,0.08);">⚡</div>
+        <div class="sci-name">Faradey</div>
+        <div class="sci-years">1791–1867</div>
+        <div class="sci-desc">Elektromagnit induksiya</div>
+      </div>
+      <div class="sci-card" style="border-color:rgba(239,68,68,0.2);">
+        <div class="sci-icon-wrap" style="border-color:rgba(239,68,68,0.4);background:rgba(239,68,68,0.08);">☢️</div>
+        <div class="sci-name">Kyuri</div>
+        <div class="sci-years">1867–1934</div>
+        <div class="sci-desc">Radioaktivlik</div>
+      </div>
+    </div>
+  </div>
+</section>
 
-<!-- Dots -->
-<div class="dots" id="dots"></div>
+<!-- ===== STATS ===== -->
+<section id="stats">
+  <div class="sec-inner">
+    <div class="stats-title">Raqamlarda platforma</div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-emoji">👥</span>
+        <div class="stat-num" style="color:#3b82f6;">10 000+</div>
+        <div class="stat-label">O'quvchi</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-emoji">📚</span>
+        <div class="stat-num" style="color:#a855f7;">500+</div>
+        <div class="stat-label">Dars</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-emoji">🔬</span>
+        <div class="stat-num" style="color:#f59e0b;">100+</div>
+        <div class="stat-label">Simulatsiya</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-emoji">✅</span>
+        <div class="stat-num" style="color:#10b981;">98%</div>
+        <div class="stat-label">Muvaffaqiyat</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CTA ===== -->
+<section id="cta">
+  <!-- CTA atom -->
+  <div class="cta-atom">
+    <div class="cta-n"></div>
+    <div class="cta-o1"></div>
+    <div class="cta-o2"></div>
+    <div class="cta-o3"></div>
+  </div>
+  <h2 class="cta-title">Hoziroq boshlang!</h2>
+  <p class="cta-sub">Fizika olamiga yangicha ko'z bilan qarang — minglab o'quvchilar allaqachon boshlagan</p>
+  <div class="cta-btns">
+    <button class="btn-primary" style="font-size:16px;padding:16px 40px;">🚀 Bepul ro'yxatdan o'ting</button>
+    <button class="btn-outline" style="font-size:16px;padding:16px 32px;">Kirish</button>
+  </div>
+  <div class="cta-note">
+    <span>Bepul ro'yxatdan o'tish</span>
+    <span>Kredit karta talab qilinmaydi</span>
+    <span>Istalgan vaqt bekor qilish</span>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <span style="color:#a855f7;font-weight:700;">Fizika AI</span> · O'zbekiston Respublikasi · 2025 ·
+  <a href="index.html" style="color:#f59e0b;text-decoration:none;">← Platforma bosh sahifasi</a>
+</footer>
 
 <script>
-  // Generate stars
-  const starsEl = document.getElementById('stars');
-  for (let i = 0; i < 120; i++) {
-    const s = document.createElement('div');
-    s.className = 'star';
-    const size = Math.random() * 2.5 + 0.5;
-    s.style.cssText = `
-      width:${size}px; height:${size}px;
-      top:${Math.random()*100}%;
-      left:${Math.random()*100}%;
-      --d:${(Math.random()*3+2).toFixed(1)}s;
-      animation-delay:${(Math.random()*4).toFixed(1)}s;
-    `;
-    starsEl.appendChild(s);
+// Stars
+const starsEl = document.getElementById('stars');
+for (let i = 0; i < 160; i++) {
+  const s = document.createElement('div');
+  s.className = 'star';
+  const sz = Math.random() * 2.5 + 0.4;
+  s.style.cssText = `width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;opacity:${Math.random()*0.7+0.1};`;
+  starsEl.appendChild(s);
+}
+
+// Watermark
+const wm = document.getElementById('watermark');
+for (let r = 0; r < 6; r++) {
+  for (let c = 0; c < 4; c++) {
+    const t = document.createElement('div');
+    t.className = 'wm-text';
+    t.textContent = 'Fizika AI';
+    t.style.cssText = `top:${r*22}%;left:${c*30-5}%;transform:rotate(-20deg);`;
+    wm.appendChild(t);
   }
+}
 
-  // Slides logic
-  const TOTAL = 5;
-  let current = 0;
-
-  const dotsEl = document.getElementById('dots');
-  for (let i = 0; i < TOTAL; i++) {
-    const d = document.createElement('div');
-    d.className = 'dot' + (i === 0 ? ' active' : '');
-    d.onclick = () => goTo(i);
-    dotsEl.appendChild(d);
+// Pendulum animation
+(function() {
+  const rod  = document.getElementById('p-rod');
+  const ball = document.getElementById('p-ball');
+  if (!rod || !ball) return;
+  const cx = 130, cy = 30, len = 200;
+  let angle = -45 * Math.PI / 180;
+  let vel = 0;
+  const g = 9.8, dt = 0.016;
+  function step() {
+    vel += (-g / len * Math.sin(angle)) * 20 * dt;
+    vel *= 0.999;
+    angle += vel * dt * 20;
+    const bx = cx + Math.sin(angle) * len;
+    const by = cy + Math.cos(angle) * len;
+    rod.setAttribute('x2', bx.toFixed(1));
+    rod.setAttribute('y2', by.toFixed(1));
+    ball.setAttribute('cx', bx.toFixed(1));
+    ball.setAttribute('cy', by.toFixed(1));
+    requestAnimationFrame(step);
   }
-
-  function goTo(n) {
-    const prev = document.getElementById('slide-' + current);
-    prev.classList.remove('active');
-    prev.classList.add('prev');
-    setTimeout(() => prev.classList.remove('prev'), 600);
-
-    current = n;
-    document.getElementById('slide-' + current).classList.add('active');
-
-    // dots
-    document.querySelectorAll('.dot').forEach((d, i) => {
-      d.classList.toggle('active', i === current);
-    });
-
-    // buttons
-    document.getElementById('btn-back').classList.toggle('hidden', current === 0);
-    document.getElementById('btn-next').style.display = current === TOTAL - 1 ? 'none' : 'flex';
-  }
-
-  function changeSlide(dir) {
-    const next = Math.min(Math.max(0, current + dir), TOTAL - 1);
-    if (next !== current) goTo(next);
-  }
-
-  // Keyboard
-  document.addEventListener('keydown', e => {
-    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
-    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   changeSlide(-1);
-  });
-
-  // Touch swipe
-  let touchX = 0;
-  document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; });
-  document.addEventListener('touchend', e => {
-    const dx = touchX - e.changedTouches[0].clientX;
-    if (Math.abs(dx) > 50) changeSlide(dx > 0 ? 1 : -1);
-  });
+  step();
+})();
 </script>
 </body>
 </html>
