@@ -33,11 +33,11 @@
     }
     .wm {
       position:absolute;
-      font-size:clamp(40px,7vw,90px);
+      font-size:28px;
       font-weight:900;
-      color:rgba(139,92,246,0.035);
+      color:rgba(139,92,246,0.028);
       white-space:nowrap;
-      letter-spacing:16px;
+      letter-spacing:10px;
       transform:rotate(-20deg);
       user-select:none;
     }
@@ -170,16 +170,20 @@
       border-radius:50%;
       background:radial-gradient(circle,#fde68a,#f59e0b);
       box-shadow:0 0 32px rgba(245,158,11,0.65), 0 0 64px rgba(245,158,11,0.25);
-      z-index:2; position:relative;
+      z-index:2; position:absolute;
+      top:50%; left:50%; transform:translate(-50%,-50%);
     }
     .orbit {
-      position:absolute; top:50%; left:50%; border-radius:50%;
-      border:2px solid; transform-origin:0 0;
+      position:absolute;
+      top:50%; left:50%;
+      border-radius:50%;
+      border:2px solid;
     }
-    .o1 { border-color:rgba(168,85,247,0.75); animation:spin var(--t,3s) linear infinite; }
-    .o2 { border-color:rgba(59,130,246,0.65);  animation:spin var(--t,3s) linear infinite reverse; }
-    .o3 { border-color:rgba(245,158,11,0.55);  animation:spin var(--t,3s) linear infinite; }
-    @keyframes spin { to { transform:rotate(360deg); } }
+    .o1 { border-color:rgba(168,85,247,0.75); animation:spin1 var(--t,3s) linear infinite; }
+    .o2 { border-color:rgba(59,130,246,0.65);  animation:spin2 var(--t,3s) linear infinite; }
+    .o3 { border-color:rgba(245,158,11,0.55);  animation:spin1 var(--t,3s) linear infinite; }
+    @keyframes spin1 { from{transform:translate(-50%,-50%) rotate(0deg)}   to{transform:translate(-50%,-50%) rotate(360deg)} }
+    @keyframes spin2 { from{transform:translate(-50%,-50%) rotate(0deg)}   to{transform:translate(-50%,-50%) rotate(-360deg)} }
     .elec {
       position:absolute; top:-7px; left:calc(50% - 7px);
       width:14px; height:14px; border-radius:50%;
@@ -189,10 +193,11 @@
     .e-amber  { background:#fbbf24; box-shadow:0 0 10px #fbbf24; }
 
     /* hero atom sizes */
+    .ha { width:220px; height:220px; }
     .ha .nucleus { width:50px; height:50px; }
-    .ha .o1 { width:130px; height:66px; margin:-33px 0 0 -65px; --t:2.6s; }
-    .ha .o2 { width:162px; height:81px; margin:-40.5px 0 0 -81px; --t:3.2s; }
-    .ha .o3 { width:194px; height:97px; margin:-48.5px 0 0 -97px; --t:4s; }
+    .ha .o1 { width:130px; height:66px; --t:2.6s; }
+    .ha .o2 { width:162px; height:81px; --t:3.2s; }
+    .ha .o3 { width:194px; height:97px; --t:4s; }
 
     /* scroll hint */
     .scroll-hint {
@@ -296,9 +301,9 @@
     /* cta atom */
     .ca { position:relative; width:130px; height:130px; display:flex; align-items:center; justify-content:center; margin-bottom:32px; }
     .ca .nucleus { width:34px; height:34px; }
-    .ca .o1 { width:84px; height:42px; margin:-21px 0 0 -42px; --t:2.2s; }
-    .ca .o2 { width:106px; height:53px; margin:-26.5px 0 0 -53px; --t:2.9s; }
-    .ca .o3 { width:128px; height:64px; margin:-32px 0 0 -64px; --t:3.7s; }
+    .ca .o1 { width:84px;  height:42px; --t:2.2s; }
+    .ca .o2 { width:106px; height:53px; --t:2.9s; }
+    .ca .o3 { width:128px; height:64px; --t:3.7s; }
     .cta-t { font-size:clamp(34px,5vw,64px); font-weight:900; color:#f8fafc; margin-bottom:14px; }
     .cta-s { font-size:16px; color:#64748b; max-width:440px; line-height:1.7; margin-bottom:36px; }
     .cta-btns { display:flex; gap:14px; flex-wrap:wrap; justify-content:center; margin-bottom:22px; }
@@ -541,11 +546,11 @@ for (let i = 0; i < 180; i++) {
 
 // ===== Watermark =====
 const wEl = document.getElementById('wm');
-for (let r = 0; r < 7; r++) for (let c = 0; c < 5; c++) {
+for (let r = 0; r < 4; r++) for (let c = 0; c < 3; c++) {
   const t = document.createElement('div');
   t.className = 'wm';
   t.textContent = 'Fizika AI';
-  t.style.cssText = `top:${r*18-5}%;left:${c*26-5}%;`;
+  t.style.cssText = `top:${r*30+5}%;left:${c*38}%;`;
   wEl.appendChild(t);
 }
 
