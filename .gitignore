@@ -33,3 +33,10 @@ frontend/.env.production.local
 .DS_Store
 Thumbs.db
 *.log
+
+# Katta fayllar — git ga shart emas
+*.pdf
+backend/venv/
+backend/.venv/
+mexanika_qollanma.py
+blender_scripts/

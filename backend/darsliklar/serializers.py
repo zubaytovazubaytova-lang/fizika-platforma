@@ -12,9 +12,17 @@ class DarslikSerializer(serializers.ModelSerializer):
     mavzular = serializers.SerializerMethodField()
 
     def get_mavzular(self, obj):
-        qs = obj.mavzu_set.all()
+        qs = obj.mavzu_set.all().order_by('order')
         if qs.exists():
-            return [{'mavzu': m.mavzu, 'bet': m.bet, 'pdf': m.pdf_file.url if m.pdf_file else None} for m in qs]
+            return [
+                {
+                    'mavzu': m.mavzu,
+                    'bet': m.bet,
+                    'bob': m.bob,
+                    'pdf': m.pdf_file.url if m.pdf_file else None,
+                }
+                for m in qs
+            ]
         return obj.mavzular  # eski JSONField fallback
 
     class Meta:

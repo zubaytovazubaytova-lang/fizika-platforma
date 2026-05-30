@@ -117,12 +117,22 @@ export default function TestPage() {
     try {
       const payload = questions.map((q)=>({ question_id:q.id, choice_ids:answers[q.id]??[] }))
       const { data } = await testsApi.submit(quiz.id, payload)
+
+      // Server javobidagi answers dan to'g'ri/noto'g'ri hisoblash
       let correct = 0
-      questions.forEach((q)=>{
-        const cIds = new Set(q.choices.filter(c=>c.is_correct).map(c=>c.id))
-        const chosen = new Set(answers[q.id]??[])
-        if (chosen.size===cIds.size && [...chosen].every(id=>cIds.has(id))) correct++
-      })
+      if (Array.isArray(data.answers)) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        data.answers.forEach((ans: any) => {
+          const chosenIds  = new Set((ans.chosen_choices  ?? []).map((c: any) => c.id))
+          const correctIds = new Set((ans.correct_choices ?? []).map((c: any) => c.id))
+          if (
+            chosenIds.size === correctIds.size &&
+            chosenIds.size > 0 &&
+            [...chosenIds].every((id) => correctIds.has(id))
+          ) correct++
+        })
+      }
+
       setResult({ score:data.score, passed:data.is_passed, total:questions.length, correct })
     } catch { setSubmit(false) }
   }, [quiz, questions, answers])

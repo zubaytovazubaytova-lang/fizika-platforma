@@ -14,7 +14,7 @@ const CATEGORIES = [
       { id: 'free-fall', label: 'Erkin tushish',               icon: '🎯', available: false },
       { id: 'rotation',  label: 'Aylanma harakat',             icon: '🌀', available: false },
       { id: 'collision', label: "To'qnashuv",                  icon: '💥', available: false },
-      { id: 'gravity',   label: "Og'irlik kuchi",              icon: '🏋️', available: false },
+      { id: 'gravity',   label: "g = 9.8 — Yerning Imzosi",    icon: '🌍', available: true  },
       { id: 'harmonic',  label: 'Garmonik tebranish',          icon: '〰️', available: false },
     ],
   },

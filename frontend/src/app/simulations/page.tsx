@@ -13,6 +13,7 @@ const TezlikSim        = dynamic(() => import('@/components/3d/TezlikSim'),     
 const PaskalSim        = dynamic(() => import('@/components/3d/PaskalSim'),        { ssr: false })
 const PaskalShariSim   = dynamic(() => import('@/components/3d/PaskalShariSim'),   { ssr: false })
 const ElektroskopSim   = dynamic(() => import('@/components/3d/ElektroskopSim'),   { ssr: false })
+const GravitySim       = dynamic(() => import('@/components/3d/GravitySim'),       { ssr: false })
 const SimInfoPanel     = dynamic(() => import('@/components/3d/SimInfoPanel'),     { ssr: false })
 
 /* ── tiny slider helper ── */
@@ -388,6 +389,7 @@ export default function SimulationsPage() {
     activeId === 'paskal'      ? 'Paskal qonuni (silindr)'  :
     activeId === 'paskal-shar'  ? 'Paskal shari (360°)'       :
     activeId === 'elektroskop'  ? 'Elektroskop'               :
+    activeId === 'gravity'      ? "g = 9.8 — Yerning Imzosi"  :
     'Fizika simulatsiyasi'
 
   return (
@@ -532,6 +534,10 @@ export default function SimulationsPage() {
                 showLabels={eInfoOpen}
                 onToggle={() => setEInfoOpen(v => !v)}
               />
+            )}
+
+            {activeId === 'gravity' && (
+              <GravitySim key={simKey} />
             )}
           </div>
 

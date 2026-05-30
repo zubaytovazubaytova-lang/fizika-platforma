@@ -1,6 +1,9 @@
 'use client'
-import { useState, useEffect } from 'react'
-import { BookMarked, BookOpen, Search, X, ChevronRight } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import {
+  BookMarked, BookOpen, Search, X, ChevronRight,
+  FlaskConical, Wrench, FolderKanban, LayoutList, ChevronDown,
+} from 'lucide-react'
 import { darsliklarApi } from '@/lib/api'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:8000'
@@ -11,82 +14,62 @@ function pdfUrl(path: string | null | undefined): string | null {
   return `${API_BASE}${path.startsWith('/') ? '' : '/'}${path}`
 }
 
-interface Mavzu { mavzu: string; bet: number | string; pdf?: string | null }
+// ── Kategoriya turlari ───────────────────────────────────────────────────────
+type LabCategory = 'all' | 'lab' | 'amaliy' | 'loyiha'
+
+const LAB_CATEGORIES: { id: LabCategory; label: string; icon: React.ReactNode; color: string; match: string }[] = [
+  { id: 'all',    label: 'Hammasi',             icon: <LayoutList   className="h-3.5 w-3.5" />, color: '#94a3b8', match: '' },
+  { id: 'lab',    label: 'Lab ishlari',         icon: <FlaskConical className="h-3.5 w-3.5" />, color: '#38bdf8', match: 'lab ishi' },
+  { id: 'amaliy', label: 'Amaliy mashg\'ulot',  icon: <Wrench       className="h-3.5 w-3.5" />, color: '#34d399', match: 'amaliy' },
+  { id: 'loyiha', label: 'Loyiha ishi',         icon: <FolderKanban className="h-3.5 w-3.5" />, color: '#a78bfa', match: 'loyiha' },
+]
+
+function filterMavzu(mavzu: string, cat: LabCategory): boolean {
+  if (cat === 'all') return true
+  const m = cat === 'lab' ? 'lab ishi' : cat === 'amaliy' ? 'amaliy' : 'loyiha'
+  return mavzu.toLowerCase().includes(m)
+}
+
+// ── Interfaces ───────────────────────────────────────────────────────────────
+interface Mavzu {
+  mavzu: string
+  bet: number | string
+  bob?: number
+  pdf?: string | null
+}
 
 interface GradeBook {
+  id: number
   grade: number
   subject: string
   subtitle: string
   icon: string
-  color: string       // spine & accent color
-  dark: string        // dark card body tint
+  color: string
+  accent: string
+  dark: string
   formulas: string[]
   chapters: number
   pages: number
   mavzular?: Mavzu[]
 }
 
-// Kosmik fon bilan uyg'un rang palitrasi:
-// — To'q karta foni, faqat spine/belgi yorqin rang
-const BOOKS: GradeBook[] = [
-  {
-    grade: 7,
-    subject: 'Mexanika',
-    subtitle: 'Harakat, Kuch va Energiya',
-    icon: '🚀',
-    color: '#38bdf8',   // yulduz ko'k
-    dark:  '#0c2233',
-    formulas: ['F = ma', 'v = v₀ + at', 'E = mgh'],
-    chapters: 7,
-    pages: 180,
-  },
-  {
-    grade: 8,
-    subject: 'Termodinamika',
-    subtitle: 'Issiqlik, Elektr va Magnit',
-    icon: '⚡',
-    color: '#fbbf24',   // quyosh sariq
-    dark:  '#211a00',
-    formulas: ['Q = mcΔT', 'U = IR', 'P = UI'],
-    chapters: 7,
-    pages: 196,
-  },
-  {
-    grade: 9,
-    subject: 'Elektromagnitizm',
-    subtitle: "To'lqinlar, Optika va Atom",
-    icon: '🌊',
-    color: '#a78bfa',   // tumanlik binafsha
-    dark:  '#150d2e',
-    formulas: ['λ = v/f', 'n = c/v', 'E = hf'],
-    chapters: 7,
-    pages: 208,
-  },
-  {
-    grade: 10,
-    subject: 'Fizika (Chuqur)',
-    subtitle: 'Mexanika, Elektrostatika, Magnit',
-    icon: '🔭',
-    color: '#34d399',   // shimoliy yorug'lik
-    dark:  '#061a12',
-    formulas: ['F = kq₁q₂/r²', 'W = qU', 'Φ = BS·cosα'],
-    chapters: 6,
-    pages: 224,
-  },
-  {
-    grade: 11,
-    subject: 'Zamonaviy Fizika',
-    subtitle: 'Kvant, Yadro va Kosmologiya',
-    icon: '⚛️',
-    color: '#f87171',   // supernova qizil
-    dark:  '#200a0a',
-    formulas: ['E = mc²', 'ΔxΔp ≥ ℏ/2', 'λ = h/mv'],
-    chapters: 7,
-    pages: 238,
-  },
-]
+function makeDark(color: string): string {
+  const map: Record<string, string> = {
+    '#38bdf8': '#071a27', '#fb923c': '#1a0c04', '#ea580c': '#1a0c04',
+    '#34d399': '#061a12', '#059669': '#061a12', '#a78bfa': '#120a2e',
+    '#7c3aed': '#120a2e', '#818cf8': '#0d0f2e', '#4f46e5': '#0d0f2e',
+    '#f87171': '#200a0a', '#dc2626': '#200a0a', '#fbbf24': '#211a00',
+    '#e11d48': '#200510',
+  }
+  return map[color.toLowerCase()] ?? '#080c1a'
+}
 
-function BookCard({ book, active, onClick }: { book: GradeBook; active: boolean; onClick: () => void }) {
+// ─────────────────────────────────────────────────────────────────────────────
+// BookCard
+// ─────────────────────────────────────────────────────────────────────────────
+function BookCard({ book, active, onClick }: {
+  book: GradeBook; active: boolean; onClick: () => void
+}) {
   const [hov, setHov] = useState(false)
   const lifted = hov || active
 
@@ -98,119 +81,75 @@ function BookCard({ book, active, onClick }: { book: GradeBook; active: boolean;
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
     >
-      {/* Pastdagi glow soya */}
       <div
         className="absolute pointer-events-none transition-all duration-500"
         style={{
-          bottom: '-6px', left: '50%',
-          transform: 'translateX(-50%)',
-          width: lifted ? '80%' : '45%',
-          height: '18px',
+          bottom: '-6px', left: '50%', transform: 'translateX(-50%)',
+          width: lifted ? '80%' : '45%', height: '18px',
           background: `radial-gradient(ellipse, ${book.color}50 0%, transparent 70%)`,
-          filter: 'blur(10px)',
-          opacity: lifted ? 1 : 0.3,
+          filter: 'blur(10px)', opacity: lifted ? 1 : 0.3,
         }}
       />
-
-      {/* Kitob tanasi */}
       <div
         className="relative overflow-hidden flex flex-col transition-all duration-500"
         style={{
-          width: '164px',
-          height: '236px',
+          width: '164px', height: '236px',
           borderRadius: '3px 12px 12px 3px',
-          // To'q, deyarli opak fon — kosmik fon ko'rinmaydi
           background: `linear-gradient(160deg, ${book.dark}f0 0%, rgba(4,5,18,0.97) 100%)`,
           border: `1px solid ${book.color}${active ? '55' : '22'}`,
           boxShadow: lifted
             ? `5px 14px 40px rgba(0,0,0,0.8), 0 0 35px ${book.color}22`
             : `3px 8px 22px rgba(0,0,0,0.7)`,
-          transform: lifted
-            ? 'translateY(-12px) rotateY(-4deg)'
-            : 'rotateY(0deg)',
+          transform: lifted ? 'translateY(-12px) rotateY(-4deg)' : 'rotateY(0deg)',
         }}
       >
-        {/* Spine (chap chiziq) */}
-        <div
-          className="absolute left-0 top-0 bottom-0 w-[13px]"
-          style={{ background: `linear-gradient(180deg, ${book.color} 0%, ${book.color}88 100%)` }}
-        />
-
-        {/* Yuqori bezak chiziq */}
-        <div
-          className="absolute top-[20px] left-5 right-3 h-px"
-          style={{ background: `linear-gradient(90deg, ${book.color}45, transparent)` }}
-        />
-
-        {/* Katta grade raqami — watermark */}
-        <div
-          className="absolute right-1 bottom-3 font-black pointer-events-none leading-none"
-          style={{ fontSize: '88px', color: `${book.color}0c`, lineHeight: 1 }}
-        >
+        <div className="absolute left-0 top-0 bottom-0 w-[13px]"
+          style={{ background: `linear-gradient(180deg, ${book.color} 0%, ${book.color}88 100%)` }} />
+        <div className="absolute top-[20px] left-5 right-3 h-px"
+          style={{ background: `linear-gradient(90deg, ${book.color}45, transparent)` }} />
+        <div className="absolute right-1 bottom-3 font-black pointer-events-none leading-none"
+          style={{ fontSize: '88px', color: `${book.color}0c`, lineHeight: 1 }}>
           {book.grade}
         </div>
-
-        {/* O'ng tomondagi formulalar */}
         <div className="absolute top-8 right-2 flex flex-col gap-1.5 items-end pointer-events-none">
-          {book.formulas.map((f, i) => (
-            <span
-              key={f}
-              className="font-mono text-[10px] rounded px-1.5 py-0.5"
+          {book.formulas.slice(0, 3).map((f, i) => (
+            <span key={f} className="font-mono text-[10px] rounded px-1.5 py-0.5"
               style={{
                 color: `${book.color}${['bb', '88', '55'][i]}`,
-                background: `${book.color}12`,
-                border: `1px solid ${book.color}18`,
-              }}
-            >
+                background: `${book.color}12`, border: `1px solid ${book.color}18`,
+              }}>
               {f}
             </span>
           ))}
         </div>
-
-        {/* Kontent */}
         <div className="relative flex flex-col h-full pl-6 pr-3 pt-6 pb-4">
           <span className="text-3xl mb-3 block">{book.icon}</span>
-
-          <span
-            className="inline-block rounded-full px-2 py-0.5 text-[11px] font-black mb-2 self-start"
-            style={{
-              background: `${book.color}20`,
-              color: book.color,
-              border: `1px solid ${book.color}40`,
-            }}
-          >
+          <span className="inline-block rounded-full px-2 py-0.5 text-[11px] font-black mb-2 self-start"
+            style={{ background: `${book.color}20`, color: book.color, border: `1px solid ${book.color}40` }}>
             {book.grade}-sinf
           </span>
-
           <h3 className="font-black text-white text-[13px] leading-tight mb-1">{book.subject}</h3>
           <p className="text-[11px] leading-snug mb-auto" style={{ color: 'rgba(180,190,210,0.7)' }}>
             {book.subtitle}
           </p>
-
-          <div
-            className="pt-2 flex justify-between mt-2"
-            style={{ borderTop: `1px solid ${book.color}18` }}
-          >
+          <div className="pt-2 flex justify-between mt-2"
+            style={{ borderTop: `1px solid ${book.color}18` }}>
             <span className="text-[11px]" style={{ color: `${book.color}80` }}>{book.chapters} bob</span>
             <span className="text-[11px]" style={{ color: `${book.color}80` }}>{book.pages} bet</span>
           </div>
         </div>
-
-        {/* Faol holat — yuqori chiziq */}
         {active && (
-          <div
-            className="absolute top-0 left-3 right-0 h-[2px]"
-            style={{ background: `linear-gradient(90deg, ${book.color}cc, transparent)` }}
-          />
+          <div className="absolute top-0 left-3 right-0 h-[2px]"
+            style={{ background: `linear-gradient(90deg, ${book.color}cc, transparent)` }} />
         )}
       </div>
-
-      {/* Pastki yorliq */}
       <div className="mt-3.5 text-center transition-all duration-300">
-        <p className="text-[13px] font-bold" style={{ color: active ? book.color : 'rgba(255,255,255,0.3)' }}>
+        <p className="text-[13px] font-bold"
+          style={{ color: active ? book.color : 'rgba(255,255,255,0.3)' }}>
           {book.grade}-sinf
         </p>
-        <p className="text-[11px] mt-0.5" style={{ color: active ? `${book.color}70` : 'rgba(255,255,255,0.13)' }}>
+        <p className="text-[11px] mt-0.5"
+          style={{ color: active ? `${book.color}70` : 'rgba(255,255,255,0.13)' }}>
           {book.subject}
         </p>
       </div>
@@ -218,34 +157,254 @@ function BookCard({ book, active, onClick }: { book: GradeBook; active: boolean;
   )
 }
 
-function MavzuList({ book }: { book: GradeBook }) {
-  const [q, setQ] = useState('')
-  const mavzular = book.mavzular ?? []
-  const filtered = q.trim()
-    ? mavzular.filter(m => m.mavzu.toLowerCase().includes(q.toLowerCase()))
-    : mavzular
+// ─────────────────────────────────────────────────────────────────────────────
+// GradeFilterInput  — har bir kitob uchun pastki input + kichik dropdown
+// ─────────────────────────────────────────────────────────────────────────────
+function GradeFilterInput({ book, activeCat, onSelect }: {
+  book: GradeBook
+  activeCat: LabCategory
+  onSelect: (bookId: number, cat: LabCategory) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
 
+  // tashqarini bosganda yopilsin
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
+  const currentCat = LAB_CATEGORIES.find(c => c.id === activeCat) ?? LAB_CATEGORIES[0]
+  const labCount = (book.mavzular ?? []).filter(m => filterMavzu(m.mavzu, 'lab')).length
+  const amaliyCount = (book.mavzular ?? []).filter(m => filterMavzu(m.mavzu, 'amaliy')).length
+  const loyihaCount = (book.mavzular ?? []).filter(m => filterMavzu(m.mavzu, 'loyiha')).length
+  const counts: Record<LabCategory, number> = {
+    all: (book.mavzular ?? []).length,
+    lab: labCount,
+    amaliy: amaliyCount,
+    loyiha: loyihaCount,
+  }
+
+  return (
+    <div ref={ref} className="relative flex flex-col items-center" style={{ width: '164px' }}>
+      {/* ── Asosiy tugma ── */}
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="w-full flex items-center justify-between gap-2 px-3.5 py-2.5 transition-all duration-300"
+        style={{
+          borderRadius: 14,
+          background: open
+            ? `linear-gradient(135deg, ${book.color}22 0%, ${book.color}0e 100%)`
+            : 'rgba(255,255,255,0.04)',
+          border: `1.5px solid ${open ? book.color + '60' : 'rgba(255,255,255,0.1)'}`,
+          boxShadow: open
+            ? `0 8px 28px rgba(0,0,0,0.4), 0 0 0 1px ${book.color}30, 0 0 24px ${book.color}25, inset 0 1px 0 rgba(255,255,255,0.08)`
+            : `0 4px 16px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04)`,
+          backdropFilter: 'blur(16px)',
+        }}
+      >
+        <span className="flex items-center gap-2 truncate min-w-0">
+          {/* Rang dot */}
+          <span style={{
+            width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+            background: book.color,
+            boxShadow: `0 0 8px ${book.color}`,
+          }} />
+          {activeCat !== 'all' ? (
+            <>
+              <span style={{ color: currentCat.color, fontSize: 11 }}>{currentCat.icon}</span>
+              <span className="truncate text-[12px] font-semibold" style={{ color: currentCat.color }}>
+                {currentCat.label}
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="text-[12px] font-black" style={{ color: book.color, flexShrink: 0 }}>
+                {book.grade}-sinf
+              </span>
+              <span className="truncate text-[11px]" style={{ color: `${book.color}70` }}>
+                {book.subject}
+              </span>
+            </>
+          )}
+        </span>
+        <ChevronDown
+          className="h-3.5 w-3.5 shrink-0 transition-transform duration-300"
+          style={{ transform: open ? 'rotate(180deg)' : 'none', color: `${book.color}cc` }}
+        />
+      </button>
+
+      {/* ── Dropdown ── */}
+      {open && (
+        <div
+          className="absolute top-full mt-2.5 z-50 overflow-hidden"
+          style={{
+            width: '220px',
+            borderRadius: 18,
+            background: 'rgba(10,10,26,0.97)',
+            border: `1.5px solid ${book.color}40`,
+            backdropFilter: 'blur(24px)',
+            boxShadow: `
+              0 20px 60px rgba(0,0,0,0.7),
+              0 0 0 1px ${book.color}20,
+              0 0 40px ${book.color}20,
+              inset 0 1px 0 rgba(255,255,255,0.06)
+            `,
+          }}
+        >
+          {/* Yuqori rang chizig'i */}
+          <div style={{
+            height: 2,
+            background: `linear-gradient(90deg, transparent, ${book.color}cc, transparent)`,
+          }} />
+
+          {/* Header */}
+          <div className="px-4 py-3 flex items-center gap-2.5"
+            style={{ borderBottom: `1px solid ${book.color}18`, background: `${book.color}08` }}>
+            <div style={{
+              width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+              background: `${book.color}20`,
+              border: `1px solid ${book.color}35`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 14,
+            }}>
+              {book.icon}
+            </div>
+            <div>
+              <div className="text-[11px] font-black" style={{ color: book.color }}>
+                {book.grade}-sinf
+              </div>
+              <div className="text-[10px]" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                Kategoriya tanlang
+              </div>
+            </div>
+          </div>
+
+          {/* Kategoriyalar */}
+          <div className="p-2 flex flex-col gap-1">
+            {LAB_CATEGORIES.filter(c => c.id !== 'all').map(cat => {
+              const count = counts[cat.id]
+              const isActive = activeCat === cat.id
+              const disabled = count === 0
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => { if (!disabled) { onSelect(book.id, cat.id); setOpen(false) } }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-all duration-150"
+                  style={{
+                    borderRadius: 12,
+                    background: isActive
+                      ? `linear-gradient(135deg, ${book.color}22, ${book.color}0e)`
+                      : 'transparent',
+                    border: `1px solid ${isActive ? book.color + '45' : 'transparent'}`,
+                    boxShadow: isActive
+                      ? `0 0 0 1px ${book.color}25, 0 4px 12px ${book.color}15`
+                      : 'none',
+                    opacity: disabled ? 0.3 : 1,
+                    cursor: disabled ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  <div style={{
+                    width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+                    background: isActive ? `${cat.color}20` : 'rgba(255,255,255,0.04)',
+                    border: `1px solid ${isActive ? cat.color + '35' : 'rgba(255,255,255,0.06)'}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: isActive ? `0 0 10px ${cat.color}25` : 'none',
+                    transition: 'all 0.2s',
+                  }}>
+                    <span style={{ color: isActive ? cat.color : 'rgba(200,215,235,0.5)', fontSize: 12 }}>
+                      {cat.icon}
+                    </span>
+                  </div>
+                  <span className="flex-1 text-[12px] font-semibold"
+                    style={{ color: isActive ? cat.color : 'rgba(200,215,235,0.65)' }}>
+                    {cat.label}
+                  </span>
+                  <span className="text-[10px] font-black rounded-full px-2 py-0.5 tabular-nums"
+                    style={{
+                      background: isActive ? `${cat.color}28` : 'rgba(255,255,255,0.06)',
+                      color: isActive ? cat.color : 'rgba(255,255,255,0.28)',
+                      border: `1px solid ${isActive ? cat.color + '30' : 'transparent'}`,
+                    }}>
+                    {count}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MavzuList  — mavzularni ko'rsatish (kategoriya filtri bilan)
+// ─────────────────────────────────────────────────────────────────────────────
+function MavzuList({ book, category }: { book: GradeBook; category: LabCategory }) {
+  const [q, setQ] = useState('')
+  const allMavzular = book.mavzular ?? []
+
+  // kategoriya filtri
+  const catFiltered = category === 'all'
+    ? allMavzular
+    : allMavzular.filter(m => filterMavzu(m.mavzu, category))
+
+  // qidiruv filtri
+  const filtered = q.trim()
+    ? catFiltered.filter(m => m.mavzu.toLowerCase().includes(q.toLowerCase()))
+    : catFiltered
+
+  const currentCat = LAB_CATEGORIES.find(c => c.id === category)!
   const openPdf = (m: Mavzu) => {
     const url = pdfUrl(m.pdf)
     if (url) window.open(url, '_blank', 'noopener,noreferrer')
   }
 
+  // Aktiv kategoriyaga mos rang
+  const accentColor = category === 'all' ? book.color : currentCat.color
+
   return (
     <div>
-      {/* Sarlavha + qidiruv */}
+      {/* Kategoriya badge */}
+      {category !== 'all' && (
+        <div className="flex items-center gap-2 mb-3">
+          <span
+            className="flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold"
+            style={{
+              background: `${currentCat.color}18`,
+              border: `1px solid ${currentCat.color}40`,
+              color: currentCat.color,
+            }}
+          >
+            {currentCat.icon}
+            {currentCat.label}
+          </span>
+          <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.25)' }}>
+            {catFiltered.length} ta topildi
+          </span>
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-3">
-        <p className="text-xs font-bold uppercase tracking-widest" style={{ color: `${book.color}70` }}>
-          Mavzular — {mavzular.length} ta
+        <p className="text-xs font-bold uppercase tracking-widest"
+          style={{ color: `${accentColor}70` }}>
+          {category === 'all' ? `Mavzular — ${allMavzular.length} ta` : `Filtrlangan — ${catFiltered.length} ta`}
         </p>
-        {mavzular.filter(m => m.pdf).length > 0 && (
-          <span className="text-xs" style={{ color: `${book.color}60` }}>
-            {mavzular.filter(m => m.pdf).length} ta PDF mavjud
+        {allMavzular.filter(m => m.pdf).length > 0 && (
+          <span className="text-xs" style={{ color: `${accentColor}60` }}>
+            {allMavzular.filter(m => m.pdf).length} ta PDF
           </span>
         )}
       </div>
 
+      {/* Qidiruv */}
       <div className="relative mb-3">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5" style={{ color: `${book.color}55` }} />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5"
+          style={{ color: `${accentColor}55` }} />
         <input
           value={q}
           onChange={e => setQ(e.target.value)}
@@ -253,111 +412,149 @@ function MavzuList({ book }: { book: GradeBook }) {
           className="w-full rounded-xl py-2.5 pl-9 pr-9 text-sm outline-none transition-all"
           style={{
             background: 'rgba(255,255,255,0.04)',
-            border: `1.5px solid ${q ? book.color + '45' : 'rgba(255,255,255,0.09)'}`,
+            border: `1.5px solid ${q ? accentColor + '45' : 'rgba(255,255,255,0.09)'}`,
             color: 'rgba(220,230,245,0.9)',
           }}
         />
         {q && (
-          <button onClick={() => setQ('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-300 transition-colors">
+          <button onClick={() => setQ('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-300 transition-colors">
             <X className="h-3.5 w-3.5" />
           </button>
         )}
       </div>
 
-      {mavzular.length === 0 ? (
+      {/* Ro'yxat */}
+      {allMavzular.length === 0 ? (
         <p className="text-xs italic py-4 text-center" style={{ color: 'rgba(255,255,255,0.2)' }}>
           Admin paneldan mavzular qo&apos;shing
         </p>
       ) : filtered.length === 0 ? (
-        <p className="text-xs" style={{ color: `${book.color}50` }}>&quot;{q}&quot; topilmadi</p>
+        <p className="text-xs py-3" style={{ color: `${accentColor}50` }}>
+          {q ? `"${q}" topilmadi` : 'Bu kategoriyada mavzu yo\'q'}
+        </p>
       ) : (
         <div
           className="max-h-52 overflow-y-auto rounded-xl"
-          style={{ background: 'rgba(0,0,0,0.3)', border: `1px solid ${book.color}18` }}
+          style={{
+            background: 'rgba(0,0,0,0.3)',
+            border: `1px solid ${accentColor}18`,
+          }}
         >
-          {filtered.map((m, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-3 px-3.5 py-2.5 transition-colors hover:bg-white/[0.04]"
-              style={{ borderBottom: i < filtered.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}
-            >
-              {/* Tartib raqami */}
-              <span className="shrink-0 text-xs tabular-nums w-5 text-center" style={{ color: `${book.color}45` }}>
-                {i + 1}
-              </span>
+          {filtered.map((m, i) => {
+            const isLab    = m.mavzu.toLowerCase().includes('lab ishi')
+            const isAmaliy = m.mavzu.toLowerCase().includes('amaliy')
+            const isLoyiha = m.mavzu.toLowerCase().includes('loyiha')
+            const tag = isLab ? { label: 'Lab', color: '#38bdf8' }
+              : isAmaliy ? { label: 'Amaliy', color: '#34d399' }
+              : isLoyiha ? { label: 'Loyiha', color: '#a78bfa' }
+              : null
 
-              {/* Mavzu nomi */}
-              <span className="flex-1 text-sm truncate" style={{ color: 'rgba(210,220,235,0.88)' }}>
-                {m.mavzu}
-              </span>
-
-              {/* Bet raqami */}
-              <span
-                className="shrink-0 rounded-lg px-2 py-0.5 text-xs font-bold tabular-nums"
-                style={{ background: `${book.color}15`, color: `${book.color}cc`, border: `1px solid ${book.color}22` }}
+            return (
+              <div
+                key={i}
+                className="flex items-center gap-3 px-3.5 py-2.5 transition-colors hover:bg-white/[0.04]"
+                style={{
+                  borderBottom: i < filtered.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                  background: (isLab || isAmaliy || isLoyiha) ? `${accentColor}06` : 'transparent',
+                }}
               >
-                {m.bet}-bet
-              </span>
+                <span className="shrink-0 text-xs tabular-nums w-5 text-center"
+                  style={{ color: `${accentColor}45` }}>
+                  {i + 1}
+                </span>
 
-              {/* PDF tugmasi */}
-              {m.pdf ? (
-                <button
-                  onClick={() => openPdf(m)}
-                  className="shrink-0 flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold transition-all hover:brightness-125 active:scale-95"
+                <span className="flex-1 text-sm truncate" style={{ color: 'rgba(210,220,235,0.88)' }}>
+                  {m.mavzu}
+                </span>
+
+                {/* Lab/Amaliy/Loyiha tegi */}
+                {tag && (
+                  <span
+                    className="shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold"
+                    style={{
+                      background: `${tag.color}18`,
+                      color: tag.color,
+                      border: `1px solid ${tag.color}35`,
+                    }}
+                  >
+                    {tag.label}
+                  </span>
+                )}
+
+                <span
+                  className="shrink-0 rounded-lg px-2 py-0.5 text-xs font-bold tabular-nums"
                   style={{
-                    background: `${book.color}22`,
-                    color: book.color,
-                    border: `1px solid ${book.color}40`,
+                    background: `${accentColor}15`,
+                    color: `${accentColor}cc`,
+                    border: `1px solid ${accentColor}22`,
                   }}
                 >
-                  <BookOpen className="h-3 w-3" />
-                  O&apos;qish
-                </button>
-              ) : (
-                <span className="shrink-0 w-[62px] text-center text-xs" style={{ color: 'rgba(255,255,255,0.12)' }}>
-                  —
+                  {m.bet}-bet
                 </span>
-              )}
-            </div>
-          ))}
+
+                {m.pdf ? (
+                  <button
+                    onClick={() => openPdf(m)}
+                    className="shrink-0 flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs
+                               font-bold transition-all hover:brightness-125 active:scale-95"
+                    style={{
+                      background: `${accentColor}22`,
+                      color: accentColor,
+                      border: `1px solid ${accentColor}40`,
+                    }}
+                  >
+                    <BookOpen className="h-3 w-3" />
+                    O&apos;qish
+                  </button>
+                ) : (
+                  <span className="shrink-0 w-[62px] text-center text-xs"
+                    style={{ color: 'rgba(255,255,255,0.12)' }}>—</span>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
     </div>
   )
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Asosiy sahifa
+// ─────────────────────────────────────────────────────────────────────────────
 export default function DarsliklarPage() {
-  const [selected, setSelected] = useState<number | null>(null)
-  const [books, setBooks] = useState<GradeBook[]>(BOOKS)
-  const [pdfViewer, setPdfViewer] = useState<{ url: string; title: string } | null>(null)
+  const [selectedId, setSelectedId]   = useState<number | null>(null)
+  const [books, setBooks]             = useState<GradeBook[]>([])
+  const [loading, setLoading]         = useState(true)
+  // har bir kitob uchun alohida kategoriya holati: { [bookId]: LabCategory }
+  const [catMap, setCatMap]           = useState<Record<number, LabCategory>>({})
 
   useEffect(() => {
     darsliklarApi.list()
       .then((r) => {
-        const data = r.data?.results ?? r.data
+        const data: GradeBook[] = r.data?.results ?? r.data
         if (Array.isArray(data) && data.length > 0) {
-          setBooks(prev => prev.map(staticBook => {
-            const apiBook = data.find((d: GradeBook & { pdf_file?: string }) => d.grade === staticBook.grade)
-            if (!apiBook) return staticBook
-            return {
-              ...staticBook,
-              ...apiBook,
-              color: staticBook.color,
-              dark: staticBook.dark,
-            }
-          }))
+          setBooks(data.map(d => ({ ...d, dark: makeDark(d.color) })))
         }
       })
       .catch(() => {})
+      .finally(() => setLoading(false))
   }, [])
 
-  const handleRead = (book: GradeBook) => {
-    const url = pdfUrl((book as GradeBook & { pdf_file?: string }).pdf_file)
-    if (url) window.open(url, '_blank', 'noopener,noreferrer')
-    else setPdfViewer({ url: '', title: book.subject })
+  const book = books.find(b => b.id === selectedId) ?? null
+  const activeCat: LabCategory = selectedId ? (catMap[selectedId] ?? 'all') : 'all'
+
+  // Kategoriya tanlanganda kitobni ham ochish
+  const handleCatSelect = (bookId: number, cat: LabCategory) => {
+    setSelectedId(bookId)
+    setCatMap(prev => ({ ...prev, [bookId]: cat }))
   }
 
-  const book = selected ? books.find(b => b.grade === selected) : null
+  // Kitob kartochkasiga bosilganda: faqat selectedId toggle qilinadi, kategoriya saqlanib qoladi
+  const handleBookClick = (bookId: number) => {
+    setSelectedId(prev => prev === bookId ? null : bookId)
+  }
 
   return (
     <div className="min-h-screen px-4 pt-10 pb-16">
@@ -391,57 +588,104 @@ export default function DarsliklarPage() {
 
         {/* ── Kitoblar ── */}
         <div className="slide-up-d1 mb-4">
-          <div className="flex items-end justify-center gap-7 flex-wrap px-4 pb-5">
-            {books.map(b => (
-              <BookCard
-                key={b.grade}
-                book={b}
-                active={selected === b.grade}
-                onClick={() => setSelected(selected === b.grade ? null : b.grade)}
-              />
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex items-center justify-center py-16">
+              <div className="w-8 h-8 rounded-full border-2 border-sky-400/30 border-t-sky-400 animate-spin" />
+            </div>
+          ) : (
+            <div className="flex items-end justify-center gap-7 flex-wrap px-4 pb-5">
+              {books.map(b => (
+                <BookCard
+                  key={b.id}
+                  book={b}
+                  active={selectedId === b.id}
+                  onClick={() => handleBookClick(b.id)}
+                />
+              ))}
+            </div>
+          )}
 
           {/* Shelf taxtasi */}
-          <div
-            className="mx-auto rounded-2xl"
-            style={{
-              maxWidth: '840px',
-              height: '8px',
-              background: 'linear-gradient(180deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.02) 100%)',
-              border: '1px solid rgba(255,255,255,0.07)',
-              boxShadow: '0 6px 28px rgba(0,0,0,0.7)',
-            }}
-          />
-          <div
-            className="mx-auto mt-[3px]"
-            style={{
-              maxWidth: '820px',
-              height: '3px',
-              background: 'linear-gradient(180deg, rgba(0,0,0,0.5), transparent)',
-              borderRadius: '0 0 8px 8px',
-            }}
-          />
+          {!loading && (
+            <>
+              <div className="mx-auto" style={{ maxWidth: '1060px' }}>
+                <div style={{
+                  height: 10,
+                  borderRadius: '0 0 6px 6px',
+                  background: 'linear-gradient(180deg, rgba(124,58,237,0.18) 0%, rgba(255,255,255,0.06) 40%, rgba(255,255,255,0.02) 100%)',
+                  border: '1px solid rgba(124,58,237,0.2)',
+                  borderTop: 'none',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(124,58,237,0.1), 0 0 20px rgba(124,58,237,0.08)',
+                }} />
+                <div style={{
+                  height: 4,
+                  marginTop: 2,
+                  borderRadius: '0 0 8px 8px',
+                  background: 'linear-gradient(180deg, rgba(0,0,0,0.55), transparent)',
+                }} />
+              </div>
+            </>
+          )}
         </div>
 
+        {/* ── Filtr qatori ── */}
+        {!loading && books.length > 0 && (
+          <div className="mt-6 mb-2">
+            {/* Sarlavha */}
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, transparent, rgba(124,58,237,0.25))' }} />
+              <div className="flex items-center gap-2 px-4 py-1.5 rounded-full"
+                style={{
+                  background: 'rgba(124,58,237,0.08)',
+                  border: '1px solid rgba(124,58,237,0.2)',
+                  boxShadow: '0 0 16px rgba(124,58,237,0.08)',
+                }}>
+                <FlaskConical className="h-3.5 w-3.5" style={{ color: 'rgba(167,139,250,0.7)' }} />
+                <span className="text-[11px] font-bold uppercase tracking-widest"
+                  style={{ color: 'rgba(167,139,250,0.6)' }}>
+                  Sinf bo&apos;yicha amaliy ishlar filtri
+                </span>
+              </div>
+              <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, rgba(124,58,237,0.25), transparent)' }} />
+            </div>
+
+            {/* Tugmalar qatori */}
+            <div className="flex justify-center gap-4 flex-wrap px-4">
+              {books.map(b => (
+                <GradeFilterInput
+                  key={b.id}
+                  book={b}
+                  activeCat={catMap[b.id] ?? 'all'}
+                  onSelect={handleCatSelect}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Tanlanmagan holat */}
-        {!selected && (
-          <p
-            className="text-center text-sm mt-8 flex items-center justify-center gap-2"
-            style={{ color: 'rgba(255,255,255,0.22)' }}
-          >
-            Kitobni bosib tanlang
-            <ChevronRight className="h-3.5 w-3.5 opacity-60" />
-          </p>
+        {!selectedId && !loading && (
+          <div className="flex items-center justify-center gap-3 mt-8">
+            <div style={{ flex: 1, maxWidth: 120, height: 1, background: 'linear-gradient(90deg, transparent, rgba(124,58,237,0.2))' }} />
+            <p className="flex items-center gap-2 px-4 py-2 rounded-full text-sm"
+              style={{
+                color: 'rgba(167,139,250,0.45)',
+                background: 'rgba(124,58,237,0.06)',
+                border: '1px solid rgba(124,58,237,0.12)',
+              }}>
+              Kitobni yoki pastdagi filtrni bosing
+              <ChevronRight className="h-3.5 w-3.5" />
+            </p>
+            <div style={{ flex: 1, maxWidth: 120, height: 1, background: 'linear-gradient(90deg, rgba(124,58,237,0.2), transparent)' }} />
+          </div>
         )}
 
         {/* ── Tanlangan kitob detail ── */}
         {book && (
           <div
-            key={book.grade}
+            key={`${book.id}-${activeCat}`}
             className="slide-up mt-8 rounded-3xl overflow-hidden"
             style={{
-              // To'q opak fon — fon rasmi ko'rinmaydi
               background: `linear-gradient(135deg, ${book.dark}f8 0%, rgba(4,5,18,0.97) 100%)`,
               border: `1px solid ${book.color}28`,
               backdropFilter: 'blur(20px)',
@@ -449,12 +693,38 @@ export default function DarsliklarPage() {
             }}
           >
             {/* Yuqori rang chizig'i */}
-            <div
-              className="h-[2px] w-full"
-              style={{
-                background: `linear-gradient(90deg, transparent 0%, ${book.color}70 25%, ${book.color}cc 50%, ${book.color}70 75%, transparent 100%)`,
-              }}
-            />
+            <div className="relative">
+              <div
+                className="h-[2px] w-full"
+                style={{
+                  background: `linear-gradient(90deg, transparent 0%, ${book.color}70 25%, ${book.color}cc 50%, ${book.color}70 75%, transparent 100%)`,
+                }}
+              />
+              {/* Yopish tugmasi */}
+              <button
+                onClick={() => setSelectedId(null)}
+                className="absolute right-4 top-3 flex items-center justify-center
+                           w-8 h-8 rounded-xl transition-all duration-200
+                           hover:scale-110 active:scale-95"
+                style={{
+                  background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  color: 'rgba(200,215,235,0.5)',
+                }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLButtonElement).style.background = `${book.color}22`
+                  ;(e.currentTarget as HTMLButtonElement).style.borderColor = `${book.color}55`
+                  ;(e.currentTarget as HTMLButtonElement).style.color = book.color
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.06)'
+                  ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.1)'
+                  ;(e.currentTarget as HTMLButtonElement).style.color = 'rgba(200,215,235,0.5)'
+                }}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
 
             <div className="p-8 flex flex-col sm:flex-row gap-8">
               {/* Chap ustun */}
@@ -471,33 +741,66 @@ export default function DarsliklarPage() {
                 </div>
                 <div
                   className="rounded-full px-5 py-1.5 text-sm font-black"
-                  style={{
-                    background: `${book.color}18`,
-                    color: book.color,
-                    border: `1px solid ${book.color}40`,
-                  }}
+                  style={{ background: `${book.color}18`, color: book.color, border: `1px solid ${book.color}40` }}
                 >
                   {book.grade}-sinf
                 </div>
-                {/* Formulalar chap ustunda */}
+
+                {/* Lab kategoriyalari statistikasi */}
                 <div className="flex flex-col gap-2 w-full">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-center mb-0.5"
                     style={{ color: `${book.color}55` }}>
-                    Formulalar
+                    Amaliy ishlar
                   </p>
-                  {book.formulas.map(f => (
-                    <div
-                      key={f}
-                      className="rounded-xl px-3 py-2 text-center font-mono text-sm font-bold"
-                      style={{
-                        background: `${book.color}0e`,
-                        color: book.color,
-                        border: `1px solid ${book.color}25`,
-                      }}
-                    >
-                      {f}
-                    </div>
-                  ))}
+                  {LAB_CATEGORIES.filter(c => c.id !== 'all').map(cat => {
+                    const cnt = (book.mavzular ?? []).filter(m => filterMavzu(m.mavzu, cat.id)).length
+                    return (
+                      <button
+                        key={cat.id}
+                        onClick={() => handleCatSelect(book.id, cat.id === activeCat ? 'all' : cat.id)}
+                        className="flex items-center gap-2 rounded-xl px-3 py-2 transition-all duration-150"
+                        style={{
+                          background: activeCat === cat.id ? `${cat.color}20` : `${book.color}0e`,
+                          border: `1px solid ${activeCat === cat.id ? cat.color + '50' : book.color + '25'}`,
+                          opacity: cnt === 0 ? 0.3 : 1,
+                          cursor: cnt === 0 ? 'not-allowed' : 'pointer',
+                        }}
+                        disabled={cnt === 0}
+                      >
+                        <span style={{ color: cat.color }}>{cat.icon}</span>
+                        <span className="flex-1 text-[11px] font-medium text-left"
+                          style={{ color: activeCat === cat.id ? cat.color : 'rgba(180,200,230,0.65)' }}>
+                          {cat.label}
+                        </span>
+                        <span
+                          className="text-[11px] font-black tabular-nums"
+                          style={{ color: activeCat === cat.id ? cat.color : `${book.color}70` }}
+                        >
+                          {cnt}
+                        </span>
+                      </button>
+                    )
+                  })}
+
+                  {/* Hammasi tugmasi */}
+                  <button
+                    onClick={() => handleCatSelect(book.id, 'all')}
+                    className="flex items-center gap-2 rounded-xl px-3 py-2 mt-1 transition-all duration-150"
+                    style={{
+                      background: activeCat === 'all' ? `${book.color}20` : 'rgba(255,255,255,0.03)',
+                      border: `1px solid ${activeCat === 'all' ? book.color + '50' : 'rgba(255,255,255,0.08)'}`,
+                    }}
+                  >
+                    <LayoutList className="h-3.5 w-3.5" style={{ color: activeCat === 'all' ? book.color : '#94a3b8' }} />
+                    <span className="flex-1 text-[11px] font-medium text-left"
+                      style={{ color: activeCat === 'all' ? book.color : 'rgba(180,200,230,0.5)' }}>
+                      Hammasi
+                    </span>
+                    <span className="text-[11px] font-black tabular-nums"
+                      style={{ color: activeCat === 'all' ? book.color : `${book.color}70` }}>
+                      {book.mavzular?.length ?? 0}
+                    </span>
+                  </button>
                 </div>
               </div>
 
@@ -511,57 +814,23 @@ export default function DarsliklarPage() {
                 {/* Statistika */}
                 <div className="grid grid-cols-3 gap-3 mb-7">
                   {[
-                    { label: 'Boblar',     value: `${book.chapters}` },
-                    { label: 'Sahifalar',  value: `${book.pages}+` },
-                    { label: 'Formulalar', value: `${book.formulas.length * 15}+` },
+                    { label: 'Boblar',    value: `${book.chapters}` },
+                    { label: 'Sahifalar', value: `${book.pages}` },
+                    { label: 'Mavzular',  value: `${book.mavzular?.length ?? 0}` },
                   ].map(({ label, value }) => (
-                    <div
-                      key={label}
-                      className="rounded-2xl p-4 text-center"
-                      style={{
-                        background: `${book.color}0c`,
-                        border: `1px solid ${book.color}1e`,
-                      }}
-                    >
+                    <div key={label} className="rounded-2xl p-4 text-center"
+                      style={{ background: `${book.color}0c`, border: `1px solid ${book.color}1e` }}>
                       <p className="text-2xl font-black mb-0.5" style={{ color: book.color }}>{value}</p>
                       <p className="text-xs font-medium" style={{ color: 'rgba(160,180,210,0.5)' }}>{label}</p>
                     </div>
                   ))}
                 </div>
 
-                {/* Ajratgich */}
                 <div className="mb-6" style={{ height: '1px', background: 'rgba(255,255,255,0.06)' }} />
 
-                {/* Mavzu qidiruv */}
+                {/* Mavzu ro'yxati */}
                 <div className="mb-7">
-                  <MavzuList book={book} />
-                </div>
-
-                {/* CTA */}
-                <div className="flex gap-3 flex-wrap items-center">
-                  <button
-                    onClick={() => handleRead(book)}
-                    className="flex items-center gap-2.5 rounded-2xl px-6 py-3 font-bold text-white text-sm transition-all hover:brightness-110 active:scale-95"
-                    style={{
-                      background: `linear-gradient(135deg, ${book.color}dd, ${book.color}88)`,
-                      boxShadow: `0 4px 20px ${book.color}35`,
-                      color: '#050510',
-                    }}
-                  >
-                    <BookOpen className="h-4 w-4" />
-                    Onlayn o&apos;qish
-                  </button>
-                  {(book as GradeBook & { pdf_file?: string }).pdf_file ? (
-                    <span className="text-xs font-medium flex items-center gap-1.5" style={{ color: '#34d399' }}>
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      PDF mavjud
-                    </span>
-                  ) : (
-                    <span className="text-xs font-medium flex items-center gap-1.5" style={{ color: 'rgba(255,255,255,0.2)' }}>
-                      <span className="h-1.5 w-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.15)' }} />
-                      PDF yuklanmagan
-                    </span>
-                  )}
+                  <MavzuList book={book} category={activeCat} />
                 </div>
               </div>
             </div>
@@ -569,38 +838,6 @@ export default function DarsliklarPage() {
         )}
 
       </div>
-
-      {/* ── PDF modal ── */}
-      {pdfViewer && (
-        <div
-          className="fixed inset-0 z-[200] flex items-center justify-center"
-          style={{ background: 'rgba(0,0,0,0.80)', backdropFilter: 'blur(14px)' }}
-          onClick={() => setPdfViewer(null)}
-        >
-          <div
-            className="rounded-3xl p-10 text-center max-w-sm mx-4"
-            style={{
-              background: 'rgba(5,6,22,0.99)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              boxShadow: '0 32px 80px rgba(0,0,0,0.7)',
-            }}
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="text-5xl mb-5">📄</div>
-            <h3 className="font-black text-white text-xl mb-2">{pdfViewer.title}</h3>
-            <p className="text-sm mb-7 leading-relaxed" style={{ color: 'rgba(160,180,210,0.6)' }}>
-              Bu darslik uchun PDF hali yuklanmagan.<br />Admin paneldan PDF qo&apos;shing.
-            </p>
-            <button
-              onClick={() => setPdfViewer(null)}
-              className="rounded-2xl px-8 py-3 font-bold text-white text-sm transition-all hover:brightness-110 active:scale-95"
-              style={{ background: 'linear-gradient(135deg,#0891b2,#2563eb)', boxShadow: '0 4px 20px rgba(8,145,178,0.3)' }}
-            >
-              Yopish
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

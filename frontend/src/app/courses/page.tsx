@@ -193,8 +193,8 @@ function CourseCard({ s, idx }: { s: typeof SECTIONS[number]; idx: number }) {
           : 'rgba(8,8,25,0.75)',
         border: `1px solid ${hov ? s.color + '55' : 'rgba(255,255,255,0.07)'}`,
         boxShadow: hov
-          ? `0 0 40px ${s.color}22, 0 0 80px ${s.color}0a, 0 12px 40px rgba(0,0,0,0.6)`
-          : '0 4px 20px rgba(0,0,0,0.35)',
+          ? `0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px ${s.color}55, 0 0 50px ${s.color}30, inset 0 1px 0 rgba(255,255,255,0.1)`
+          : `0 8px 28px rgba(0,0,0,0.4), 0 0 0 1px ${s.color}18, 0 0 20px ${s.color}10`,
         transform: hov ? 'translateY(-6px) scale(1.015)' : 'translateY(0) scale(1)',
         transition: 'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',
         backdropFilter: 'blur(16px)',
@@ -268,7 +268,7 @@ function CourseCard({ s, idx }: { s: typeof SECTIONS[number]; idx: number }) {
 
         {/* CTA button */}
         <Link
-          href={`/courses/${s.id}`}
+          href={`/bo-lim/${s.id}`}
           className="mt-auto flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition-all duration-200"
           style={{
             background: hov
@@ -304,7 +304,7 @@ export default function CoursesPage() {
     <div
       className="min-h-screen px-4 py-10"
       style={{
-        background: 'radial-gradient(ellipse 80% 60% at 50% -10%, rgba(139,92,246,0.08) 0%, transparent 60%), #020208',
+        background: 'radial-gradient(ellipse 80% 50% at 50% -5%, rgba(124,58,237,0.12) 0%, transparent 65%)',
       }}
     >
       <div className="mx-auto max-w-7xl">
@@ -312,13 +312,13 @@ export default function CoursesPage() {
         {/* Header */}
         <div className="mb-10 slide-up text-center">
           <div className="flex items-center justify-center gap-2 mb-3">
-            <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
-            <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest">O&apos;quv dasturi</span>
-            <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
+            <span className="h-1.5 w-1.5 rounded-full bg-purple-400 animate-pulse" />
+            <span className="text-xs font-bold text-purple-400 uppercase tracking-widest" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>O&apos;quv dasturi</span>
+            <span className="h-1.5 w-1.5 rounded-full bg-purple-400 animate-pulse" />
           </div>
-          <h1 className="text-4xl sm:text-5xl font-black text-white mb-3">
+          <h1 className="text-4xl sm:text-5xl font-black text-white mb-3" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
             Fizika{' '}
-            <span style={{ background: 'linear-gradient(90deg,#00D4FF,#8B5CF6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            <span style={{ background: 'linear-gradient(90deg,#a78bfa,#7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               Bo&apos;limlari
             </span>
           </h1>
@@ -330,16 +330,16 @@ export default function CoursesPage() {
         {/* Stats */}
         <div className="mb-8 grid grid-cols-3 gap-4 slide-up-d1">
           {[
-            { label: "Jami bo'lim",    value: SECTIONS.length,                                   color: '#00D4FF' },
+            { label: "Jami bo'lim",    value: SECTIONS.length,                                   color: '#a78bfa' },
             { label: '3D animatsiya',  value: SECTIONS.filter((s) => s.has3D).length,            color: '#8B5CF6' },
             { label: 'Jami darslar',   value: SECTIONS.reduce((a, s) => a + s.lessons, 0),       color: '#34D399' },
           ].map(({ label, value, color }) => (
             <div
               key={label}
               className="rounded-2xl p-4 text-center"
-              style={{ background: 'rgba(8,8,25,0.7)', border: `1px solid ${color}20`, backdropFilter: 'blur(12px)' }}
+              style={{ background: 'rgba(124,58,237,0.06)', border: `1px solid ${color}30`, backdropFilter: 'blur(16px)', boxShadow: `0 8px 32px rgba(0,0,0,0.35), 0 0 0 1px ${color}18, 0 0 24px ${color}14` }}
             >
-              <div className="text-2xl font-black" style={{ color }}>{value}</div>
+              <div className="text-2xl font-black" style={{ color, fontFamily: "'Space Grotesk', sans-serif" }}>{value}</div>
               <div className="text-xs text-gray-500 mt-0.5">{label}</div>
             </div>
           ))}
@@ -353,7 +353,7 @@ export default function CoursesPage() {
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Bo'lim qidirish..."
               className="w-full rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 transition-all outline-none"
-              style={{ background: 'rgba(8,8,25,0.8)', border: '1px solid rgba(255,255,255,0.1)' }}
+              style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.2)' }}
             />
           </div>
           {(['', 'easy', 'medium', 'hard'] as const).map((d) => (
@@ -362,9 +362,10 @@ export default function CoursesPage() {
               onClick={() => setDiffFilter(d)}
               className="rounded-xl px-4 py-2.5 text-sm font-medium transition-all"
               style={{
-                background: diffFilter === d ? 'rgba(0,212,255,0.15)' : 'rgba(8,8,25,0.7)',
-                border: `1px solid ${diffFilter === d ? 'rgba(0,212,255,0.4)' : 'rgba(255,255,255,0.08)'}`,
-                color: diffFilter === d ? '#00D4FF' : '#6b7280',
+                background: diffFilter === d ? 'rgba(124,58,237,0.18)' : 'rgba(124,58,237,0.05)',
+                border: `1px solid ${diffFilter === d ? 'rgba(168,85,247,0.45)' : 'rgba(124,58,237,0.15)'}`,
+                color: diffFilter === d ? '#c084fc' : '#6b7280',
+                boxShadow: diffFilter === d ? '0 0 12px rgba(124,58,237,0.2)' : 'none',
               }}
             >
               {d === '' ? 'Barchasi' : DIFF[d]?.label}

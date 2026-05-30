@@ -15,6 +15,9 @@ class QuizListView(generics.ListAPIView):
         course_id = self.request.query_params.get('course')
         if course_id:
             qs = qs.filter(course_id=course_id)
+        grade = self.request.query_params.get('grade')
+        if grade:
+            qs = qs.filter(grade=grade)
         return qs
 
 

@@ -213,7 +213,7 @@ export default function LandingPage() {
   const [slide, setSlide] = useState(0)
   const lock = useRef(false)
 
-  useEffect(() => { const t = setTimeout(() => setVis(true), 150); return () => clearTimeout(t) }, [])
+  useEffect(() => { setVis(true) }, [])
 
   /* ── Restore from localStorage ── */
   useEffect(() => {
@@ -271,7 +271,7 @@ export default function LandingPage() {
       {/* ── Global CSS ── */}
       <style>{`
         *{box-sizing:border-box;margin:0;padding:0}
-        body{background:#050510}
+        body{background:#0c0c1e}
         @keyframes pendulumSwing{0%,100%{transform:rotate(-32deg)}50%{transform:rotate(32deg)}}
         @keyframes pendulumShadow{0%,100%{transform:translateX(-80%) scaleX(0.5);opacity:0.4}50%{transform:translateX(80%) scaleX(1.2);opacity:0.15}}
         @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
@@ -280,7 +280,7 @@ export default function LandingPage() {
         @keyframes ringCW{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
         @keyframes ringCCW{from{transform:rotate(0deg)}to{transform:rotate(-360deg)}}
         @keyframes blink{50%{opacity:0}}
-        @keyframes pulsate{0%,100%{box-shadow:0 0 24px rgba(124,58,237,.5),0 0 48px rgba(59,130,246,.2)}50%{box-shadow:0 0 50px rgba(124,58,237,.9),0 0 90px rgba(59,130,246,.5)}}
+        @keyframes pulsate{0%,100%{box-shadow:0 0 24px rgba(124,58,237,.6),0 0 48px rgba(109,40,217,.3)}50%{box-shadow:0 0 56px rgba(124,58,237,1),0 0 100px rgba(109,40,217,.6)}}
         @keyframes chatIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
         @keyframes typing{0%,80%,100%{transform:scale(1);opacity:.4}40%{transform:scale(1.4);opacity:1}}
         @keyframes zoomBg{0%,100%{transform:scale(1) translateX(0)}33%{transform:scale(1.06) translateX(-12px)}66%{transform:scale(1.09) translateX(12px)}}
@@ -379,19 +379,28 @@ export default function LandingPage() {
       `}</style>
 
       {/* ── NAV ──────────────────────────────────────────────────── */}
-      <nav className="lg-nav" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200, padding: '14px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <nav className="lg-nav" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200, padding: '14px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(124,58,237,0.22)', boxShadow: '0 4px 30px rgba(0,0,0,0.5), 0 0 60px rgba(124,58,237,0.06), inset 0 -1px 0 rgba(124,58,237,0.15)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 34, height: 34, borderRadius: 9, background: 'linear-gradient(135deg,#7c3aed,#3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, boxShadow: '0 0 14px rgba(124,58,237,.5)' }}>⚛️</div>
-          <span style={{ color: 'white', fontWeight: 900, fontSize: 19, letterSpacing: -0.5 }}>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg,#7c3aed,#5b21b6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, boxShadow: '0 0 16px rgba(124,58,237,.55)' }}>⚛️</div>
+          <span style={{ color: 'white', fontWeight: 900, fontSize: 19, letterSpacing: -0.5, fontFamily: "'Space Grotesk', sans-serif" }}>
             Fizika <span className="gt-nav">AI</span>
           </span>
         </div>
-        {/* Atom login tugmasi */}
-        <Link href="/login" style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }} className="atom-hover">
-          <div style={{ cursor: 'pointer', position: 'relative' }}>
-            <AtomSVG size={68} label="Kirish" />
-          </div>
-        </Link>
+        {/* Login tugmalari */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Link href="/login" style={{ textDecoration: 'none', color: 'rgba(255,255,255,0.6)', fontSize: 14, fontWeight: 600, padding: '8px 16px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', transition: 'all 0.2s' }}>
+            Kirish
+          </Link>
+          <Link href="/register" style={{ textDecoration: 'none', color: 'white', fontSize: 14, fontWeight: 700, padding: '8px 18px', borderRadius: 10, background: 'linear-gradient(135deg,#7c3aed,#5b21b6)', boxShadow: '0 0 16px rgba(124,58,237,0.4)', transition: 'all 0.2s' }}>
+            Ro&apos;yxat
+          </Link>
+          {/* Atom login icon */}
+          <Link href="/login" style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }} className="atom-hover">
+            <div style={{ cursor: 'pointer', position: 'relative' }}>
+              <AtomSVG size={52} label="→" />
+            </div>
+          </Link>
+        </div>
       </nav>
 
       {/* ── HORIZONTAL SLIDES ────────────────────────────────────── */}
@@ -414,7 +423,7 @@ export default function LandingPage() {
         }}>
 
           {/* ── SLIDE 0: Hero ── */}
-          <div style={{ width: '100vw', flexShrink: 0, height: '100%', overflowY: 'auto', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(145deg,#050510 0%,#0a0f1e 45%,#120829 75%,#0a0f1e 100%)' }}>
+          <div style={{ width: '100vw', flexShrink: 0, height: '100%', overflowY: 'auto', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(145deg,#0c0c1e 0%,#141230 45%,#1a1540 75%,#0e0c2a 100%)' }}>
             <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', padding: '40px 24px', maxWidth: 900, width: '100%' }}>
               <div style={{ opacity: vis ? 1 : 0, transform: vis ? 'none' : 'translateY(-20px)', transition: 'all 1s ease 0s', marginBottom: 28 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 16 }}>
@@ -448,7 +457,7 @@ export default function LandingPage() {
           </div>
 
           {/* ── SLIDE 1: 3D Simulatsiyalar ── */}
-          <div style={{ width: '100vw', flexShrink: 0, height: '100%', overflowY: 'auto', background: 'linear-gradient(180deg,#0a0f1e 0%,#0d1428 100%)', display: 'flex', alignItems: 'center' }}>
+          <div style={{ width: '100vw', flexShrink: 0, height: '100%', overflowY: 'auto', background: 'linear-gradient(180deg,#0d0b24 0%,#13112e 100%)', display: 'flex', alignItems: 'center' }}>
             <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '40px 40px' }}>
               <div className="two-col" style={{ display: 'flex', alignItems: 'center', gap: 72 }}>
                 <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
@@ -475,7 +484,7 @@ export default function LandingPage() {
           </div>
 
           {/* ── SLIDE 2: AI Tutor ── */}
-          <div style={{ width: '100vw', flexShrink: 0, height: '100%', overflowY: 'auto', background: 'linear-gradient(180deg,#0d1428 0%,#120829 100%)', display: 'flex', alignItems: 'center' }}>
+          <div style={{ width: '100vw', flexShrink: 0, height: '100%', overflowY: 'auto', background: 'linear-gradient(180deg,#13112e 0%,#1c1645 100%)', display: 'flex', alignItems: 'center' }}>
             <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '40px 40px' }}>
               <div className="two-col-rev" style={{ display: 'flex', alignItems: 'center', gap: 72, flexDirection: 'row-reverse' }}>
                 <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
@@ -502,7 +511,7 @@ export default function LandingPage() {
           </div>
 
           {/* ── SLIDE 3: Kurslar ── */}
-          <div style={{ width: '100vw', flexShrink: 0, height: '100%', overflowY: 'auto', background: 'rgba(5,5,16,0.95)', display: 'flex', alignItems: 'center' }}>
+          <div style={{ width: '100vw', flexShrink: 0, height: '100%', overflowY: 'auto', background: 'linear-gradient(145deg,#0e0c25 0%,#151238 100%)', display: 'flex', alignItems: 'center' }}>
             <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '40px 40px' }}>
               <div style={{ textAlign: 'center', marginBottom: 32 }}>
                 <Badge text="KURSLAR" color="#f59e0b" />
@@ -531,7 +540,7 @@ export default function LandingPage() {
           </div>
 
           {/* ── SLIDE 4: Testlar ── */}
-          <div style={{ width: '100vw', flexShrink: 0, height: '100%', overflowY: 'auto', background: 'linear-gradient(180deg,#080d20 0%,#0a0f1e 100%)', display: 'flex', alignItems: 'center' }}>
+          <div style={{ width: '100vw', flexShrink: 0, height: '100%', overflowY: 'auto', background: 'linear-gradient(180deg,#10102a 0%,#0e0c25 100%)', display: 'flex', alignItems: 'center' }}>
             <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '40px 40px' }}>
               <div className="two-col" style={{ display: 'flex', alignItems: 'center', gap: 72 }}>
                 <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}><QuizAnim /></div>
@@ -553,7 +562,7 @@ export default function LandingPage() {
           </div>
 
           {/* ── SLIDE 5: Kashfiyotlar ── */}
-          <div style={{ width: '100vw', flexShrink: 0, height: '100%', overflowY: 'auto', background: 'linear-gradient(180deg,#0a0f1e 0%,#12082a 100%)', display: 'flex', alignItems: 'center' }}>
+          <div style={{ width: '100vw', flexShrink: 0, height: '100%', overflowY: 'auto', background: 'linear-gradient(180deg,#13112e 0%,#1e1848 100%)', display: 'flex', alignItems: 'center' }}>
             <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', padding: '40px 40px' }}>
               <div style={{ textAlign: 'center', marginBottom: 36 }}>
                 <Badge text="KASHFIYOTLAR" color="#a78bfa" />
@@ -579,7 +588,7 @@ export default function LandingPage() {
           </div>
 
           {/* ── SLIDE 6: Statistika + CTA ── */}
-          <div style={{ width: '100vw', flexShrink: 0, height: '100%', overflowY: 'auto', background: 'linear-gradient(180deg,#050510 0%,#0a0820 100%)', display: 'flex', alignItems: 'center' }}>
+          <div style={{ width: '100vw', flexShrink: 0, height: '100%', overflowY: 'auto', background: 'linear-gradient(180deg,#0c0c1e 0%,#0d0535 100%)', display: 'flex', alignItems: 'center' }}>
             <div style={{ maxWidth: 1000, margin: '0 auto', width: '100%', padding: '40px 24px' }}>
               <h2 style={{ textAlign: 'center', fontSize: 'clamp(22px,3.5vw,38px)', fontWeight: 900, color: 'white', marginBottom: 36 }}>Raqamlarda platforma</h2>
               <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 24, marginBottom: 56 }}>
@@ -622,25 +631,26 @@ export default function LandingPage() {
       </div>{/* /slide-container */}
 
       {/* ── Nav dots ── */}
-      <div style={{ position: 'fixed', bottom: 18, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 8, zIndex: 300, alignItems: 'center' }}>
+      <div style={{ position: 'fixed', bottom: 22, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 8, zIndex: 300, alignItems: 'center', padding: '8px 16px', borderRadius: 30, background: 'rgba(6,2,26,0.6)', backdropFilter: 'blur(16px)', border: '1px solid rgba(124,58,237,0.2)' }}>
         {Array.from({ length: TOTAL }).map((_, i) => (
           <button key={i} onClick={() => goTo(i)} style={{
-            width: slide === i ? 28 : 8, height: 8, borderRadius: 4,
-            background: slide === i ? '#f59e0b' : 'rgba(255,255,255,0.22)',
+            width: slide === i ? 28 : 7, height: 7, borderRadius: 4,
+            background: slide === i ? 'linear-gradient(90deg,#a78bfa,#7c3aed)' : 'rgba(255,255,255,0.18)',
             border: 'none', cursor: 'pointer', padding: 0,
             transition: 'all 0.3s ease', outline: 'none',
+            boxShadow: slide === i ? '0 0 10px rgba(124,58,237,0.6)' : 'none',
           }} />
         ))}
       </div>
 
       {/* ── Prev arrow ── */}
       {slide > 0 && (
-        <button onClick={() => go(-1)} style={{ position: 'fixed', left: 14, top: '50%', transform: 'translateY(-50%)', width: 44, height: 44, borderRadius: '50%', background: 'rgba(10,10,30,0.72)', border: '1px solid rgba(255,255,255,0.14)', color: 'white', fontSize: 26, cursor: 'pointer', zIndex: 300, backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>‹</button>
+        <button onClick={() => go(-1)} style={{ position: 'fixed', left: 16, top: '50%', transform: 'translateY(-50%)', width: 46, height: 46, borderRadius: '50%', background: 'rgba(6,2,26,0.75)', border: '1px solid rgba(124,58,237,0.3)', color: 'rgba(167,139,250,0.9)', fontSize: 22, cursor: 'pointer', zIndex: 300, backdropFilter: 'blur(16px)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', boxShadow: '0 0 16px rgba(124,58,237,0.2)' }}>‹</button>
       )}
 
       {/* ── Next arrow ── */}
       {slide < TOTAL - 1 && (
-        <button onClick={() => go(1)} style={{ position: 'fixed', right: 14, top: '50%', transform: 'translateY(-50%)', width: 44, height: 44, borderRadius: '50%', background: 'rgba(10,10,30,0.72)', border: '1px solid rgba(255,255,255,0.14)', color: 'white', fontSize: 26, cursor: 'pointer', zIndex: 300, backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>›</button>
+        <button onClick={() => go(1)} style={{ position: 'fixed', right: 16, top: '50%', transform: 'translateY(-50%)', width: 46, height: 46, borderRadius: '50%', background: 'rgba(6,2,26,0.75)', border: '1px solid rgba(124,58,237,0.3)', color: 'rgba(167,139,250,0.9)', fontSize: 22, cursor: 'pointer', zIndex: 300, backdropFilter: 'blur(16px)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', boxShadow: '0 0 16px rgba(124,58,237,0.2)' }}>›</button>
       )}
     </>
   )

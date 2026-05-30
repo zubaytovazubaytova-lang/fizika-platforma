@@ -4,10 +4,13 @@ from .base import *
 
 DEBUG = False
 
+_db_url = config('DATABASE_URL', default='sqlite:////data/db.sqlite3')
+_is_sqlite = _db_url.startswith('sqlite')
+
 DATABASES = {
     'default': dj_database_url.config(
-        default=config('DATABASE_URL', default='sqlite:///db.sqlite3'),
-        conn_max_age=600,
+        default=_db_url,
+        conn_max_age=0 if _is_sqlite else 60,
     )
 }
 
@@ -37,3 +40,5 @@ SECURE_HSTS_SECONDS            = 31_536_000   # 1 yil
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD            = True
 SECURE_BROWSER_XSS_FILTER      = True
+
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'

@@ -8,6 +8,7 @@ class Quiz(models.Model):
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='quizzes', null=True, blank=True)
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
+    grade = models.PositiveSmallIntegerField(null=True, blank=True, help_text="Sinf raqami (7, 8, 9, 10, 11)")
     time_limit_minutes = models.PositiveIntegerField(default=0, help_text="0 = cheklovsiz")
     pass_score = models.PositiveSmallIntegerField(default=60, help_text="O'tish uchun minimal ball (%)")
     created_at = models.DateTimeField(auto_now_add=True)
