@@ -1,15 +1,604 @@
 <!DOCTYPE html>
 <html lang="uz">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Fizika AI — Fizikani yangicha his qiling</title>
-    <link rel="preload" as="image" href="/physics-bg.jpg">
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fizika Platforma — 7-sinf Fizika va SOAR GAZ</title>
+
+  <meta property="og:title" content="Fizika Platforma"/>
+  <meta property="og:description" content="7-sinf Fizika darsligi va SOAR GAZ gaz tizimi platformasi"/>
+  <meta property="og:image" content="https://zubaytovazubaytova-lang.github.io/fizika-platforma/soar-gaz/preview.svg"/>
+  <meta property="og:url" content="https://zubaytovazubaytova-lang.github.io/fizika-platforma/"/>
+  <meta property="og:type" content="website"/>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    html { scroll-behavior: smooth; }
+    body { background: #0f172a; color: #e2e8f0; margin: 0; }
+
+    /* ===== NAVIGATION ===== */
+    .nav-tab { cursor: pointer; transition: all .25s; }
+    .nav-tab.active { background: linear-gradient(135deg, #f59e0b, #f97316); color: #0f172a; font-weight: 700; }
+    .nav-tab:not(.active):hover { background: rgba(255,255,255,0.08); }
+
+    /* ===== PAGE SECTIONS ===== */
+    .page-section { display: none; }
+    .page-section.active { display: block; }
+
+    /* ===== BOB HEADERS ===== */
+    .bob-line { height: 2px; flex: 1; border-radius: 1px; }
+
+    /* ===== PDF CARDS ===== */
+    .pdf-card {
+      background: #1e293b;
+      border: 1px solid rgba(100,116,139,0.3);
+      border-radius: 16px;
+      padding: 18px 20px;
+      cursor: pointer;
+      transition: all .25s ease;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .pdf-card:hover {
+      border-color: rgba(245,158,11,0.6);
+      background: #253044;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(0,0,0,0.4);
+    }
+    .pdf-num {
+      width: 42px; height: 42px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 15px;
+      flex-shrink: 0;
+    }
+    .pdf-card .tag {
+      display: inline-block;
+      font-size: 10px; font-weight: 600;
+      padding: 2px 8px; border-radius: 20px;
+      border: 1px solid;
+    }
+
+    /* Search bar */
+    #searchBox {
+      background: #1e293b;
+      border: 1px solid rgba(100,116,139,0.4);
+      border-radius: 12px;
+      padding: 12px 18px 12px 46px;
+      width: 100%; max-width: 500px;
+      color: #e2e8f0; font-size: 15px;
+      outline: none; transition: border-color .2s;
+    }
+    #searchBox:focus { border-color: #f59e0b; }
+    #searchBox::placeholder { color: #64748b; }
+
+    /* Stats badges */
+    .stat-badge {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 13px; font-weight: 500;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+
+    /* HOME CARDS */
+    .home-card {
+      background: #1e293b;
+      border: 1px solid rgba(100,116,139,0.25);
+      border-radius: 20px;
+      padding: 36px 28px;
+      cursor: pointer;
+      transition: all .3s;
+    }
+    .home-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(245,158,11,0.5);
+      box-shadow: 0 12px 36px rgba(0,0,0,0.4);
+    }
+    .home-card .icon-wrap {
+      width: 72px; height: 72px;
+      border-radius: 18px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 30px; margin-bottom: 20px;
+    }
+
+    /* Hide cards when search no match */
+    .bob-group.hidden-group { display: none; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- ===== TOP NAVIGATION ===== -->
+<nav style="position:sticky;top:0;z-index:50;background:rgba(15,23,42,0.95);backdrop-filter:blur(12px);border-bottom:1px solid rgba(100,116,139,0.2);">
+  <div style="max-width:1100px;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:64px;">
+
+    <!-- Logo -->
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:36px;height:36px;background:linear-gradient(135deg,#f59e0b,#f97316);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;">⚛️</div>
+      <span style="font-weight:800;font-size:18px;color:#f8fafc;">Fizika <span style="color:#f59e0b;">Platforma</span></span>
+    </div>
+
+    <!-- Nav Tabs -->
+    <div style="display:flex;gap:4px;background:rgba(255,255,255,0.05);border-radius:12px;padding:4px;">
+      <button onclick="showPage('home')" id="tab-home" class="nav-tab active" style="padding:8px 18px;border-radius:8px;border:none;font-size:14px;color:#0f172a;">
+        <i class="fas fa-home" style="margin-right:6px;"></i>Bosh sahifa
+      </button>
+      <button onclick="showPage('darsliklar')" id="tab-darsliklar" class="nav-tab" style="padding:8px 18px;border-radius:8px;border:none;font-size:14px;color:#94a3b8;">
+        <i class="fas fa-book-open" style="margin-right:6px;"></i>Darsliklar
+      </button>
+    </div>
+
+  </div>
+</nav>
+
+<!-- ===== HOME PAGE ===== -->
+<div id="page-home" class="page-section active">
+  <div style="max-width:900px;margin:0 auto;padding:60px 20px;">
+
+    <!-- Hero -->
+    <div style="text-align:center;margin-bottom:60px;">
+      <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);border-radius:20px;padding:6px 16px;font-size:13px;color:#f59e0b;margin-bottom:20px;">
+        <i class="fas fa-atom"></i> O'zbekiston fizika ta'lim platformasi
+      </div>
+      <h1 style="font-size:clamp(32px,5vw,56px);font-weight:900;color:#f8fafc;line-height:1.15;margin:0 0 16px;">
+        Fizika <span style="color:#f59e0b;">Platformasi</span>
+      </h1>
+      <p style="font-size:18px;color:#94a3b8;max-width:540px;margin:0 auto;">
+        Darsliklar, kalkulyatorlar va amaliy vositalar — barchasi bir joyda
+      </p>
+    </div>
+
+    <!-- Cards -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;">
+
+      <!-- Darsliklar Card -->
+      <div class="home-card" onclick="showPage('darsliklar')">
+        <div class="icon-wrap" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);">📚</div>
+        <h2 style="font-size:22px;font-weight:800;color:#f8fafc;margin:0 0 10px;">Darsliklar</h2>
+        <p style="color:#94a3b8;font-size:15px;margin:0 0 20px;">7-sinf Fizika darsligi — har bir mavzu alohida PDF fayl sifatida</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <span class="stat-badge"><i class="fas fa-file-pdf" style="color:#ef4444;"></i> 64 fayl</span>
+          <span class="stat-badge"><i class="fas fa-file-alt" style="color:#3b82f6;"></i> 192 sahifa</span>
+          <span class="stat-badge"><i class="fas fa-book" style="color:#8b5cf6;"></i> 5 bob</span>
+        </div>
+        <div style="margin-top:20px;">
+          <span style="color:#f59e0b;font-weight:600;font-size:14px;">Ko'rish <i class="fas fa-arrow-right" style="margin-left:4px;"></i></span>
+        </div>
+      </div>
+
+
+      <!-- Fizika AI Card -->
+      <div class="home-card" onclick="window.location.href='fizika-ai.html'" style="border-color:rgba(139,92,246,0.35);position:relative;overflow:hidden;">
+        <div style="position:absolute;top:12px;right:12px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:0.5px;">AI</div>
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at top right,rgba(139,92,246,0.08),transparent 70%);pointer-events:none;"></div>
+        <div class="icon-wrap" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);">🤖</div>
+        <h2 style="font-size:22px;font-weight:800;color:#f8fafc;margin:0 0 10px;">Fizika AI</h2>
+        <p style="color:#94a3b8;font-size:15px;margin:0 0 20px;">Sun'iy intellekt yordamida fizika masalalarini yechish va o'rganish</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <span class="stat-badge"><i class="fas fa-robot" style="color:#a855f7;"></i> AI Tutor</span>
+          <span class="stat-badge"><i class="fas fa-flask" style="color:#06b6d4;"></i> Simulyator</span>
+          <span class="stat-badge"><i class="fas fa-graduation-cap" style="color:#10b981;"></i> Testlar</span>
+        </div>
+        <div style="margin-top:20px;">
+          <span style="color:#a855f7;font-weight:600;font-size:14px;">Ochish <i class="fas fa-arrow-right" style="margin-left:4px;"></i></span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bottom info -->
+    <div style="text-align:center;margin-top:60px;color:#475569;font-size:13px;">
+      <i class="fas fa-atom" style="margin-right:6px;color:#f59e0b;"></i>
+      Fizika Platforma · O'zbekiston Respublikasi · 2025
+    </div>
+  </div>
+</div>
+
+<!-- ===== DARSLIKLAR PAGE ===== -->
+<div id="page-darsliklar" class="page-section">
+  <div style="max-width:1100px;margin:0 auto;padding:40px 20px;">
+
+    <!-- Header -->
+    <div style="text-align:center;margin-bottom:36px;">
+      <h1 style="font-size:clamp(24px,4vw,42px);font-weight:900;color:#f8fafc;margin:0 0 8px;">
+        7-sinf <span style="color:#f59e0b;">Fizika</span> Darsligi
+      </h1>
+      <p style="color:#64748b;font-size:15px;margin:0 0 20px;">Har bir mavzu alohida PDF fayl sifatida</p>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">
+        <span class="stat-badge"><i class="fas fa-file-pdf" style="color:#ef4444;"></i> 64 ta fayl</span>
+        <span class="stat-badge"><i class="fas fa-file-alt" style="color:#3b82f6;"></i> 192 sahifa</span>
+        <span class="stat-badge"><i class="fas fa-hdd" style="color:#10b981;"></i> 78 MB</span>
+        <span class="stat-badge"><i class="fas fa-layer-group" style="color:#8b5cf6;"></i> 5 bob · 62 mavzu</span>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div style="position:relative;display:flex;justify-content:center;margin-bottom:40px;">
+      <i class="fas fa-search" style="position:absolute;left:50%;transform:translateX(-230px);top:50%;transform:translateY(-50%);color:#64748b;font-size:15px;pointer-events:none;margin-left:14px;"></i>
+      <input id="searchBox" type="text" placeholder="Mavzu nomi bo'yicha qidiring..." oninput="filterCards(this.value)"/>
+    </div>
+
+    <!-- ===== KIRISH ===== -->
+    <div class="bob-group" id="bob-kirish">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+        <div class="bob-line" style="background:linear-gradient(to right,transparent,#8b5cf6);"></div>
+        <div style="white-space:nowrap;font-size:13px;font-weight:700;color:#a78bfa;letter-spacing:1.5px;padding:6px 16px;background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.3);border-radius:20px;">📖 KIRISH QISMI</div>
+        <div class="bob-line" style="background:linear-gradient(to right,#8b5cf6,transparent);"></div>
+      </div>
+      <div style="margin-bottom:32px;">
+        <div class="pdf-card" onclick="openPdf('darsliklar/00_Kirish.pdf')" style="background:linear-gradient(135deg,rgba(139,92,246,0.15),rgba(109,40,217,0.1));border-color:rgba(139,92,246,0.4);">
+          <div class="pdf-num" style="background:rgba(139,92,246,0.2);color:#a78bfa;">📖</div>
+          <div style="flex:1;">
+            <div style="font-size:10px;font-weight:600;color:#7c3aed;letter-spacing:1px;margin-bottom:4px;">00 · KIRISH QISMI</div>
+            <div style="font-size:16px;font-weight:700;color:#f1f5f9;margin-bottom:8px;">Muqova · Taqrizchilar · Mundarija · Kirish</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <span class="tag" style="color:#a78bfa;border-color:rgba(139,92,246,0.4);background:rgba(139,92,246,0.1);"><i class="fas fa-file-alt" style="margin-right:3px;"></i>6 sahifa</span>
+              <span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.4);background:rgba(16,185,129,0.1);"><i class="fas fa-hdd" style="margin-right:3px;"></i>1.3 MB</span>
+            </div>
+          </div>
+          <i class="fas fa-external-link-alt" style="color:#64748b;font-size:14px;margin-top:4px;"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== I BOB ===== -->
+    <div class="bob-group" id="bob-1">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+        <div class="bob-line" style="background:linear-gradient(to right,transparent,#3b82f6);"></div>
+        <div style="white-space:nowrap;font-size:13px;font-weight:700;color:#60a5fa;letter-spacing:1.5px;padding:6px 16px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.3);border-radius:20px;">🔵 I BOB — MEXANIK HARAKAT HAQIDA MA'LUMOTLAR</div>
+        <div class="bob-line" style="background:linear-gradient(to right,#3b82f6,transparent);"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-bottom:32px;">
+        <!-- Mavzu 1 -->
+        <div class="pdf-card" onclick="openPdf('darsliklar/01_1-mavzu_Fizika_fani_taraqqiyoti_tarixida_Orta_Osiyo_olimlari.pdf')">
+          <div class="pdf-num" style="background:rgba(59,130,246,0.2);color:#60a5fa;">1</div>
+          <div style="flex:1;">
+            <div style="font-size:10px;font-weight:600;color:#3b82f6;letter-spacing:1px;margin-bottom:4px;">1-MAVZU</div>
+            <div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Fizika fani taraqqiyoti tarixida O'rta Osiyo olimlari</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);"><i class="fas fa-file-alt" style="margin-right:3px;"></i>3 sahifa</span>
+              <span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);"><i class="fas fa-hdd" style="margin-right:3px;"></i>773 KB</span>
+            </div>
+          </div>
+        </div>
+        <!-- Mavzu 2 -->
+        <div class="pdf-card" onclick="openPdf('darsliklar/02_2-mavzu_Ozbekistonda_ilmiy_maktab_yaratgan_fizik_olimlar.pdf')">
+          <div class="pdf-num" style="background:rgba(59,130,246,0.2);color:#60a5fa;">2</div>
+          <div style="flex:1;">
+            <div style="font-size:10px;font-weight:600;color:#3b82f6;letter-spacing:1px;margin-bottom:4px;">2-MAVZU</div>
+            <div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Fizika sohasida O'zbekistonda ilmiy maktab yaratgan fizik olimlar</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);"><i class="fas fa-file-alt" style="margin-right:3px;"></i>3 sahifa</span>
+              <span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);"><i class="fas fa-hdd" style="margin-right:3px;"></i>523 KB</span>
+            </div>
+          </div>
+        </div>
+        <!-- Mavzu 3 -->
+        <div class="pdf-card" onclick="openPdf('darsliklar/03_3-mavzu_Fizik_kattaliklar_Xalqaro_birliklar_sistemasi_SI.pdf')">
+          <div class="pdf-num" style="background:rgba(59,130,246,0.2);color:#60a5fa;">3</div>
+          <div style="flex:1;">
+            <div style="font-size:10px;font-weight:600;color:#3b82f6;letter-spacing:1px;margin-bottom:4px;">3-MAVZU</div>
+            <div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Fizik kattaliklar. Xalqaro birliklar sistemasi (SI)</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);"><i class="fas fa-file-alt" style="margin-right:3px;"></i>4 sahifa</span>
+              <span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);"><i class="fas fa-hdd" style="margin-right:3px;"></i>1.6 MB</span>
+            </div>
+          </div>
+        </div>
+        <!-- Mavzu 4 -->
+        <div class="pdf-card" onclick="openPdf('darsliklar/04_4-mavzu_Fizikada_tadqiqot_metodlari.pdf')">
+          <div class="pdf-num" style="background:rgba(59,130,246,0.2);color:#60a5fa;">4</div>
+          <div style="flex:1;">
+            <div style="font-size:10px;font-weight:600;color:#3b82f6;letter-spacing:1px;margin-bottom:4px;">4-MAVZU</div>
+            <div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Fizikada tadqiqot metodlari</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);"><i class="fas fa-file-alt" style="margin-right:3px;"></i>3 sahifa</span>
+              <span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);"><i class="fas fa-hdd" style="margin-right:3px;"></i>779 KB</span>
+            </div>
+          </div>
+        </div>
+        <!-- Mavzu 5 -->
+        <div class="pdf-card" onclick="openPdf('darsliklar/05_5-mavzu_Skalyar_va_vektor_kattaliklar.pdf')">
+          <div class="pdf-num" style="background:rgba(59,130,246,0.2);color:#60a5fa;">5</div>
+          <div style="flex:1;">
+            <div style="font-size:10px;font-weight:600;color:#3b82f6;letter-spacing:1px;margin-bottom:4px;">5-MAVZU</div>
+            <div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Skalyar va vektor kattaliklar</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);"><i class="fas fa-file-alt" style="margin-right:3px;"></i>2 sahifa</span>
+              <span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);"><i class="fas fa-hdd" style="margin-right:3px;"></i>557 KB</span>
+            </div>
+          </div>
+        </div>
+        <!-- Mavzu 6 -->
+        <div class="pdf-card" onclick="openPdf('darsliklar/06_6-mavzu_Masalalar_yechish.pdf')">
+          <div class="pdf-num" style="background:rgba(245,158,11,0.2);color:#fbbf24;">✏️</div>
+          <div style="flex:1;">
+            <div style="font-size:10px;font-weight:600;color:#f59e0b;letter-spacing:1px;margin-bottom:4px;">6-MAVZU</div>
+            <div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Masalalar yechish</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);"><i class="fas fa-file-alt" style="margin-right:3px;"></i>2 sahifa</span>
+              <span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);"><i class="fas fa-hdd" style="margin-right:3px;"></i>381 KB</span>
+            </div>
+          </div>
+        </div>
+        <!-- Mavzu 7 -->
+        <div class="pdf-card" onclick="openPdf('darsliklar/07_7-mavzu_Mexanik_harakat.pdf')">
+          <div class="pdf-num" style="background:rgba(59,130,246,0.2);color:#60a5fa;">7</div>
+          <div style="flex:1;">
+            <div style="font-size:10px;font-weight:600;color:#3b82f6;letter-spacing:1px;margin-bottom:4px;">7-MAVZU</div>
+            <div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Mexanik harakat</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);"><i class="fas fa-file-alt" style="margin-right:3px;"></i>4 sahifa</span>
+              <span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);"><i class="fas fa-hdd" style="margin-right:3px;"></i>4.7 MB</span>
+            </div>
+          </div>
+        </div>
+        <!-- Mavzu 8 -->
+        <div class="pdf-card" onclick="openPdf('darsliklar/08_8-mavzu_Kinematikaning_asosiy_tushunchalari.pdf')">
+          <div class="pdf-num" style="background:rgba(59,130,246,0.2);color:#60a5fa;">8</div>
+          <div style="flex:1;">
+            <div style="font-size:10px;font-weight:600;color:#3b82f6;letter-spacing:1px;margin-bottom:4px;">8-MAVZU</div>
+            <div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Kinematikaning asosiy tushunchalari</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);"><i class="fas fa-file-alt" style="margin-right:3px;"></i>3 sahifa</span>
+              <span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);"><i class="fas fa-hdd" style="margin-right:3px;"></i>587 KB</span>
+            </div>
+          </div>
+        </div>
+        <!-- Mavzu 9 -->
+        <div class="pdf-card" onclick="openPdf('darsliklar/09_9-mavzu_Togri_chiziqli_tekis_harakatda_tezlik_va_yol.pdf')">
+          <div class="pdf-num" style="background:rgba(59,130,246,0.2);color:#60a5fa;">9</div>
+          <div style="flex:1;">
+            <div style="font-size:10px;font-weight:600;color:#3b82f6;letter-spacing:1px;margin-bottom:4px;">9-MAVZU</div>
+            <div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">To'g'ri chiziqli tekis harakatda tezlik va yo'l</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);"><i class="fas fa-file-alt" style="margin-right:3px;"></i>5 sahifa</span>
+              <span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);"><i class="fas fa-hdd" style="margin-right:3px;"></i>2.5 MB</span>
+            </div>
+          </div>
+        </div>
+        <!-- Mavzu 10 -->
+        <div class="pdf-card" onclick="openPdf('darsliklar/10_10-mavzu_Masalalar_yechish.pdf')">
+          <div class="pdf-num" style="background:rgba(245,158,11,0.2);color:#fbbf24;">✏️</div>
+          <div style="flex:1;">
+            <div style="font-size:10px;font-weight:600;color:#f59e0b;letter-spacing:1px;margin-bottom:4px;">10-MAVZU</div>
+            <div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Masalalar yechish</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);"><i class="fas fa-file-alt" style="margin-right:3px;"></i>3 sahifa</span>
+              <span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);"><i class="fas fa-hdd" style="margin-right:3px;"></i>1.0 MB</span>
+            </div>
+          </div>
+        </div>
+        <!-- Mavzu 11 -->
+        <div class="pdf-card" onclick="openPdf('darsliklar/11_11-mavzu_Notekis_harakat.pdf')">
+          <div class="pdf-num" style="background:rgba(59,130,246,0.2);color:#60a5fa;">11</div>
+          <div style="flex:1;">
+            <div style="font-size:10px;font-weight:600;color:#3b82f6;letter-spacing:1px;margin-bottom:4px;">11-MAVZU</div>
+            <div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Notekis harakat</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);"><i class="fas fa-file-alt" style="margin-right:3px;"></i>3 sahifa</span>
+              <span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);"><i class="fas fa-hdd" style="margin-right:3px;"></i>966 KB</span>
+            </div>
+          </div>
+        </div>
+        <!-- Mavzu 12 — LAB -->
+        <div class="pdf-card" onclick="openPdf('darsliklar/12_12-mavzu_Laboratoriya_ishi_Notekis_harakat_ortacha_tezlik.pdf')">
+          <div class="pdf-num" style="background:rgba(139,92,246,0.2);color:#a78bfa;">🔬</div>
+          <div style="flex:1;">
+            <div style="font-size:10px;font-weight:600;color:#8b5cf6;letter-spacing:1px;margin-bottom:4px;">12-MAVZU · LABORATORIYA ISHI</div>
+            <div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Notekis harakatning o'rtacha tezligini aniqlash</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);"><i class="fas fa-file-alt" style="margin-right:3px;"></i>1 sahifa</span>
+              <span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);"><i class="fas fa-hdd" style="margin-right:3px;"></i>819 KB</span>
+              <span class="tag" style="color:#a78bfa;border-color:rgba(139,92,246,0.4);background:rgba(139,92,246,0.1);">🔬 Lab</span>
+            </div>
+          </div>
+        </div>
+        <!-- Mavzu 13 -->
+        <div class="pdf-card" onclick="openPdf('darsliklar/13_13-mavzu_Masalalar_yechish.pdf')">
+          <div class="pdf-num" style="background:rgba(245,158,11,0.2);color:#fbbf24;">✏️</div>
+          <div style="flex:1;">
+            <div style="font-size:10px;font-weight:600;color:#f59e0b;letter-spacing:1px;margin-bottom:4px;">13-MAVZU</div>
+            <div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Masalalar yechish</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);"><i class="fas fa-file-alt" style="margin-right:3px;"></i>2 sahifa</span>
+              <span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);"><i class="fas fa-hdd" style="margin-right:3px;"></i>445 KB</span>
+            </div>
+          </div>
+        </div>
+        <!-- Mavzu 14 -->
+        <div class="pdf-card" onclick="openPdf('darsliklar/14_14-mavzu_Aylana_boylab_harakat.pdf')">
+          <div class="pdf-num" style="background:rgba(59,130,246,0.2);color:#60a5fa;">14</div>
+          <div style="flex:1;">
+            <div style="font-size:10px;font-weight:600;color:#3b82f6;letter-spacing:1px;margin-bottom:4px;">14-MAVZU</div>
+            <div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Aylana bo'ylab harakat</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);"><i class="fas fa-file-alt" style="margin-right:3px;"></i>3 sahifa</span>
+              <span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);"><i class="fas fa-hdd" style="margin-right:3px;"></i>641 KB</span>
+            </div>
+          </div>
+        </div>
+        <!-- Mavzu 15 -->
+        <div class="pdf-card" onclick="openPdf('darsliklar/15_15-mavzu_Masalalar_yechish_va_I_bob_topshiriqlari.pdf')">
+          <div class="pdf-num" style="background:rgba(245,158,11,0.2);color:#fbbf24;">✏️</div>
+          <div style="flex:1;">
+            <div style="font-size:10px;font-weight:600;color:#f59e0b;letter-spacing:1px;margin-bottom:4px;">15-MAVZU + I BOB TOPSHIRIQLARI</div>
+            <div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Masalalar yechish + Bob topshiriqlari va testlar</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);"><i class="fas fa-file-alt" style="margin-right:3px;"></i>4 sahifa</span>
+              <span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);"><i class="fas fa-hdd" style="margin-right:3px;"></i>696 KB</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== II BOB ===== -->
+    <div class="bob-group" id="bob-2">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+        <div class="bob-line" style="background:linear-gradient(to right,transparent,#10b981);"></div>
+        <div style="white-space:nowrap;font-size:13px;font-weight:700;color:#34d399;letter-spacing:1.5px;padding:6px 16px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);border-radius:20px;">🟢 II BOB — TABIATDA KUCH. ENERGIYA</div>
+        <div class="bob-line" style="background:linear-gradient(to right,#10b981,transparent);"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-bottom:32px;" id="bob2-cards">
+        <div class="pdf-card" onclick="openPdf('darsliklar/16_16-mavzu_Massa_va_uning_birliklari.pdf')"><div class="pdf-num" style="background:rgba(16,185,129,0.2);color:#34d399;">16</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#10b981;letter-spacing:1px;margin-bottom:4px;">16-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Massa va uning birliklari</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">3 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">608 KB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/17_17-mavzu_Zichlik_va_uning_birliklari.pdf')"><div class="pdf-num" style="background:rgba(16,185,129,0.2);color:#34d399;">17</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#10b981;letter-spacing:1px;margin-bottom:4px;">17-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Zichlik va uning birliklari</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">4 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">6.0 MB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/18_18-mavzu_Laboratoriya_ishi_Jismlar_zichligini_aniqlash.pdf')"><div class="pdf-num" style="background:rgba(139,92,246,0.2);color:#a78bfa;">🔬</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#8b5cf6;letter-spacing:1px;margin-bottom:4px;">18-MAVZU · LABORATORIYA ISHI</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Turli shakldagi jismlarning zichligini aniqlash</div><div style="display:flex;gap:6px;flex-wrap:wrap;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">3 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">1.2 MB</span><span class="tag" style="color:#a78bfa;border-color:rgba(139,92,246,0.4);background:rgba(139,92,246,0.1);">🔬 Lab</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/19_19-mavzu_Jismlarning_ozaro_tasiri_Kuch.pdf')"><div class="pdf-num" style="background:rgba(16,185,129,0.2);color:#34d399;">19</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#10b981;letter-spacing:1px;margin-bottom:4px;">19-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Jismlarning o'zaro ta'siri. Kuch</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">4 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">1.4 MB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/20_20-mavzu_Bosim_va_uning_birliklari.pdf')"><div class="pdf-num" style="background:rgba(16,185,129,0.2);color:#34d399;">20</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#10b981;letter-spacing:1px;margin-bottom:4px;">20-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Bosim va uning birliklari</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">3 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">782 KB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/21_21-mavzu_Masalalar_yechish.pdf')"><div class="pdf-num" style="background:rgba(245,158,11,0.2);color:#fbbf24;">✏️</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#f59e0b;letter-spacing:1px;margin-bottom:4px;">21-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Masalalar yechish</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">2 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">462 KB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/22_22-mavzu_Suyuqlik_va_gazlarda_bosimning_uzatilishi.pdf')"><div class="pdf-num" style="background:rgba(16,185,129,0.2);color:#34d399;">22</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#10b981;letter-spacing:1px;margin-bottom:4px;">22-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Suyuqlik va gazlarda bosimning uzatilishi</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">3 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">692 KB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/23_23-mavzu_Tinch_holatdagi_suyuqlik_bosimi.pdf')"><div class="pdf-num" style="background:rgba(16,185,129,0.2);color:#34d399;">23</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#10b981;letter-spacing:1px;margin-bottom:4px;">23-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Tinch holatdagi suyuqlik bosimi</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">2 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">521 KB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/24_24-mavzu_Masalalar_yechish.pdf')"><div class="pdf-num" style="background:rgba(245,158,11,0.2);color:#fbbf24;">✏️</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#f59e0b;letter-spacing:1px;margin-bottom:4px;">24-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Masalalar yechish</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">2 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">447 KB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/25_25-mavzu_Atmosfera_bosimi_va_Loyiha_ishi.pdf')"><div class="pdf-num" style="background:rgba(16,185,129,0.2);color:#34d399;">25</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#10b981;letter-spacing:1px;margin-bottom:4px;">25-MAVZU + LOYIHA ISHI</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Atmosfera bosimi + Loyiha ishi</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">5 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">2.4 MB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/26_26-mavzu_Mexanik_ish.pdf')"><div class="pdf-num" style="background:rgba(16,185,129,0.2);color:#34d399;">26</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#10b981;letter-spacing:1px;margin-bottom:4px;">26-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Mexanik ish</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">2 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">499 KB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/27_27-mavzu_Mexanik_energiyaning_turlari.pdf')"><div class="pdf-num" style="background:rgba(16,185,129,0.2);color:#34d399;">27</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#10b981;letter-spacing:1px;margin-bottom:4px;">27-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Mexanik energiyaning turlari</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">3 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">770 KB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/28_28-mavzu_Masalalar_yechish.pdf')"><div class="pdf-num" style="background:rgba(245,158,11,0.2);color:#fbbf24;">✏️</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#f59e0b;letter-spacing:1px;margin-bottom:4px;">28-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Masalalar yechish</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">2 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">611 KB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/29_29-mavzu_Mexanik_quvvat_va_uning_birligi.pdf')"><div class="pdf-num" style="background:rgba(16,185,129,0.2);color:#34d399;">29</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#10b981;letter-spacing:1px;margin-bottom:4px;">29-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Mexanik quvvat va uning birligi</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">3 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">553 KB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/30_30-mavzu_Masalalar_yechish_va_II_bob_topshiriqlari.pdf')"><div class="pdf-num" style="background:rgba(245,158,11,0.2);color:#fbbf24;">✏️</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#f59e0b;letter-spacing:1px;margin-bottom:4px;">30-MAVZU + II BOB TOPSHIRIQLARI</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Masalalar yechish + Bob topshiriqlari</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">3 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">452 KB</span></div></div></div>
+      </div>
+    </div>
+
+    <!-- ===== III BOB ===== -->
+    <div class="bob-group" id="bob-3">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+        <div class="bob-line" style="background:linear-gradient(to right,transparent,#f97316);"></div>
+        <div style="white-space:nowrap;font-size:13px;font-weight:700;color:#fb923c;letter-spacing:1.5px;padding:6px 16px;background:rgba(249,115,22,0.12);border:1px solid rgba(249,115,22,0.3);border-radius:20px;">🟠 III BOB — ISSIQLIK HODISALARI</div>
+        <div class="bob-line" style="background:linear-gradient(to right,#f97316,transparent);"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-bottom:32px;">
+        <div class="pdf-card" onclick="openPdf('darsliklar/31_31-mavzu_Ichki_energiya.pdf')"><div class="pdf-num" style="background:rgba(249,115,22,0.2);color:#fb923c;">31</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#f97316;letter-spacing:1px;margin-bottom:4px;">31-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Ichki energiya</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">4 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">2.5 MB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/32_32-mavzu_Issiqlik_miqdori_va_Loyiha_ishi.pdf')"><div class="pdf-num" style="background:rgba(249,115,22,0.2);color:#fb923c;">32</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#f97316;letter-spacing:1px;margin-bottom:4px;">32-MAVZU + LOYIHA ISHI</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Issiqlik miqdori + Loyiha ishi</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">4 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">932 KB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/33_33-mavzu_Masalalar_yechish.pdf')"><div class="pdf-num" style="background:rgba(245,158,11,0.2);color:#fbbf24;">✏️</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#f59e0b;letter-spacing:1px;margin-bottom:4px;">33-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Masalalar yechish</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">2 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">396 KB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/34_34-mavzu_Amaliy_mashgulot_Issiqlik_almashinuvi.pdf')"><div class="pdf-num" style="background:rgba(20,184,166,0.2);color:#2dd4bf;">🧪</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#14b8a6;letter-spacing:1px;margin-bottom:4px;">34-MAVZU · AMALIY MASHG'ULOT</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Turli temperaturali suvlar aralashtirilganda issiqlik almashinuvi</div><div style="display:flex;gap:6px;flex-wrap:wrap;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">1 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">522 KB</span><span class="tag" style="color:#2dd4bf;border-color:rgba(20,184,166,0.4);background:rgba(20,184,166,0.1);">🧪 Amaliy</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/35_35-mavzu_Yoqilgining_solishtirma_yonish_issiqligi.pdf')"><div class="pdf-num" style="background:rgba(249,115,22,0.2);color:#fb923c;">35</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#f97316;letter-spacing:1px;margin-bottom:4px;">35-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Yoqilg'ining solishtirma yonish issiqligi</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">3 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">757 KB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/36_36-mavzu_Buglanish_Kondensatsiya_Qaynash.pdf')"><div class="pdf-num" style="background:rgba(249,115,22,0.2);color:#fb923c;">36</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#f97316;letter-spacing:1px;margin-bottom:4px;">36-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Bug'lanish va kondensatsiya. Qaynash</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">5 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">1.7 MB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/37_37-mavzu_Qattiq_jismning_erishi_va_qotishi.pdf')"><div class="pdf-num" style="background:rgba(249,115,22,0.2);color:#fb923c;">37</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#f97316;letter-spacing:1px;margin-bottom:4px;">37-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Qattiq jismning erishi va qotishi</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">3 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">422 KB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/38_38-mavzu_Masalalar_yechish_va_III_bob_topshiriqlari.pdf')"><div class="pdf-num" style="background:rgba(245,158,11,0.2);color:#fbbf24;">✏️</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#f59e0b;letter-spacing:1px;margin-bottom:4px;">38-MAVZU + III BOB TOPSHIRIQLARI</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Masalalar yechish + Bob topshiriqlari</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">4 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">617 KB</span></div></div></div>
+      </div>
+    </div>
+
+    <!-- ===== IV BOB ===== -->
+    <div class="bob-group" id="bob-4">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+        <div class="bob-line" style="background:linear-gradient(to right,transparent,#ef4444);"></div>
+        <div style="white-space:nowrap;font-size:13px;font-weight:700;color:#f87171;letter-spacing:1.5px;padding:6px 16px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);border-radius:20px;">🔴 IV BOB — ELEKTR</div>
+        <div class="bob-line" style="background:linear-gradient(to right,#ef4444,transparent);"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-bottom:32px;">
+        <div class="pdf-card" onclick="openPdf('darsliklar/39_39-mavzu_Jismlarning_elektrlanishi.pdf')"><div class="pdf-num" style="background:rgba(239,68,68,0.2);color:#f87171;">39</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#ef4444;letter-spacing:1px;margin-bottom:4px;">39-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Jismlarning elektrlanishi</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">4 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">1.4 MB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/40_40-mavzu_Elektr_zaryad.pdf')"><div class="pdf-num" style="background:rgba(239,68,68,0.2);color:#f87171;">40</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#ef4444;letter-spacing:1px;margin-bottom:4px;">40-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Elektr zaryad</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">4 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">2.0 MB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/41_41-mavzu_Elektroskop_va_elektrometr.pdf')"><div class="pdf-num" style="background:rgba(239,68,68,0.2);color:#f87171;">41</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#ef4444;letter-spacing:1px;margin-bottom:4px;">41-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Elektroskop va elektrometr</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">2 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">612 KB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/42_42-mavzu_Elektr_otkazgichlar_va_dielektriklar.pdf')"><div class="pdf-num" style="background:rgba(239,68,68,0.2);color:#f87171;">42</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#ef4444;letter-spacing:1px;margin-bottom:4px;">42-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Elektr o'tkazgichlar va dielektriklar</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">2 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">612 KB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/43_43-mavzu_Zaryadlangan_jismlarning_ozaro_tasirlashuvi.pdf')"><div class="pdf-num" style="background:rgba(239,68,68,0.2);color:#f87171;">43</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#ef4444;letter-spacing:1px;margin-bottom:4px;">43-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Zaryadlangan jismlarning o'zaro ta'sirlashuvi</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">3 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">858 KB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/44_44-mavzu_Otkazgichlarda_elektr_zaryadlarning_taqsimlanishi.pdf')"><div class="pdf-num" style="background:rgba(239,68,68,0.2);color:#f87171;">44</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#ef4444;letter-spacing:1px;margin-bottom:4px;">44-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">O'tkazgichlarda elektr zaryadlarning taqsimlanishi</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">2 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">530 KB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/45_45-mavzu_Tabiatdagi_elektr_hodisalar.pdf')"><div class="pdf-num" style="background:rgba(239,68,68,0.2);color:#f87171;">45</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#ef4444;letter-spacing:1px;margin-bottom:4px;">45-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Tabiatdagi elektr hodisalar</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">3 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">918 KB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/46_46-mavzu_Elektr_toki.pdf')"><div class="pdf-num" style="background:rgba(239,68,68,0.2);color:#f87171;">46</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#ef4444;letter-spacing:1px;margin-bottom:4px;">46-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Elektr toki</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">3 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">827 KB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/47_47-mavzu_Tok_manbalari.pdf')"><div class="pdf-num" style="background:rgba(239,68,68,0.2);color:#f87171;">47</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#ef4444;letter-spacing:1px;margin-bottom:4px;">47-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Tok manbalari</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">4 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">3.3 MB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/48_48-mavzu_Elektr_kuchlanish_va_uni_olchash.pdf')"><div class="pdf-num" style="background:rgba(239,68,68,0.2);color:#f87171;">48</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#ef4444;letter-spacing:1px;margin-bottom:4px;">48-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Elektr kuchlanish va uni o'lchash</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">4 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">1.2 MB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/49_49-mavzu_Tok_kuchi.pdf')"><div class="pdf-num" style="background:rgba(239,68,68,0.2);color:#f87171;">49</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#ef4444;letter-spacing:1px;margin-bottom:4px;">49-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Tok kuchi</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">3 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">820 KB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/50_50-mavzu_Masalalar_yechish.pdf')"><div class="pdf-num" style="background:rgba(245,158,11,0.2);color:#fbbf24;">✏️</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#f59e0b;letter-spacing:1px;margin-bottom:4px;">50-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Masalalar yechish</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">2 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">462 KB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/51_51-mavzu_Laboratoriya_ishi_Tok_kuchi_va_kuchlanish.pdf')"><div class="pdf-num" style="background:rgba(139,92,246,0.2);color:#a78bfa;">🔬</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#8b5cf6;letter-spacing:1px;margin-bottom:4px;">51-MAVZU · LABORATORIYA ISHI</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Tok kuchi va kuchlanishni o'lchash</div><div style="display:flex;gap:6px;flex-wrap:wrap;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">1 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">418 KB</span><span class="tag" style="color:#a78bfa;border-color:rgba(139,92,246,0.4);background:rgba(139,92,246,0.1);">🔬 Lab</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/52_52-mavzu_Elektr_qarshilik.pdf')"><div class="pdf-num" style="background:rgba(239,68,68,0.2);color:#f87171;">52</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#ef4444;letter-spacing:1px;margin-bottom:4px;">52-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Elektr qarshilik</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">4 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">1.4 MB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/53_53-mavzu_Rezistorlar_Reostatlar.pdf')"><div class="pdf-num" style="background:rgba(239,68,68,0.2);color:#f87171;">53</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#ef4444;letter-spacing:1px;margin-bottom:4px;">53-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Rezistorlar. Reostatlar</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">3 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">1.0 MB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/54_54-mavzu_Zanjirning_bir_qismi_uchun_Om_qonuni.pdf')"><div class="pdf-num" style="background:rgba(239,68,68,0.2);color:#f87171;">54</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#ef4444;letter-spacing:1px;margin-bottom:4px;">54-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Zanjirning bir qismi uchun Om qonuni</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">3 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">697 KB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/55_55-mavzu_Masalalar_yechish.pdf')"><div class="pdf-num" style="background:rgba(245,158,11,0.2);color:#fbbf24;">✏️</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#f59e0b;letter-spacing:1px;margin-bottom:4px;">55-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Masalalar yechish</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">2 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">446 KB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/56_56-mavzu_Amaliy_mashgulot_Reostat_yordamida_tok_rostlash.pdf')"><div class="pdf-num" style="background:rgba(20,184,166,0.2);color:#2dd4bf;">🧪</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#14b8a6;letter-spacing:1px;margin-bottom:4px;">56-MAVZU · AMALIY MASHG'ULOT</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Reostat yordamida tok kuchini rostlash</div><div style="display:flex;gap:6px;flex-wrap:wrap;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">1 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">390 KB</span><span class="tag" style="color:#2dd4bf;border-color:rgba(20,184,166,0.4);background:rgba(20,184,166,0.1);">🧪 Amaliy</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/57_57-mavzu_Laboratoriya_ishi_va_IV_bob_topshiriqlari.pdf')"><div class="pdf-num" style="background:rgba(139,92,246,0.2);color:#a78bfa;">🔬</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#8b5cf6;letter-spacing:1px;margin-bottom:4px;">57-MAVZU · LAB + IV BOB TOPSHIRIQLARI</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Om qonunini o'rganish + Bob topshiriqlari</div><div style="display:flex;gap:6px;flex-wrap:wrap;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">3 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">462 KB</span><span class="tag" style="color:#a78bfa;border-color:rgba(139,92,246,0.4);background:rgba(139,92,246,0.1);">🔬 Lab</span></div></div></div>
+      </div>
+    </div>
+
+    <!-- ===== V BOB ===== -->
+    <div class="bob-group" id="bob-5">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+        <div class="bob-line" style="background:linear-gradient(to right,transparent,#38bdf8);"></div>
+        <div style="white-space:nowrap;font-size:13px;font-weight:700;color:#7dd3fc;letter-spacing:1.5px;padding:6px 16px;background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.3);border-radius:20px;">🔵 V BOB — OPTIKA</div>
+        <div class="bob-line" style="background:linear-gradient(to right,#38bdf8,transparent);"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-bottom:32px;">
+        <div class="pdf-card" onclick="openPdf('darsliklar/58_58-mavzu_Yoruglikning_togri_chiziq_boylab_tarqalishi.pdf')"><div class="pdf-num" style="background:rgba(56,189,248,0.2);color:#7dd3fc;">58</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#38bdf8;letter-spacing:1px;margin-bottom:4px;">58-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Yorug'likning to'g'ri chiziq bo'ylab tarqalishi</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">3 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">952 KB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/59_59-mavzu_Quyosh_va_Oy_tutilishi.pdf')"><div class="pdf-num" style="background:rgba(56,189,248,0.2);color:#7dd3fc;">59</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#38bdf8;letter-spacing:1px;margin-bottom:4px;">59-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Quyosh va Oy tutilishi</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">3 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">631 KB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/60_60-mavzu_Yoruglikning_qaytishi_va_sinishi.pdf')"><div class="pdf-num" style="background:rgba(56,189,248,0.2);color:#7dd3fc;">60</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#38bdf8;letter-spacing:1px;margin-bottom:4px;">60-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Yorug'likning qaytishi va sinishi</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">3 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">538 KB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/61_61-mavzu_Linza.pdf')"><div class="pdf-num" style="background:rgba(56,189,248,0.2);color:#7dd3fc;">61</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#38bdf8;letter-spacing:1px;margin-bottom:4px;">61-MAVZU</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Linza</div><div style="display:flex;gap:6px;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">2 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">403 KB</span></div></div></div>
+        <div class="pdf-card" onclick="openPdf('darsliklar/62_62-mavzu_Amaliy_mashgulot_va_V_bob_topshiriqlari.pdf')"><div class="pdf-num" style="background:rgba(20,184,166,0.2);color:#2dd4bf;">🧪</div><div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#14b8a6;letter-spacing:1px;margin-bottom:4px;">62-MAVZU · AMALIY + V BOB TOPSHIRIQLARI</div><div style="font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:8px;">Yassi ko'zguda qaytish + Bob topshiriqlari</div><div style="display:flex;gap:6px;flex-wrap:wrap;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">3 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">412 KB</span><span class="tag" style="color:#2dd4bf;border-color:rgba(20,184,166,0.4);background:rgba(20,184,166,0.1);">🧪 Amaliy</span></div></div></div>
+      </div>
+    </div>
+
+    <!-- ===== OXIRGI ===== -->
+    <div class="bob-group" id="bob-oxirgi">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+        <div class="bob-line" style="background:linear-gradient(to right,transparent,#64748b);"></div>
+        <div style="white-space:nowrap;font-size:13px;font-weight:700;color:#94a3b8;letter-spacing:1.5px;padding:6px 16px;background:rgba(100,116,139,0.12);border:1px solid rgba(100,116,139,0.3);border-radius:20px;">📎 OXIRGI QISM</div>
+        <div class="bob-line" style="background:linear-gradient(to right,#64748b,transparent);"></div>
+      </div>
+      <div style="margin-bottom:40px;">
+        <div class="pdf-card" onclick="openPdf('darsliklar/63_Mashqlar_javoblari_va_Adabiyotlar.pdf')" style="border-color:rgba(100,116,139,0.4);">
+          <div class="pdf-num" style="background:rgba(100,116,139,0.2);color:#94a3b8;">📎</div>
+          <div style="flex:1;"><div style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:1px;margin-bottom:4px;">63 · OXIRGI QISM</div><div style="font-size:16px;font-weight:700;color:#f1f5f9;margin-bottom:8px;">Mashqlar javoblari + Foydalanilgan adabiyotlar</div><div style="display:flex;gap:8px;flex-wrap:wrap;"><span class="tag" style="color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.08);">4 sahifa</span><span class="tag" style="color:#10b981;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);">240 KB</span></div></div>
+          <i class="fas fa-external-link-alt" style="color:#64748b;font-size:14px;margin-top:4px;"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align:center;padding:20px 0 40px;color:#334155;font-size:13px;border-top:1px solid rgba(100,116,139,0.15);">
+      7-sinf Fizika darsligi · O'zbekiston Respublikasi · 2022 yil nashr · 192 sahifa
+    </div>
+  </div>
+</div>
+
+<script>
+  // Tab switching
+  function showPage(page) {
+    document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => {
+      t.classList.remove('active');
+      t.style.color = '#94a3b8';
+    });
+    document.getElementById('page-' + page).classList.add('active');
+    const tab = document.getElementById('tab-' + page);
+    tab.classList.add('active');
+    tab.style.color = '#0f172a';
+    window.scrollTo(0, 0);
+  }
+
+
+  // Open PDF
+  function openPdf(path) {
+    window.open(path, '_blank');
+  }
+
+  // Search / filter
+  function filterCards(query) {
+    const q = query.toLowerCase().trim();
+    const groups = document.querySelectorAll('.bob-group');
+    groups.forEach(group => {
+      const cards = group.querySelectorAll('.pdf-card');
+      let visibleCount = 0;
+      cards.forEach(card => {
+        const text = card.innerText.toLowerCase();
+        if (!q || text.includes(q)) {
+          card.style.display = 'flex';
+          visibleCount++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+      group.style.display = visibleCount === 0 ? 'none' : 'block';
+    });
+  }
+</script>
+
+</body>
 </html>
