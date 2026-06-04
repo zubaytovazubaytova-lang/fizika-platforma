@@ -16,6 +16,8 @@ CORS_ALLOWED_ORIGINS = config(
     cast=Csv(),
 )
 
-# Dev da batafsil xato sahifasi
-if DEBUG:
-    INSTALLED_APPS += ['django.contrib.admindocs']
+# Admin panelga doimiy kirish (local dev uchun)
+SESSION_COOKIE_AGE            = 60 * 60 * 24 * 365   # 1 yil
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_SAVE_EVERY_REQUEST    = True
+

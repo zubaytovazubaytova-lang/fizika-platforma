@@ -527,8 +527,8 @@ export default function DarsliklarPage() {
   const [selectedId, setSelectedId]   = useState<number | null>(null)
   const [books, setBooks]             = useState<GradeBook[]>([])
   const [loading, setLoading]         = useState(true)
-  // har bir kitob uchun alohida kategoriya holati: { [bookId]: LabCategory }
   const [catMap, setCatMap]           = useState<Record<number, LabCategory>>({})
+  const detailRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     darsliklarApi.list()
@@ -549,11 +549,16 @@ export default function DarsliklarPage() {
   const handleCatSelect = (bookId: number, cat: LabCategory) => {
     setSelectedId(bookId)
     setCatMap(prev => ({ ...prev, [bookId]: cat }))
+    setTimeout(() => detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80)
   }
 
   // Kitob kartochkasiga bosilganda: faqat selectedId toggle qilinadi, kategoriya saqlanib qoladi
   const handleBookClick = (bookId: number) => {
+    const isOpening = selectedId !== bookId
     setSelectedId(prev => prev === bookId ? null : bookId)
+    if (isOpening) {
+      setTimeout(() => detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80)
+    }
   }
 
   return (
@@ -680,9 +685,11 @@ export default function DarsliklarPage() {
           </div>
         )}
 
+
         {/* ── Tanlangan kitob detail ── */}
         {book && (
           <div
+            ref={detailRef}
             key={`${book.id}-${activeCat}`}
             className="slide-up mt-8 rounded-3xl overflow-hidden"
             style={{

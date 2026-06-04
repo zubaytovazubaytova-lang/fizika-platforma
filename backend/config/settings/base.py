@@ -12,6 +12,7 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv(
 
 # ── Ilovalar ──────────────────────────────────────────────────────────────────
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -96,6 +97,94 @@ MEDIA_URL   = '/media/'
 MEDIA_ROOT  = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ── Jazzmin Admin UI ──────────────────────────────────────────────────────────
+JAZZMIN_SETTINGS = {
+    "site_title": "Fizika Platform",
+    "site_header": "Fizika Platform Admin",
+    "site_brand": "Fizika AI",
+    "site_logo": None,
+    "login_logo": None,
+    "site_icon": None,
+    "welcome_sign": "Fizika Platform boshqaruv paneliga xush kelibsiz",
+    "copyright": "Fizika Platform © 2025",
+    "search_model": ["users.CustomUser", "courses.Course"],
+    "user_avatar": None,
+    "topmenu_links": [
+        {"name": "Asosiy sahifa", "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"name": "Sayt", "url": "http://localhost:3000", "new_window": True},
+    ],
+    "usermenu_links": [
+        {"name": "Sayt", "url": "http://localhost:3000", "new_window": True, "icon": "fas fa-globe"},
+    ],
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    "hide_apps": [],
+    "hide_models": [],
+    "order_with_respect_to": [
+        "users", "courses", "tests", "ai_tutor",
+        "darsliklar", "kashfiyotlar", "simulatsiyalar", "referenslar",
+    ],
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "auth.user": "fas fa-user",
+        "auth.Group": "fas fa-users",
+        "users.CustomUser": "fas fa-user-graduate",
+        "courses.Course": "fas fa-book-open",
+        "courses.Lesson": "fas fa-chalkboard-teacher",
+        "tests.Quiz": "fas fa-tasks",
+        "ai_tutor.Conversation": "fas fa-robot",
+        "darsliklar.Darslik": "fas fa-book",
+        "kashfiyotlar.Kashfiyot": "fas fa-flask",
+        "simulatsiyalar.Simulatsiya": "fas fa-atom",
+        "referenslar.Formula": "fas fa-square-root-alt",
+    },
+    "default_icon_parents": "fas fa-chevron-circle-right",
+    "default_icon_children": "fas fa-circle",
+    "related_modal_active": True,
+    "custom_css": None,
+    "custom_js": None,
+    "use_google_fonts_cdn": False,
+    "show_ui_builder": False,
+    "changeform_format": "horizontal_tabs",
+    "changeform_format_overrides": {
+        "auth.user": "collapsible",
+        "auth.group": "vertical_tabs",
+    },
+    "language_chooser": False,
+}
+
+JAZZMIN_UI_TWEAKS = {
+    "navbar_small_text": False,
+    "footer_small_text": False,
+    "body_small_text": False,
+    "brand_small_text": False,
+    "brand_colour": "navbar-dark",
+    "accent": "accent-primary",
+    "navbar": "navbar-dark",
+    "no_navbar_border": True,
+    "navbar_fixed": True,
+    "layout_boxed": False,
+    "footer_fixed": False,
+    "sidebar_fixed": True,
+    "sidebar": "sidebar-dark-primary",
+    "sidebar_nav_small_text": False,
+    "sidebar_disable_expand": False,
+    "sidebar_nav_child_indent": True,
+    "sidebar_nav_compact_style": False,
+    "sidebar_nav_legacy_style": False,
+    "sidebar_nav_flat_style": False,
+    "theme": "darkly",
+    "dark_mode_theme": "darkly",
+    "button_classes": {
+        "primary": "btn-primary",
+        "secondary": "btn-secondary",
+        "info": "btn-info",
+        "warning": "btn-warning",
+        "danger": "btn-danger",
+        "success": "btn-success",
+    },
+}
 
 # ── REST Framework ────────────────────────────────────────────────────────────
 REST_FRAMEWORK = {

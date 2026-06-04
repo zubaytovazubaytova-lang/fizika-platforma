@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>7-sinf Fizika — Mavzular bo'yicha PDF</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background:#0f172a; color:#e2e8f0; min-height:100vh; }
+
+    header {
+      background: linear-gradient(135deg, #1e3a8a, #1e40af);
+      border-bottom: 3px solid #f59e0b;
+      padding: 28px 20px;
+      text-align: center;
+    }
+    header h1 { font-size: 2rem; font-weight: 900; color: #fff; }
+    header h1 span { color: #fbbf24; }
+    header p { color: #93c5fd; margin-top: 6px; font-size: 0.95rem; }
+    .badge-row { display:flex; justify-content:center; gap:12px; margin-top:14px; flex-wrap:wrap; }
+    .badge { background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:99px; padding:4px 14px; font-size:0.8rem; color:#e2e8f0; }
+
+    .search-bar { max-width:600px; margin:24px auto; padding:0 16px; }
+    .search-bar input {
+      width:100%; padding:12px 18px; border-radius:12px;
+      border:2px solid #334155; background:#1e293b; color:#fff;
+      font-size:0.95rem; outline:none; transition:.2s;
+    }
+    .search-bar input:focus { border-color:#3b82f6; }
+    .search-bar input::placeholder { color:#64748b; }
+
+    .container { max-width:1100px; margin:0 auto; padding:0 16px 40px; }
+
+    .bob-title {
+      display: flex; align-items: center; gap: 12px;
+      margin: 28px 0 14px;
+      font-size: 1rem; font-weight: 700;
+      color: #fbbf24; text-transform: uppercase; letter-spacing: .05em;
+    }
+    .bob-title::before, .bob-title::after {
+      content:''; flex:1; height:1px; background:linear-gradient(90deg,#f59e0b,transparent);
+    }
+    .bob-title::after { background:linear-gradient(90deg,transparent,#f59e0b); }
+
+    .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:12px; }
+
+    .card {
+      background:#1e293b; border:1px solid #334155;
+      border-radius:14px; padding:16px;
+      display:flex; align-items:center; gap:14px;
+      cursor:pointer; transition:all .2s;
+      text-decoration:none; color:inherit;
+    }
+    .card:hover { border-color:#3b82f6; background:#273549; transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,.3); }
+
+    .card-icon {
+      width:46px; height:46px; border-radius:10px; flex-shrink:0;
+      display:flex; align-items:center; justify-content:center;
+      font-size:1.4rem; font-weight:900;
+    }
+    .icon-kirish  { background:linear-gradient(135deg,#7c3aed,#6d28d9); }
+    .icon-bob1    { background:linear-gradient(135deg,#1d4ed8,#2563eb); }
+    .icon-bob2    { background:linear-gradient(135deg,#065f46,#059669); }
+    .icon-bob3    { background:linear-gradient(135deg,#92400e,#d97706); }
+    .icon-bob4    { background:linear-gradient(135deg,#7f1d1d,#dc2626); }
+    .icon-bob5    { background:linear-gradient(135deg,#1e3a5f,#0ea5e9); }
+    .icon-oxir    { background:linear-gradient(135deg,#374151,#6b7280); }
+    .icon-lab     { background:linear-gradient(135deg,#4c1d95,#7c3aed); }
+    .icon-amaliy  { background:linear-gradient(135deg,#064e3b,#10b981); }
+    .icon-masala  { background:linear-gradient(135deg,#1e3a8a,#6366f1); }
+
+    .card-info { flex:1; min-width:0; }
+    .card-num  { font-size:0.72rem; color:#64748b; font-weight:600; text-transform:uppercase; letter-spacing:.05em; }
+    .card-name { font-size:0.88rem; font-weight:600; color:#e2e8f0; margin-top:2px; line-height:1.4; }
+    .card-meta { display:flex; gap:8px; margin-top:6px; flex-wrap:wrap; }
+    .tag { font-size:0.7rem; padding:2px 8px; border-radius:99px; font-weight:500; }
+    .tag-pages { background:#172554; color:#93c5fd; border:1px solid #1e3a8a; }
+    .tag-size  { background:#14532d; color:#86efac; border:1px solid #166534; }
+    .tag-lab   { background:#2e1065; color:#c4b5fd; border:1px solid #4c1d95; }
+    .tag-amaliy{ background:#064e3b; color:#6ee7b7; border:1px solid #065f46; }
+
+    .kirish-card {
+      background: linear-gradient(135deg, #1e1b4b, #312e81);
+      border-color: #7c3aed;
+      grid-column: 1 / -1;
+    }
+    .kirish-card:hover { border-color:#a78bfa; }
+    .kirish-card .card-name { font-size:1rem; }
+
+    .no-result { text-align:center; padding:40px; color:#475569; font-size:1rem; display:none; }
+
+    footer { text-align:center; padding:20px; color:#334155; font-size:0.8rem; border-top:1px solid #1e293b; margin-top:20px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>7-sinf <span>Fizika</span> Darsligi</h1>
+  <p>Har bir mavzu alohida PDF fayl sifatida</p>
+  <div class="badge-row">
+    <span class="badge">📚 64 ta fayl</span>
+    <span class="badge">📄 192 sahifa</span>
+    <span class="badge">💾 78 MB</span>
+    <span class="badge">⚗️ 5 bob · 62 mavzu</span>
+  </div>
+</header>
+
+<div class="search-bar">
+  <input type="text" id="searchInput" placeholder="🔍 Mavzu nomi bo'yicha qidiring..." oninput="search()"/>
+</div>
+
+<div class="container" id="mainContent">
+
+  <!-- KIRISH -->
+  <div class="bob-title">📖 Kirish qismi</div>
+  <div class="grid">
+    <a class="card kirish-card" href="00_Kirish.pdf" target="_blank" data-name="Kirish muqova mundarija kirish">
+      <div class="card-icon icon-kirish">📗</div>
+      <div class="card-info">
+        <div class="card-num">00 · Kirish qismi</div>
+        <div class="card-name">Muqova · Taqrizchilar · Mundarija · Kirish</div>
+        <div class="card-meta">
+          <span class="tag tag-pages">📄 6 sahifa</span>
+          <span class="tag tag-size">💾 1.3 MB</span>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <!-- I BOB -->
+  <div class="bob-title">🔵 I bob — Mexanik harakat haqida ma'lumotlar</div>
+  <div class="grid" id="bob1">
+    <a class="card" href="01_1-mavzu_Fizika_fani_taraqqiyoti_tarixida_Orta_Osiyo_olimlari.pdf" target="_blank" data-name="fizika fani taraqqiyoti o'rta osiyo olimlar xorazmiy beruniy ulugbek">
+      <div class="card-icon icon-bob1">1</div>
+      <div class="card-info">
+        <div class="card-num">1-mavzu</div>
+        <div class="card-name">Fizika fani taraqqiyoti tarixida O'rta Osiyo olimlarining tutgan o'rni</div>
+        <div class="card-meta"><span class="tag tag-pages">📄 3 sahifa</span><span class="tag tag-size">💾 773 KB</span></div>
+      </div>
+    </a>
+    <a class="card" href="02_2-mavzu_Ozbekistonda_ilmiy_maktab_yaratgan_fizik_olimlar.pdf" target="_blank" data-name="o'zbekistonda ilmiy maktab fizik olimlar azimov orifov saidov">
+      <div class="card-icon icon-bob1">2</div>
+      <div class="card-info">
+        <div class="card-num">2-mavzu</div>
+        <div class="card-name">Fizika sohasida O'zbekistonda ilmiy maktab yaratgan fizik olimlar</div>
+        <div class="card-meta"><span class="tag tag-pages">📄 3 sahifa</span><span class="tag tag-size">💾 523 KB</span></div>
+      </div>
+    </a>
+    <a class="card" href="03_3-mavzu_Fizik_kattaliklar_Xalqaro_birliklar_sistemasi_SI.pdf" target="_blank" data-name="fizik kattaliklar xalqaro birliklar sistemasi SI metr kilogramm sekund">
+      <div class="card-icon icon-bob1">3</div>
+      <div class="card-info">
+        <div class="card-num">3-mavzu</div>
+        <div class="card-name">Fizik kattaliklar. Xalqaro birliklar sistemasi (SI)</div>
+        <div class="card-meta"><span class="tag tag-pages">📄 4 sahifa</span><span class="tag tag-size">💾 1.6 MB</span></div>
+      </div>
+    </a>
+    <a class="card" href="04_4-mavzu_Fizikada_tadqiqot_metodlari.pdf" target="_blank" data-name="fizikada tadqiqot metodlari kuzatish tajriba gipoteza qonun">
+      <div class="card-icon icon-bob1">4</div>
+      <div class="card-info">
+        <div class="card-num">4-mavzu</div>
+        <div class="card-name">Fizikada tadqiqot metodlari</div>
+        <div class="card-meta"><span class="tag tag-pages">📄 3 sahifa</span><span class="tag tag-size">💾 779 KB</span></div>
+      </div>
+    </a>
+    <a class="card" href="05_5-mavzu_Skalyar_va_vektor_kattaliklar.pdf" target="_blank" data-name="skalyar vektor kattaliklar yo'nalish son qiymat">
+      <div class="card-icon icon-bob1">5</div>
+      <div class="card-info">
+        <div class="card-num">5-mavzu</div>
+        <div class="card-name">Skalyar va vektor kattaliklar</div>
+        <div class="card-meta"><span class="tag tag-pages">📄 2 sahifa</span><span class="tag tag-size">💾 557 KB</span></div>
+      </div>
+    </a>
+    <a class="card" href="06_6-mavzu_Masalalar_yechish.pdf" target="_blank" data-name="masalalar yechish">
+      <div class="card-icon icon-masala">✏️</div>
+      <div class="card-info">
+        <div class="card-num">6-mavzu</div>
+        <div class="card-name">Masalalar yechish</div>
+        <div class="card-meta"><span class="tag tag-pages">📄 2 sahifa</span><span class="tag tag-size">💾 381 KB</span></div>
+      </div>
+    </a>
+    <a class="card" href="07_7-mavzu_Mexanik_harakat.pdf" target="_blank" data-name="mexanik harakat trayektoriya yo'l ko'chish jism modda nuqta">
+      <div class="card-icon icon-bob1">7</div>
+      <div class="card-info">
+        <div class="card-num">7-mavzu</div>
+        <div class="card-name">Mexanik harakat</div>
+        <div class="card-meta"><span class="tag tag-pages">📄 4 sahifa</span><span class="tag tag-size">💾 4.7 MB</span></div>
+      </div>
+    </a>
+    <a class="card" href="08_8-mavzu_Kinematikaning_asosiy_tushunchalari.pdf" target="_blank" data-name="kinematika asosiy tushunchalar sanoq jism sistema fazo vaqt">
+      <div class="card-icon icon-bob1">8</div>
+      <div class="card-info">
+        <div class="card-num">8-mavzu</div>
+        <div class="card-name">Kinematikaning asosiy tushunchalari</div>
+        <div class="card-meta"><span class="tag tag-pages">📄 3 sahifa</span><span class="tag tag-size">💾 587 KB</span></div>
+      </div>
+    </a>
+    <a class="card" href="09_9-mavzu_Togri_chiziqli_tekis_harakatda_tezlik_va_yol.pdf" target="_blank" data-name="to'g'ri chiziqli tekis harakat tezlik yo'l grafik formula">
+      <div class="card-icon icon-bob1">9</div>
+      <div class="card-info">
+        <div class="card-num">9-mavzu</div>
+        <div class="card-name">To'g'ri chiziqli tekis harakatda tezlik va yo'l</div>
+        <div class="card-meta"><span class="tag tag-pages">📄 5 sahifa</span><span class="tag tag-size">💾 2.5 MB</span></div>
+      </div>
+    </a>
+    <a class="card" href="10_10-mavzu_Masalalar_yechish.pdf" target="_blank" data-name="masalalar yechish tezlik yo'l vaqt">
+      <div class="card-icon icon-masala">✏️</div>
+      <div class="card-info">
+        <div class="card-num">10-mavzu</div>
+        <div class="card-name">Masalalar yechish</div>
+        <div class="card-meta"><span class="tag tag-pages">📄 3 sahifa</span><span class="tag tag-size">💾 1.0 MB</span></div>
+      </div>
+    </a>
+    <a class="card" href="11_11-mavzu_Notekis_harakat.pdf" target="_blank" data-name="notekis harakat o'rtacha tezlik tezlanish">
+      <div class="card-icon icon-bob1">11</div>
+      <div class="card-info">
+        <div class="card-num">11-mavzu</div>
+        <div class="card-name">Notekis harakat</div>
+        <div class="card-meta"><span class="tag tag-pages">📄 3 sahifa</span><span class="tag tag-size">💾 966 KB</span></div>
+      </div>
+    </a>
+    <a class="card" href="12_12-mavzu_Laboratoriya_ishi_Notekis_harakat_ortacha_tezlik.pdf" target="_blank" data-name="laboratoriya ishi notekis harakat o'rtacha tezlik aniqlash">
+      <div class="card-icon icon-lab">🔬</div>
+      <div class="card-info">
+        <div class="card-num">12-mavzu · Laboratoriya ishi</div>
+        <div class="card-name">Notekis harakatning o'rtacha tezligini aniqlash</div>
+        <div class="card-meta"><span class="tag tag-pages">📄 1 sahifa</span><span class="tag tag-size">💾 819 KB</span><span class="tag tag-lab">🔬 Lab</span></div>
+      </div>
+    </a>
+    <a class="card" href="13_13-mavzu_Masalalar_yechish.pdf" target="_blank" data-name="masalalar yechish notekis harakat">
+      <div class="card-icon icon-masala">✏️</div>
+      <div class="card-info">
+        <div class="card-num">13-mavzu</div>
+        <div class="card-name">Masalalar yechish</div>
+        <div class="card-meta"><span class="tag tag-pages">📄 2 sahifa</span><span class="tag tag-size">💾 445 KB</span></div>
+      </div>
+    </a>
+    <a class="card" href="14_14-mavzu_Aylana_boylab_harakat.pdf" target="_blank" data-name="aylana bo'ylab harakat doiraviy davr chastota">
+      <div class="card-icon icon-bob1">14</div>
+      <div class="card-info">
+        <div class="card-num">14-mavzu</div>
+        <div class="card-name">Aylana bo'ylab harakat</div>
+        <div class="card-meta"><span class="tag tag-pages">📄 3 sahifa</span><span class="tag tag-size">💾 641 KB</span></div>
+      </div>
+    </a>
+    <a class="card" href="15_15-mavzu_Masalalar_yechish_va_I_bob_topshiriqlari.pdf" target="_blank" data-name="masalalar yechish I bob topshiriqlar test">
+      <div class="card-icon icon-masala">✏️</div>
+      <div class="card-info">
+        <div class="card-num">15-mavzu + I bob topshiriqlari</div>
+        <div class="card-name">Masalalar yechish + Bob topshiriqlari va testlar</div>
+        <div class="card-meta"><span class="tag tag-pages">📄 4 sahifa</span><span class="tag tag-size">💾 696 KB</span></div>
+      </div>
+    </a>
+  </div>
+
+  <!-- II BOB -->
+  <div class="bob-title">🟢 II bob — Tabiatda kuch. Energiya</div>
+  <div class="grid">
+    <a class="card" href="16_16-mavzu_Massa_va_uning_birliklari.pdf" target="_blank" data-name="massa birliklari kilogramm gramm tonna tarozi">
+      <div class="card-icon icon-bob2">16</div>
+      <div class="card-info"><div class="card-num">16-mavzu</div><div class="card-name">Massa va uning birliklari</div><div class="card-meta"><span class="tag tag-pages">📄 3 sahifa</span><span class="tag tag-size">💾 608 KB</span></div></div>
+    </a>
+    <a class="card" href="17_17-mavzu_Zichlik_va_uning_birliklari.pdf" target="_blank" data-name="zichlik birliklari kg/m3 modda suyuqlik qattiq gaz">
+      <div class="card-icon icon-bob2">17</div>
+      <div class="card-info"><div class="card-num">17-mavzu</div><div class="card-name">Zichlik va uning birliklari</div><div class="card-meta"><span class="tag tag-pages">📄 4 sahifa</span><span class="tag tag-size">💾 6.0 MB</span></div></div>
+    </a>
+    <a class="card" href="18_18-mavzu_Laboratoriya_ishi_Jismlar_zichligini_aniqlash.pdf" target="_blank" data-name="laboratoriya ishi jismlar zichligini aniqlash turli shakl">
+      <div class="card-icon icon-lab">🔬</div>
+      <div class="card-info"><div class="card-num">18-mavzu · Laboratoriya ishi</div><div class="card-name">Turli shakldagi jismlarning zichligini aniqlash</div><div class="card-meta"><span class="tag tag-pages">📄 3 sahifa</span><span class="tag tag-size">💾 1.2 MB</span><span class="tag tag-lab">🔬 Lab</span></div></div>
+    </a>
+    <a class="card" href="19_19-mavzu_Jismlarning_ozaro_tasiri_Kuch.pdf" target="_blank" data-name="jismlarning o'zaro ta'siri kuch og'irlik elastiklik ishqalanish">
+      <div class="card-icon icon-bob2">19</div>
+      <div class="card-info"><div class="card-num">19-mavzu</div><div class="card-name">Jismlarning o'zaro ta'siri. Kuch</div><div class="card-meta"><span class="tag tag-pages">📄 4 sahifa</span><span class="tag tag-size">💾 1.4 MB</span></div></div>
+    </a>
+    <a class="card" href="20_20-mavzu_Bosim_va_uning_birliklari.pdf" target="_blank" data-name="bosim birliklari paskal formula kuch yuza">
+      <div class="card-icon icon-bob2">20</div>
+      <div class="card-info"><div class="card-num">20-mavzu</div><div class="card-name">Bosim va uning birliklari</div><div class="card-meta"><span class="tag tag-pages">📄 3 sahifa</span><span class="tag tag-size">💾 2.7 MB</span></div></div>
+    </a>
+    <a class="card" href="21_21-mavzu_Masalalar_yechish.pdf" target="_blank" data-name="masalalar yechish bosim"><div class="card-icon icon-masala">✏️</div><div class="card-info"><div class="card-num">21-mavzu</div><div class="card-name">Masalalar yechish</div><div class="card-meta"><span class="tag tag-pages">📄 2 sahifa</span><span class="tag tag-size">💾 363 KB</span></div></div></a>
+    <a class="card" href="22_22-mavzu_Suyuqlik_va_gazlarda_bosimning_uzatilishi.pdf" target="_blank" data-name="suyuqlik gazlarda bosim uzatilishi paskal qonuni gidravlik press">
+      <div class="card-icon icon-bob2">22</div>
+      <div class="card-info"><div class="card-num">22-mavzu</div><div class="card-name">Suyuqlik va gazlarda bosimning uzatilishi</div><div class="card-meta"><span class="tag tag-pages">📄 3 sahifa</span><span class="tag tag-size">💾 1.9 MB</span></div></div>
+    </a>
+    <a class="card" href="23_23-mavzu_Tinch_holatdagi_suyuqlik_bosimi.pdf" target="_blank" data-name="tinch holatdagi suyuqlik bosimi gidrostatik formula zichlik chuqurlik">
+      <div class="card-icon icon-bob2">23</div>
+      <div class="card-info"><div class="card-num">23-mavzu</div><div class="card-name">Tinch holatdagi suyuqlik bosimi</div><div class="card-meta"><span class="tag tag-pages">📄 2 sahifa</span><span class="tag tag-size">💾 1.4 MB</span></div></div>
+    </a>
+    <a class="card" href="24_24-mavzu_Masalalar_yechish.pdf" target="_blank" data-name="masalalar yechish suyuqlik bosimi"><div class="card-icon icon-masala">✏️</div><div class="card-info"><div class="card-num">24-mavzu</div><div class="card-name">Masalalar yechish</div><div class="card-meta"><span class="tag tag-pages">📄 2 sahifa</span><span class="tag tag-size">💾 1.2 MB</span></div></div></a>
+    <a class="card" href="25_25-mavzu_Atmosfera_bosimi_va_Loyiha_ishi.pdf" target="_blank" data-name="atmosfera bosimi torrichelli tajriba baromert loyiha ishi">
+      <div class="card-icon icon-bob2">25</div>
+      <div class="card-info"><div class="card-num">25-mavzu + Loyiha ishi</div><div class="card-name">Atmosfera bosimi + Loyiha ishi</div><div class="card-meta"><span class="tag tag-pages">📄 5 sahifa</span><span class="tag tag-size">💾 3.9 MB</span></div></div>
+    </a>
+    <a class="card" href="26_26-mavzu_Mexanik_ish.pdf" target="_blank" data-name="mexanik ish formula kuch ko'chish ijobiy manfiy nol">
+      <div class="card-icon icon-bob2">26</div>
+      <div class="card-info"><div class="card-num">26-mavzu</div><div class="card-name">Mexanik ish</div><div class="card-meta"><span class="tag tag-pages">📄 2 sahifa</span><span class="tag tag-size">💾 413 KB</span></div></div>
+    </a>
+    <a class="card" href="27_27-mavzu_Mexanik_energiyaning_turlari.pdf" target="_blank" data-name="mexanik energiya turlari kinetik potensial">
+      <div class="card-icon icon-bob2">27</div>
+      <div class="card-info"><div class="card-num">27-mavzu</div><div class="card-name">Mexanik energiyaning turlari</div><div class="card-meta"><span class="tag tag-pages">📄 3 sahifa</span><span class="tag tag-size">💾 2.4 MB</span></div></div>
+    </a>
+    <a class="card" href="28_28-mavzu_Masalalar_yechish.pdf" target="_blank" data-name="masalalar yechish energiya ish"><div class="card-icon icon-masala">✏️</div><div class="card-info"><div class="card-num">28-mavzu</div><div class="card-name">Masalalar yechish</div><div class="card-meta"><span class="tag tag-pages">📄 2 sahifa</span><span class="tag tag-size">💾 611 KB</span></div></div></a>
+    <a class="card" href="29_29-mavzu_Mexanik_quvvat_va_uning_birligi.pdf" target="_blank" data-name="mexanik quvvat birligi vatt formula ish vaqt">
+      <div class="card-icon icon-bob2">29</div>
+      <div class="card-info"><div class="card-num">29-mavzu</div><div class="card-name">Mexanik quvvat va uning birligi</div><div class="card-meta"><span class="tag tag-pages">📄 3 sahifa</span><span class="tag tag-size">💾 553 KB</span></div></div>
+    </a>
+    <a class="card" href="30_30-mavzu_Masalalar_yechish_va_II_bob_topshiriqlari.pdf" target="_blank" data-name="masalalar yechish II bob topshiriqlar test quvvat">
+      <div class="card-icon icon-masala">✏️</div>
+      <div class="card-info"><div class="card-num">30-mavzu + II bob topshiriqlari</div><div class="card-name">Masalalar yechish + Bob topshiriqlari</div><div class="card-meta"><span class="tag tag-pages">📄 3 sahifa</span><span class="tag tag-size">💾 452 KB</span></div></div>
+    </a>
+  </div>
+
+  <!-- III BOB -->
+  <div class="bob-title">🟠 III bob — Issiqlik hodisalari</div>
+  <div class="grid">
+    <a class="card" href="31_31-mavzu_Ichki_energiya.pdf" target="_blank" data-name="ichki energiya molekula harakati temperatura issiqlik">
+      <div class="card-icon icon-bob3">31</div>
+      <div class="card-info"><div class="card-num">31-mavzu</div><div class="card-name">Ichki energiya</div><div class="card-meta"><span class="tag tag-pages">📄 4 sahifa</span><span class="tag tag-size">💾 2.5 MB</span></div></div>
+    </a>
+    <a class="card" href="32_32-mavzu_Issiqlik_miqdori_va_Loyiha_ishi.pdf" target="_blank" data-name="issiqlik miqdori solishtirma issiqlik sig'imi formula loyiha">
+      <div class="card-icon icon-bob3">32</div>
+      <div class="card-info"><div class="card-num">32-mavzu + Loyiha ishi</div><div class="card-name">Issiqlik miqdori + Loyiha ishi</div><div class="card-meta"><span class="tag tag-pages">📄 4 sahifa</span><span class="tag tag-size">💾 932 KB</span></div></div>
+    </a>
+    <a class="card" href="33_33-mavzu_Masalalar_yechish.pdf" target="_blank" data-name="masalalar yechish issiqlik miqdori"><div class="card-icon icon-masala">✏️</div><div class="card-info"><div class="card-num">33-mavzu</div><div class="card-name">Masalalar yechish</div><div class="card-meta"><span class="tag tag-pages">📄 2 sahifa</span><span class="tag tag-size">💾 396 KB</span></div></div></a>
+    <a class="card" href="34_34-mavzu_Amaliy_mashgulot_Issiqlik_almashinuvi.pdf" target="_blank" data-name="amaliy mashg'ulot issiqlik almashinuvi temperatura suvlar aralash">
+      <div class="card-icon icon-amaliy">⚗️</div>
+      <div class="card-info"><div class="card-num">34-mavzu · Amaliy mashg'ulot</div><div class="card-name">Turli temperaturali suvlar aralashtirilganda issiqlik almashinuvi</div><div class="card-meta"><span class="tag tag-pages">📄 1 sahifa</span><span class="tag tag-size">💾 522 KB</span><span class="tag tag-amaliy">⚗️ Amaliy</span></div></div>
+    </a>
+    <a class="card" href="35_35-mavzu_Yoqilgining_solishtirma_yonish_issiqligi.pdf" target="_blank" data-name="yoqilg'i solishtirma yonish issiqligi gaz benzin ko'mir yoqilg'i turi">
+      <div class="card-icon icon-bob3">35</div>
+      <div class="card-info"><div class="card-num">35-mavzu</div><div class="card-name">Yoqilg'ining solishtirma yonish issiqligi</div><div class="card-meta"><span class="tag tag-pages">📄 3 sahifa</span><span class="tag tag-size">💾 757 KB</span></div></div>
+    </a>
+    <a class="card" href="36_36-mavzu_Buglanish_Kondensatsiya_Qaynash.pdf" target="_blank" data-name="bug'lanish kondensatsiya qaynash suv bug' temperatura 100">
+      <div class="card-icon icon-bob3">36</div>
+      <div class="card-info"><div class="card-num">36-mavzu</div><div class="card-name">Bug'lanish va kondensatsiya. Qaynash</div><div class="card-meta"><span class="tag tag-pages">📄 5 sahifa</span><span class="tag tag-size">💾 1.7 MB</span></div></div>
+    </a>
+    <a class="card" href="37_37-mavzu_Qattiq_jismning_erishi_va_qotishi.pdf" target="_blank" data-name="qattiq jism erishi qotishi muz kristall temperatura">
+      <div class="card-icon icon-bob3">37</div>
+      <div class="card-info"><div class="card-num">37-mavzu</div><div class="card-name">Qattiq jismning erishi va qotishi</div><div class="card-meta"><span class="tag tag-pages">📄 3 sahifa</span><span class="tag tag-size">💾 422 KB</span></div></div>
+    </a>
+    <a class="card" href="38_38-mavzu_Masalalar_yechish_va_III_bob_topshiriqlari.pdf" target="_blank" data-name="masalalar yechish III bob topshiriqlar test issiqlik">
+      <div class="card-icon icon-masala">✏️</div>
+      <div class="card-info"><div class="card-num">38-mavzu + III bob topshiriqlari</div><div class="card-name">Masalalar yechish + Bob topshiriqlari</div><div class="card-meta"><span class="tag tag-pages">📄 4 sahifa</span><span class="tag tag-size">💾 617 KB</span></div></div>
+    </a>
+  </div>
+
+  <!-- IV BOB -->
+  <div class="bob-title">🔴 IV bob — Elektr</div>
+  <div class="grid">
+    <a class="card" href="39_39-mavzu_Jismlarning_elektrlanishi.pdf" target="_blank" data-name="jismlarning elektrlanishi ishqalash elektr zaryad musbat manfiy">
+      <div class="card-icon icon-bob4">39</div><div class="card-info"><div class="card-num">39-mavzu</div><div class="card-name">Jismlarning elektrlanishi</div><div class="card-meta"><span class="tag tag-pages">📄 4 sahifa</span><span class="tag tag-size">💾 701 KB</span></div></div>
+    </a>
+    <a class="card" href="40_40-mavzu_Elektr_zaryad.pdf" target="_blank" data-name="elektr zaryad birlik kulon elektron proton yadro atom">
+      <div class="card-icon icon-bob4">40</div><div class="card-info"><div class="card-num">40-mavzu</div><div class="card-name">Elektr zaryad</div><div class="card-meta"><span class="tag tag-pages">📄 4 sahifa</span><span class="tag tag-size">💾 2.4 MB</span></div></div>
+    </a>
+    <a class="card" href="41_41-mavzu_Elektroskop_va_elektrometr.pdf" target="_blank" data-name="elektroskop elektrometr zaryad o'lchash asbob">
+      <div class="card-icon icon-bob4">41</div><div class="card-info"><div class="card-num">41-mavzu</div><div class="card-name">Elektroskop va elektrometr</div><div class="card-meta"><span class="tag tag-pages">📄 2 sahifa</span><span class="tag tag-size">💾 1.8 MB</span></div></div>
+    </a>
+    <a class="card" href="42_42-mavzu_Elektr_otkazgichlar_va_dielektriklar.pdf" target="_blank" data-name="elektr o'tkazgichlar dielektriklar metall plastmassa shisha">
+      <div class="card-icon icon-bob4">42</div><div class="card-info"><div class="card-num">42-mavzu</div><div class="card-name">Elektr o'tkazgichlar va dielektriklar</div><div class="card-meta"><span class="tag tag-pages">📄 2 sahifa</span><span class="tag tag-size">💾 1.4 MB</span></div></div>
+    </a>
+    <a class="card" href="43_43-mavzu_Zaryadlangan_jismlarning_ozaro_tasirlashuvi.pdf" target="_blank" data-name="zaryadlangan jismlar o'zaro ta'sirlashuvi tortishish itarishish kuchlar">
+      <div class="card-icon icon-bob4">43</div><div class="card-info"><div class="card-num">43-mavzu</div><div class="card-name">Zaryadlangan jismlarning o'zaro ta'sirlashuvi</div><div class="card-meta"><span class="tag tag-pages">📄 3 sahifa</span><span class="tag tag-size">💾 3.4 MB</span></div></div>
+    </a>
+    <a class="card" href="44_44-mavzu_Otkazgichlarda_elektr_zaryadlarning_taqsimlanishi.pdf" target="_blank" data-name="o'tkazgichlarda elektr zaryadlar taqsimlanishi sirt maydon">
+      <div class="card-icon icon-bob4">44</div><div class="card-info"><div class="card-num">44-mavzu</div><div class="card-name">O'tkazgichlarda elektr zaryadlarning taqsimlanishi</div><div class="card-meta"><span class="tag tag-pages">📄 2 sahifa</span><span class="tag tag-size">💾 2.0 MB</span></div></div>
+    </a>
+    <a class="card" href="45_45-mavzu_Tabiatdagi_elektr_hodisalar.pdf" target="_blank" data-name="tabiatdagi elektr hodisalar chaqmoq momaqaldiroq atmosfera">
+      <div class="card-icon icon-bob4">45</div><div class="card-info"><div class="card-num">45-mavzu</div><div class="card-name">Tabiatdagi elektr hodisalar</div><div class="card-meta"><span class="tag tag-pages">📄 3 sahifa</span><span class="tag tag-size">💾 3.0 MB</span></div></div>
+    </a>
+    <a class="card" href="46_46-mavzu_Elektr_toki.pdf" target="_blank" data-name="elektr toki zanjir o'tkazgich harakat zaryadlar">
+      <div class="card-icon icon-bob4">46</div><div class="card-info"><div class="card-num">46-mavzu</div><div class="card-name">Elektr toki</div><div class="card-meta"><span class="tag tag-pages">📄 3 sahifa</span><span class="tag tag-size">💾 2.1 MB</span></div></div>
+    </a>
+    <a class="card" href="47_47-mavzu_Tok_manbalari.pdf" target="_blank" data-name="tok manbalari batareya akkumulyator generator quyosh">
+      <div class="card-icon icon-bob4">47</div><div class="card-info"><div class="card-num">47-mavzu</div><div class="card-name">Tok manbalari</div><div class="card-meta"><span class="tag tag-pages">📄 4 sahifa</span><span class="tag tag-size">💾 2.4 MB</span></div></div>
+    </a>
+    <a class="card" href="48_48-mavzu_Elektr_kuchlanish_va_uni_olchash.pdf" target="_blank" data-name="elektr kuchlanish volt o'lchash voltmetr zanjir">
+      <div class="card-icon icon-bob4">48</div><div class="card-info"><div class="card-num">48-mavzu</div><div class="card-name">Elektr kuchlanish va uni o'lchash</div><div class="card-meta"><span class="tag tag-pages">📄 4 sahifa</span><span class="tag tag-size">💾 571 KB</span></div></div>
+    </a>
+    <a class="card" href="49_49-mavzu_Tok_kuchi.pdf" target="_blank" data-name="tok kuchi amper o'lchash ammeter formula zaryad vaqt">
+      <div class="card-icon icon-bob4">49</div><div class="card-info"><div class="card-num">49-mavzu</div><div class="card-name">Tok kuchi</div><div class="card-meta"><span class="tag tag-pages">📄 3 sahifa</span><span class="tag tag-size">💾 696 KB</span></div></div>
+    </a>
+    <a class="card" href="50_50-mavzu_Masalalar_yechish.pdf" target="_blank" data-name="masalalar yechish tok kuchi kuchlanish"><div class="card-icon icon-masala">✏️</div><div class="card-info"><div class="card-num">50-mavzu</div><div class="card-name">Masalalar yechish</div><div class="card-meta"><span class="tag tag-pages">📄 2 sahifa</span><span class="tag tag-size">💾 447 KB</span></div></div></a>
+    <a class="card" href="51_51-mavzu_Laboratoriya_ishi_Tok_kuchi_va_kuchlanish.pdf" target="_blank" data-name="laboratoriya ishi tok kuchi kuchlanish o'lchash ammeter voltmetr">
+      <div class="card-icon icon-lab">🔬</div>
+      <div class="card-info"><div class="card-num">51-mavzu · Laboratoriya ishi</div><div class="card-name">Elektr zanjirida tok kuchi va kuchlanishni o'lchash</div><div class="card-meta"><span class="tag tag-pages">📄 1 sahifa</span><span class="tag tag-size">💾 315 KB</span><span class="tag tag-lab">🔬 Lab</span></div></div>
+    </a>
+    <a class="card" href="52_52-mavzu_Elektr_qarshilik.pdf" target="_blank" data-name="elektr qarshilik om birlik o'tkazgich uzunlik kesim">
+      <div class="card-icon icon-bob4">52</div><div class="card-info"><div class="card-num">52-mavzu</div><div class="card-name">Elektr qarshilik</div><div class="card-meta"><span class="tag tag-pages">📄 4 sahifa</span><span class="tag tag-size">💾 1.1 MB</span></div></div>
+    </a>
+    <a class="card" href="53_53-mavzu_Rezistorlar_Reostatlar.pdf" target="_blank" data-name="rezistorlar reostatlar tok kuchini rostlash qarshilik o'zgartirgich">
+      <div class="card-icon icon-bob4">53</div><div class="card-info"><div class="card-num">53-mavzu</div><div class="card-name">Rezistorlar. Reostatlar</div><div class="card-meta"><span class="tag tag-pages">📄 3 sahifa</span><span class="tag tag-size">💾 916 KB</span></div></div>
+    </a>
+    <a class="card" href="54_54-mavzu_Zanjirning_bir_qismi_uchun_Om_qonuni.pdf" target="_blank" data-name="om qonuni zanjir bir qism tok kuchlanish qarshilik formula">
+      <div class="card-icon icon-bob4">54</div><div class="card-info"><div class="card-num">54-mavzu</div><div class="card-name">Zanjirning bir qismi uchun Om qonuni</div><div class="card-meta"><span class="tag tag-pages">📄 3 sahifa</span><span class="tag tag-size">💾 641 KB</span></div></div>
+    </a>
+    <a class="card" href="55_55-mavzu_Masalalar_yechish.pdf" target="_blank" data-name="masalalar yechish om qonuni qarshilik"><div class="card-icon icon-masala">✏️</div><div class="card-info"><div class="card-num">55-mavzu</div><div class="card-name">Masalalar yechish</div><div class="card-meta"><span class="tag tag-pages">📄 2 sahifa</span><span class="tag tag-size">💾 785 KB</span></div></div></a>
+    <a class="card" href="56_56-mavzu_Amaliy_mashgulot_Reostat_yordamida_tok_rostlash.pdf" target="_blank" data-name="amaliy mashg'ulot reostat tok kuchini rostlash ammeter">
+      <div class="card-icon icon-amaliy">⚗️</div>
+      <div class="card-info"><div class="card-num">56-mavzu · Amaliy mashg'ulot</div><div class="card-name">Reostat yordamida tok kuchini rostlash</div><div class="card-meta"><span class="tag tag-pages">📄 1 sahifa</span><span class="tag tag-size">💾 473 KB</span><span class="tag tag-amaliy">⚗️ Amaliy</span></div></div>
+    </a>
+    <a class="card" href="57_57-mavzu_Laboratoriya_ishi_va_IV_bob_topshiriqlari.pdf" target="_blank" data-name="laboratoriya ishi om qonuni IV bob topshiriqlar test elektr">
+      <div class="card-icon icon-lab">🔬</div>
+      <div class="card-info"><div class="card-num">57-mavzu · Lab + IV bob topshiriqlari</div><div class="card-name">Om qonunini o'rganish + Bob topshiriqlari</div><div class="card-meta"><span class="tag tag-pages">📄 3 sahifa</span><span class="tag tag-size">💾 462 KB</span><span class="tag tag-lab">🔬 Lab</span></div></div>
+    </a>
+  </div>
+
+  <!-- V BOB -->
+  <div class="bob-title">🔵 V bob — Optika</div>
+  <div class="grid">
+    <a class="card" href="58_58-mavzu_Yoruglikning_togri_chiziq_boylab_tarqalishi.pdf" target="_blank" data-name="yorug'lik to'g'ri chiziq tarqalishi soya yarim soya manba">
+      <div class="card-icon icon-bob5">58</div><div class="card-info"><div class="card-num">58-mavzu</div><div class="card-name">Yorug'likning to'g'ri chiziq bo'ylab tarqalishi</div><div class="card-meta"><span class="tag tag-pages">📄 3 sahifa</span><span class="tag tag-size">💾 952 KB</span></div></div>
+    </a>
+    <a class="card" href="59_59-mavzu_Quyosh_va_Oy_tutilishi.pdf" target="_blank" data-name="quyosh oy tutilishi to'liq qisman soya yarim soya astronomiya">
+      <div class="card-icon icon-bob5">59</div><div class="card-info"><div class="card-num">59-mavzu</div><div class="card-name">Quyosh va Oy tutilishi</div><div class="card-meta"><span class="tag tag-pages">📄 3 sahifa</span><span class="tag tag-size">💾 631 KB</span></div></div>
+    </a>
+    <a class="card" href="60_60-mavzu_Yoruglikning_qaytishi_va_sinishi.pdf" target="_blank" data-name="yorug'lik qaytishi sinishi ko'zgu qonun burchak normal">
+      <div class="card-icon icon-bob5">60</div><div class="card-info"><div class="card-num">60-mavzu</div><div class="card-name">Yorug'likning qaytishi va sinishi</div><div class="card-meta"><span class="tag tag-pages">📄 3 sahifa</span><span class="tag tag-size">💾 538 KB</span></div></div>
+    </a>
+    <a class="card" href="61_61-mavzu_Linza.pdf" target="_blank" data-name="linza qo'ng'iroqsimon botiq to'plovchi sochuvchi ko'zoynak">
+      <div class="card-icon icon-bob5">61</div><div class="card-info"><div class="card-num">61-mavzu</div><div class="card-name">Linza</div><div class="card-meta"><span class="tag tag-pages">📄 2 sahifa</span><span class="tag tag-size">💾 403 KB</span></div></div>
+    </a>
+    <a class="card" href="62_62-mavzu_Amaliy_mashgulot_va_V_bob_topshiriqlari.pdf" target="_blank" data-name="amaliy mashg'ulot yorug'lik yassi ko'zgu qaytishi V bob topshiriqlar test">
+      <div class="card-icon icon-amaliy">⚗️</div>
+      <div class="card-info"><div class="card-num">62-mavzu · Amaliy + V bob topshiriqlari</div><div class="card-name">Yassi ko'zgudan qaytish + Bob topshiriqlari</div><div class="card-meta"><span class="tag tag-pages">📄 3 sahifa</span><span class="tag tag-size">💾 412 KB</span><span class="tag tag-amaliy">⚗️ Amaliy</span></div></div>
+    </a>
+  </div>
+
+  <!-- OXIRGI -->
+  <div class="bob-title">📎 Oxirgi qism</div>
+  <div class="grid">
+    <a class="card" href="63_Mashqlar_javoblari_va_Adabiyotlar.pdf" target="_blank" data-name="mashqlar javoblari adabiyotlar mualliflar nashr">
+      <div class="card-icon icon-oxir">📋</div>
+      <div class="card-info"><div class="card-num">63 · Oxirgi qism</div><div class="card-name">Mashqlar javoblari + Foydalanilgan adabiyotlar</div><div class="card-meta"><span class="tag tag-pages">📄 4 sahifa</span><span class="tag tag-size">💾 240 KB</span></div></div>
+    </a>
+  </div>
+
+  <div class="no-result" id="noResult">🔍 Hech narsa topilmadi</div>
+</div>
+
+<footer>7-sinf Fizika darsligi · O'zbekiston Respublikasi · 2022 yil nashr · 192 sahifa</footer>
+
+<script>
+function search() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const cards = document.querySelectorAll('.card');
+  let found = 0;
+  cards.forEach(c => {
+    const txt = (c.dataset.name || '') + c.innerText.toLowerCase();
+    const show = !q || txt.includes(q);
+    c.style.display = show ? 'flex' : 'none';
+    if (show) found++;
+  });
+  // Bob titles: hide if all cards in grid hidden
+  document.querySelectorAll('.grid').forEach(g => {
+    const visible = [...g.querySelectorAll('.card')].some(c => c.style.display !== 'none');
+    g.previousElementSibling.style.display = visible ? '' : 'none';
+    g.style.display = visible ? '' : 'none';
+  });
+  document.getElementById('noResult').style.display = found === 0 ? 'block' : 'none';
+}
+</script>
+</body>
+</html>

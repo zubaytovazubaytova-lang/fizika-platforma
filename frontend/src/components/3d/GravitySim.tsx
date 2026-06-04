@@ -8,29 +8,27 @@ import * as THREE from 'three'
 
 /* ═══════════════════ GLSL SHADERLAR ═══════════════════ */
 
+/* ── Yer yuzasi — object-space sferik UV (yarim sfera uchun to'g'ri) ── */
 const EARTH_VERT = /* glsl */`
-varying vec2 vUv;
-varying vec3 vNormal;
-varying vec3 vWorldPos;
+varying vec3 vObjPos;
+varying vec3 vWorldNormal;
 void main() {
-  vUv = uv;
-  vNormal = normalize(normalMatrix * normal);
-  vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  vObjPos      = position;
+  vWorldNormal = normalize(mat3(modelMatrix) * normal);
+  gl_Position  = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }
 `
 
 const EARTH_FRAG = /* glsl */`
-varying vec2 vUv;
-varying vec3 vNormal;
-varying vec3 vWorldPos;
-uniform vec3 cameraPosition;
+#define PI 3.14159265359
+
+varying vec3 vObjPos;
+varying vec3 vWorldNormal;
 
 float hash(float n) { return fract(sin(n) * 43758.5453); }
 
 float n2(vec2 p) {
-  vec2 i = floor(p);
-  vec2 f = fract(p);
+  vec2 i = floor(p); vec2 f = fract(p);
   f = f * f * (3.0 - 2.0 * f);
   return mix(
     mix(hash(i.x + i.y*57.0), hash(i.x+1.0 + i.y*57.0), f.x),
@@ -46,67 +44,74 @@ float fbm(vec2 p) {
 }
 
 void main() {
-  // --- Qit'a maskasi ---
-  float land  = smoothstep(0.455, 0.545, fbm(vUv * vec2(4.2, 2.9) + vec2(1.71, 0.93)));
-  // --- Qutb muz qoplami ---
-  float polar = smoothstep(0.68, 0.86, abs(vUv.y - 0.5) * 2.0);
+  /* Sferik UV koordinatalar — object-space pozitsiyadan hisoblash.
+     Yarim sfera uchun ham butun Yer teksturasini to'g'ri ko'rsatadi. */
+  vec3 p   = normalize(vObjPos);
+  float lon = atan(p.x, p.z);
+  float lat = asin(clamp(p.y, -1.0, 1.0));
+  vec2 uv   = vec2((lon + PI) / (2.0 * PI), (lat + PI * 0.5) / PI);
 
-  // --- Okean rangi ---
-  float od    = fbm(vUv * vec2(6.5, 4.2) + vec2(3.31, 2.17));
-  vec3  ocean = mix(vec3(0.006, 0.028, 0.115), vec3(0.018, 0.072, 0.22), od);
+  /* --- Qit'a maskasi --- */
+  float land  = smoothstep(0.455, 0.545, fbm(uv * vec2(4.2, 2.9) + vec2(1.71, 0.93)));
 
-  // --- Qit'a rangi (o'rmon / savanna / cho'l / tog') ---
-  float vd = fbm(vUv * vec2(5.8, 4.1) + vec2(5.83, 3.24));
-  float md = fbm(vUv * vec2(9.0, 7.0) + vec2(1.13, 7.51));
-  vec3 forest   = vec3(0.068, 0.188, 0.038);
-  vec3 savanna  = vec3(0.275, 0.315, 0.082);
-  vec3 desert   = vec3(0.592, 0.425, 0.162);
-  vec3 mountain = vec3(0.325, 0.258, 0.188);
-  vec3 lc = mix(forest, savanna, smoothstep(0.35, 0.55, vd));
-  lc = mix(lc, desert,   smoothstep(0.52, 0.68, vd));
-  lc = mix(lc, mountain, smoothstep(0.64, 0.82, md));
+  /* --- Qutb muzliklari (kenglik asosida) --- */
+  float absLat = abs(lat) / (PI * 0.5);
+  float polar  = smoothstep(0.72, 0.90, absLat);
 
-  // --- Okean + Qit'a + Muz ---
-  vec3 color = mix(mix(ocean, lc, land), vec3(0.86, 0.93, 1.0), polar);
+  /* --- Okean rangi (chuqur + sayoz) --- */
+  float od    = fbm(uv * vec2(6.5, 4.2) + vec2(3.31, 2.17));
+  vec3 ocean  = mix(vec3(0.010, 0.060, 0.220), vec3(0.035, 0.115, 0.360), od);
 
-  // --- Yorug'lik ---
-  vec3 ld   = normalize(vec3(2.2, 3.0, 3.8));
-  float diff = max(dot(vNormal, ld), 0.0);
-  vec3 vd2  = normalize(cameraPosition - vWorldPos);
-  vec3 h    = normalize(ld + vd2);
-  float spec = pow(max(dot(h, vNormal), 0.0), 52.0) * (1.0 - land) * (1.0 - polar);
+  /* --- Qit'a rangi (o'rmon / savanna / cho'l / tog') --- */
+  float vd = fbm(uv * vec2(5.8, 4.1) + vec2(5.83, 3.24));
+  float md = fbm(uv * vec2(9.0, 7.0) + vec2(1.13, 7.51));
+  vec3 lc  = mix(vec3(0.10, 0.28, 0.06), vec3(0.36, 0.42, 0.11), smoothstep(0.35, 0.55, vd));
+  lc = mix(lc, vec3(0.68, 0.50, 0.20), smoothstep(0.52, 0.68, vd));
+  lc = mix(lc, vec3(0.40, 0.33, 0.26), smoothstep(0.64, 0.82, md));
 
-  color = color * (0.22 + 0.78 * diff) + vec3(0.72, 0.88, 1.0) * spec * 0.55;
+  /* --- Bulutlar --- */
+  float cloud = smoothstep(0.53, 0.69, fbm(uv * vec2(3.8, 2.6) + vec2(8.33, 1.55)));
 
-  // --- Tungi tomon (terminator effekti) ---
-  float night = smoothstep(0.0, 0.12, diff);
-  color = mix(color * 0.04, color, night);
+  /* --- Barcha qatlamlarni birlashtirish --- */
+  vec3 color = mix(ocean, lc, land);
+  color = mix(color, vec3(0.90, 0.95, 1.00), polar);
+  color = mix(color, vec3(0.96, 0.97, 1.00), cloud * 0.75);
+
+  /* --- Yorug'lik (dunyo makonida) --- */
+  vec3 sunDir = normalize(vec3(4.0, 3.0, 5.0));
+  float diff  = max(dot(vWorldNormal, sunDir), 0.0);
+
+  /* Okean spekulyar (quyosh aksi suvda) */
+  vec3 viewApprox = normalize(vec3(1.0, 0.5, 2.5));
+  vec3 h          = normalize(sunDir + viewApprox);
+  float spec      = pow(max(dot(h, vWorldNormal), 0.0), 60.0)
+                  * (1.0 - land) * (1.0 - polar) * (1.0 - cloud * 0.8);
+
+  color = color * (0.25 + 0.75 * diff)
+        + vec3(0.78, 0.92, 1.0) * spec * 0.48;
+
+  /* Terminator — kun/tun chegarasi */
+  color *= smoothstep(0.0, 0.18, diff) * 0.94 + 0.06;
 
   gl_FragColor = vec4(color, 1.0);
 }
 `
 
+/* ── Atmosfera — rim glow effekti ── */
 const ATM_VERT = /* glsl */`
 varying vec3 vNormal;
-varying vec3 vWorldPos;
 void main() {
-  vNormal = normalize(normalMatrix * normal);
-  vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
+  vNormal     = normalize(normalMatrix * normal);
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }
 `
 
 const ATM_FRAG = /* glsl */`
 varying vec3 vNormal;
-varying vec3 vWorldPos;
-uniform vec3 cameraPosition;
 void main() {
-  vec3 viewDir = normalize(cameraPosition - vWorldPos);
-  float rim    = 1.0 - max(dot(viewDir, vNormal), 0.0);
-  rim = pow(rim, 3.0);
-  vec3 ld      = normalize(vec3(2.2, 3.0, 3.8));
-  float lit    = max(dot(vNormal, ld), 0.0) * 0.55 + 0.45;
-  gl_FragColor = vec4(vec3(0.18, 0.52, 1.0) * lit, rim * 0.88);
+  float rim = 1.0 - abs(dot(normalize(vNormal), vec3(0.0, 0.0, 1.0)));
+  rim = pow(rim, 2.2);
+  gl_FragColor = vec4(0.22, 0.60, 1.0, rim * 0.90);
 }
 `
 
@@ -187,90 +192,110 @@ function GalileoObjects({ dropped, onLand }: { dropped: boolean; onLand: () => v
   )
 }
 
-/* ── Sahna 1: Yer kesimi + Realistik tashqi ko'rinish ── */
+/* ── Sahna 1: Realistik Yer Kesimi ─────────────────────────────── */
 
 function EarthCrossSection({ activeLayer }: { activeLayer: number | null }) {
-  const { gl } = useThree()
-  useEffect(() => {
-    gl.localClippingEnabled = true
-    return () => { gl.localClippingEnabled = false }
-  }, [gl])
+  const earthGroupRef = useRef<THREE.Group>(null)
+
+  // Sekin aylanish (faqat tashqi Yer shari)
+  useFrame((_, delta) => {
+    if (earthGroupRef.current) {
+      earthGroupRef.current.rotation.y += delta * 0.12
+    }
+  })
 
   const outerR = LAYERS[0].r
 
-  // Realistik Yer yuzasi uchun shader
-  const earthShader = useMemo(() => ({
-    vertexShader: EARTH_VERT,
+  const earthMat = useMemo(() => new THREE.ShaderMaterial({
+    vertexShader:   EARTH_VERT,
     fragmentShader: EARTH_FRAG,
     side: THREE.FrontSide,
   }), [])
 
-  // Atmosfera qirrasi uchun shader
-  const atmShader = useMemo(() => ({
-    vertexShader: ATM_VERT,
+  const atmMat = useMemo(() => new THREE.ShaderMaterial({
+    vertexShader:   ATM_VERT,
     fragmentShader: ATM_FRAG,
     side: THREE.BackSide,
-    transparent: true,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
+    transparent:    true,
+    depthWrite:     false,
+    blending:       THREE.AdditiveBlending,
   }), [])
 
   return (
     <group>
-      {/* ── Realistik Yer yuzasi (orqa yarmi ko'rinadigan tomon) ── */}
+      {/* ── Atmosfera porlashi (aylanmaydi — doim bir joyda) ── */}
       <mesh>
-        <sphereGeometry args={[outerR, 128, 64, Math.PI, Math.PI]} />
-        <shaderMaterial attach="material" {...earthShader} />
+        <sphereGeometry args={[outerR + 0.18, 96, 48]} />
+        <primitive object={atmMat} attach="material" />
       </mesh>
 
-      {/* ── Atmosfera porlashi (butun sharni o'rab turadi) ── */}
-      <mesh>
-        <sphereGeometry args={[outerR + 0.14, 96, 48]} />
-        <shaderMaterial attach="material" {...atmShader} />
-      </mesh>
+      {/* ── Tashqi Yer shari (realistik, sekin aylanadi) ── */}
+      <group ref={earthGroupRef}>
+        {/* Orqa yarmi — realistik Yer teksturasi */}
+        <mesh>
+          <sphereGeometry args={[outerR, 128, 64, Math.PI, Math.PI]} />
+          <primitive object={earthMat} attach="material" />
+        </mesh>
+        {/* Old yarmi — shaffof okean rangi (kesim ko'rinadi) */}
+        <mesh>
+          <sphereGeometry args={[outerR, 64, 32, 0, Math.PI]} />
+          <meshStandardMaterial
+            color="#1a5fcc"
+            roughness={0.05}
+            metalness={0.12}
+            transparent
+            opacity={0.18}
+            side={THREE.FrontSide}
+          />
+        </mesh>
+      </group>
 
-      {/* ── Ichki qatlamlar ── */}
+      {/* ── Ichki qatlamlar (statik — kesim ochiq ko'rinadi) ── */}
       {LAYERS.map((layer, i) => {
-        const isActive    = activeLayer === i
-        const emissiveStr = isActive ? 0.38 : 0.0
+        const isActive = activeLayer === i
+        const innerR   = i < LAYERS.length - 1 ? LAYERS[i + 1].r : 0
+        const emissive = isActive ? 0.55 : (i === 3 ? 0.42 : 0.04)
+
         return (
           <group key={layer.name}>
-            {/* Orqa yarmi (ko'rinadigan kesim) — faqat ichki qatlamlar */}
+            {/* Orqa yarmi — faqat ichki qatlamlar ko'rinadi (Qobiq= i>0) */}
             {i > 0 && (
               <mesh>
                 <sphereGeometry args={[layer.r, 64, 32, Math.PI, Math.PI]} />
                 <meshStandardMaterial
                   color={layer.color}
-                  roughness={0.55}
-                  metalness={i === 2 ? 0.45 : 0.0}
+                  roughness={i === 3 ? 0.12 : 0.50}
+                  metalness={i === 2 ? 0.65 : i === 3 ? 0.88 : 0.0}
                   emissive={layer.color}
-                  emissiveIntensity={emissiveStr}
+                  emissiveIntensity={emissive}
                   side={THREE.FrontSide}
                 />
               </mesh>
             )}
 
-            {/* Old yarmi — shaffof (kesim tomoni) */}
-            <mesh>
-              <sphereGeometry args={[layer.r, 64, 32, 0, Math.PI]} />
-              <meshStandardMaterial
-                color={i === 0 ? '#3b7fd4' : layer.color}
-                roughness={i === 0 ? 0.08 : 0.6}
-                metalness={i === 0 ? 0.15 : 0}
-                transparent
-                opacity={isActive ? 0.40 : (i === 0 ? 0.22 : 0.18)}
-              />
-            </mesh>
+            {/* Old yarmi — shaffof (kesim tomoni, layerlar ko'rinadi) */}
+            {i > 0 && (
+              <mesh>
+                <sphereGeometry args={[layer.r, 64, 32, 0, Math.PI]} />
+                <meshStandardMaterial
+                  color={layer.color}
+                  roughness={0.6}
+                  transparent
+                  opacity={isActive ? 0.45 : 0.12}
+                  side={THREE.FrontSide}
+                />
+              </mesh>
+            )}
 
-            {/* Kesim yuzasi (doira) */}
-            <mesh rotation={[0, -Math.PI / 2, 0]}>
-              <circleGeometry args={[layer.r, 128]} />
+            {/* Kesim halqasi — ringGeometry (faqat o'z qatlami kengligi) */}
+            <mesh rotation={[0, Math.PI / 2, 0]}>
+              <ringGeometry args={[innerR, layer.r, 128]} />
               <meshStandardMaterial
                 color={layer.color}
-                roughness={0.35}
-                metalness={i === 2 ? 0.5 : 0.0}
+                roughness={i === 3 ? 0.10 : 0.35}
+                metalness={i === 2 ? 0.60 : i === 3 ? 0.82 : 0.04}
                 emissive={layer.color}
-                emissiveIntensity={isActive ? 0.55 : 0.08}
+                emissiveIntensity={isActive ? 0.70 : (i === 3 ? 0.50 : 0.06)}
                 side={THREE.DoubleSide}
               />
             </mesh>
@@ -333,8 +358,8 @@ export default function GravitySim() {
   )
 
   const camPos: [number, number, number][] = [
-    [0, 1.5, 11],  // 0: Galiley
-    [3.5, 2.5, 7], // 1: Yer kesimi
+    [0, 1.5, 11],   // 0: Galiley
+    [4.2, 2.0, 6.5], // 1: Yer kesimi — yaxshi burchak
   ]
 
   function SceneLights({ s }: { s: number }) {
@@ -359,13 +384,18 @@ export default function GravitySim() {
 
         {s === 1 && (
           <>
-            <ambientLight intensity={0.7} color="#ffe8c0" />
-            <directionalLight position={[4, 8, 6]} intensity={1.8} color="#fff3d0" />
-            <pointLight position={[0, 0, 0]} intensity={3.5} color="#f59e0b" distance={5} decay={1.5} />
-            <pointLight position={[0, 0, 2.5]} intensity={1.8} color="#ef4444" distance={4} decay={1.5} />
-            <pointLight position={[0, 4, 4]} intensity={1.0} color="#60a5fa" distance={10} />
-            <spotLight position={[6, 5, 0]} angle={0.5} penumbra={0.4}
-              intensity={2.0} color="#ffffff" />
+            {/* Ambient — kosmik muhit */}
+            <ambientLight intensity={0.45} color="#c8d8ff" />
+            {/* Quyosh — yuqori o'ngdan (soyalar aniq) */}
+            <directionalLight position={[6, 5, 8]} intensity={2.4} color="#fff5e0" castShadow />
+            {/* Ichki yadro porlashi */}
+            <pointLight position={[0, 0, 0]} intensity={5.0} color="#f59e0b" distance={3.5} decay={1.5} />
+            {/* Mantiya issiq porlash */}
+            <pointLight position={[0, 0.5, 0.5]} intensity={2.2} color="#ff5500" distance={3.0} decay={2} />
+            {/* Tashqi yadro moviy-yashil */}
+            <pointLight position={[0, 0, 1.5]} intensity={1.5} color="#00e5b0" distance={2.5} decay={2} />
+            {/* Kameraga qarab old tomonni yoritish */}
+            <directionalLight position={[5, 2, 7]} intensity={1.2} color="#e0eeff" />
           </>
         )}
       </>
@@ -496,15 +526,15 @@ export default function GravitySim() {
 
         {scene === 1 && (
           <>
+            <Stars radius={120} depth={60} count={5000} factor={2.5} saturation={0.1} fade />
             <EarthCrossSection activeLayer={s1Layer} />
             <OrbitControls
               enableZoom={orbitZoom}
               enableRotate={orbitRotate}
               enablePan={false}
-              autoRotate={!orbitRotate}
-              autoRotateSpeed={0.6}
-              minPolarAngle={0.3}
-              maxPolarAngle={Math.PI / 1.8}
+              autoRotate={false}
+              minPolarAngle={0.2}
+              maxPolarAngle={Math.PI / 1.7}
               zoomSpeed={0.6}
             />
           </>

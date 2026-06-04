@@ -1,7 +1,7 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, Save, CheckCircle, Play, PlayCircle } from 'lucide-react'
+import { ArrowLeft, Play, PlayCircle, FileText, Maximize2, X, BookOpen } from 'lucide-react'
 import dynamic from 'next/dynamic'
 
 const GravitySim     = dynamic(() => import('@/components/3d/GravitySim'),     { ssr: false, loading: () => <SimLoading /> })
@@ -25,7 +25,7 @@ function SimLoading() {
 
 const SIMS = [
   { id: 'gravity',     label: "g = 9.8 — Yerning Imzosi",  icon: '🌍', color: '#6366f1', desc: '6 sahnali interaktiv gravitatsiya simulatsiyasi' },
-  { id: 'pendulum',    label: 'Matematik mayatnik',         icon: '🕰️', color: '#60a5fa', desc: 'Uzunlik va burchakni o\'zgartirib kuzating' },
+  { id: 'pendulum',    label: 'Matematik mayatnik',         icon: '🕰️', color: '#60a5fa', desc: "Uzunlik va burchakni o'zgartirib kuzating" },
   { id: 'elektroskop', label: 'Elektroskop',                icon: '⚡', color: '#fbbf24', desc: 'Elektr zaryadlarni 3D da kuzating' },
 ]
 
@@ -43,7 +43,8 @@ const SECTIONS = [
 type Lang = 'uz' | 'ru' | 'en'
 
 interface LangContent {
-  text: string
+  pdfData: string
+  pdfName: string
   videoUrl: string
 }
 
@@ -53,28 +54,10 @@ interface TopicContent {
   en: LangContent
 }
 
-const EMPTY_CONTENT: TopicContent = {
-  uz: { text: '', videoUrl: '' },
-  ru: { text: '', videoUrl: '' },
-  en: { text: '', videoUrl: '' },
-}
-
-const LANGS: { key: Lang; label: string; flag: string; color: string; placeholder: string; videoPlaceholder: string }[] = [
-  {
-    key: 'uz', label: "O'zbek", flag: '🇺🇿', color: '#34d399',
-    placeholder: "O'zbek tilida mavzu matnini kiriting...",
-    videoPlaceholder: "O'zbek tilidagi YouTube havolasi...",
-  },
-  {
-    key: 'ru', label: 'Русский', flag: '🇷🇺', color: '#60a5fa',
-    placeholder: 'Введите текст темы на русском языке...',
-    videoPlaceholder: 'Ссылка на YouTube на русском языке...',
-  },
-  {
-    key: 'en', label: 'English', flag: '🇬🇧', color: '#a78bfa',
-    placeholder: 'Enter topic text in English...',
-    videoPlaceholder: 'YouTube link in English...',
-  },
+const LANGS: { key: Lang; label: string; flag: string; flagCode: string; color: string }[] = [
+  { key: 'uz', label: "O'zbek",  flag: '🇺🇿', flagCode: 'UZ', color: '#34d399' },
+  { key: 'ru', label: 'Русский', flag: '🇷🇺', flagCode: 'RU', color: '#60a5fa' },
+  { key: 'en', label: 'English', flag: '🇬🇧', flagCode: 'EN', color: '#a78bfa' },
 ]
 
 function extractYouTubeId(url: string): string | null {
@@ -83,27 +66,32 @@ function extractYouTubeId(url: string): string | null {
 }
 
 export default function TopicDetailPage() {
-  const params = useParams()
-  const router = useRouter()
+  const params    = useParams()
+  const router    = useRouter()
   const sectionId = params.id as string
   const topicId   = params.topicId as string
 
-  const section = SECTIONS.find(s => s.id === Number(sectionId))
+  const section     = SECTIONS.find(s => s.id === Number(sectionId))
   const accentColor = section?.color ?? '#00D4FF'
 
-  const [lang, setLang]           = useState<Lang>('uz')
-  const [content, setContent]     = useState<TopicContent>(EMPTY_CONTENT)
+  const [lang, setLang]             = useState<Lang>('uz')
+  const [content, setContent]       = useState<TopicContent>({
+    uz: { pdfData: '', pdfName: '', videoUrl: '' },
+    ru: { pdfData: '', pdfName: '', videoUrl: '' },
+    en: { pdfData: '', pdfName: '', videoUrl: '' },
+  })
   const [topicTitle, setTopicTitle] = useState('')
-  const [saved, setSaved]         = useState(false)
-  const [activeSim, setActiveSim] = useState<string | null>(null)
-  const [simOpen, setSimOpen]     = useState(false)
+  const [activeSim, setActiveSim]   = useState<string | null>(null)
+  const [simOpen, setSimOpen]       = useState(false)
+  const [fullscreen, setFullscreen] = useState(false)
+  const iframeRef = useRef<HTMLIFrameElement>(null)
 
   useEffect(() => {
     const stored = localStorage.getItem(`bolim-topics-${sectionId}`)
     if (stored) {
       try {
         const topics = JSON.parse(stored)
-        const topic = topics.find((t: { id: string; title: string }) => t.id === topicId)
+        const topic  = topics.find((t: { id: string; title: string }) => t.id === topicId)
         if (topic) setTopicTitle(topic.title)
       } catch { /* ignore */ }
     }
@@ -113,26 +101,56 @@ export default function TopicDetailPage() {
     }
   }, [sectionId, topicId])
 
-  const updateField = (field: keyof LangContent, value: string) => {
-    setSaved(false)
-    setContent(prev => ({
-      ...prev,
-      [lang]: { ...prev[lang], [field]: value },
-    }))
-  }
-
-  const saveAll = () => {
-    localStorage.setItem(`bolim-content-${topicId}`, JSON.stringify(content))
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2500)
-  }
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setFullscreen(false) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   const current    = content[lang]
   const langConfig = LANGS.find(l => l.key === lang)!
   const videoId    = extractYouTubeId(current.videoUrl)
+  const pdfSrc     = current.pdfData ? `data:application/pdf;base64,${current.pdfData}` : null
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
+
+      {/* ── Fullscreen PDF ── */}
+      {fullscreen && pdfSrc && (
+        <div className="fixed inset-0 z-50 flex flex-col" style={{ background: '#05050f' }}>
+          {/* toolbar */}
+          <div
+            className="flex items-center gap-3 px-5 py-3 flex-shrink-0"
+            style={{ background: 'rgba(8,8,25,0.98)', borderBottom: `1px solid ${langConfig.color}25` }}
+          >
+            <div
+              className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0"
+              style={{ background: `${langConfig.color}18`, border: `1px solid ${langConfig.color}30` }}
+            >
+              <FileText className="h-4 w-4" style={{ color: langConfig.color }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-white truncate">{current.pdfName || topicTitle}</p>
+              <p className="text-xs" style={{ color: langConfig.color }}>{langConfig.label}</p>
+            </div>
+            <button
+              onClick={() => setFullscreen(false)}
+              className="h-9 w-9 rounded-xl flex items-center justify-center transition-all hover:bg-white/10"
+              title="Yopish (Esc)"
+            >
+              <X className="h-5 w-5 text-gray-400 hover:text-white" />
+            </button>
+          </div>
+
+          {/* PDF */}
+          <iframe
+            ref={iframeRef}
+            src={`${pdfSrc}#toolbar=1&navpanes=1&scrollbar=1&view=FitH`}
+            className="flex-1 w-full"
+            title={current.pdfName}
+          />
+        </div>
+      )}
 
       {/* Back */}
       <button
@@ -143,29 +161,12 @@ export default function TopicDetailPage() {
         Mavzular ro&apos;yxati
       </button>
 
-      {/* Title row */}
-      <div className="flex items-center justify-between gap-4 mb-8 flex-wrap">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: accentColor }}>
-            Mavzu
-          </p>
-          <h1 className="text-3xl font-black text-white">{topicTitle || '—'}</h1>
-        </div>
-        <button
-          onClick={saveAll}
-          className="flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-bold transition-all"
-          style={{
-            background: saved
-              ? 'rgba(52,211,153,0.15)'
-              : `linear-gradient(135deg, ${accentColor}, ${accentColor}cc)`,
-            color: saved ? '#34d399' : '#000',
-            border: saved ? '1px solid rgba(52,211,153,0.3)' : 'none',
-            boxShadow: saved ? 'none' : `0 4px 20px ${accentColor}40`,
-          }}
-        >
-          {saved ? <CheckCircle className="h-4 w-4" /> : <Save className="h-4 w-4" />}
-          {saved ? 'Saqlandi!' : 'Saqlash'}
-        </button>
+      {/* Title */}
+      <div className="mb-8">
+        <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: accentColor }}>
+          Mavzu
+        </p>
+        <h1 className="text-3xl font-black text-white">{topicTitle || '—'}</h1>
       </div>
 
       {/* Language tabs */}
@@ -184,83 +185,114 @@ export default function TopicDetailPage() {
               border: lang === l.key ? `1px solid ${l.color}30` : '1px solid transparent',
             }}
           >
-            <span>{l.flag}</span>
+            <span className="text-xs font-black">{l.flagCode}</span>
             {l.label}
-            {content[l.key].text.trim() && (
-              <span
-                className="h-1.5 w-1.5 rounded-full"
-                style={{ background: l.color }}
-              />
+            {content[l.key].pdfData && (
+              <span className="h-1.5 w-1.5 rounded-full" style={{ background: l.color }} />
             )}
           </button>
         ))}
       </div>
 
-      {/* Two-column layout */}
+      {/* Two-column */}
       <div className="grid gap-6 lg:grid-cols-2">
 
-        {/* Left: text content */}
+        {/* Left: PDF reader */}
         <div
-          className="rounded-2xl p-5 flex flex-col gap-3"
-          style={{
-            background: 'rgba(8,8,25,0.8)',
-            border: `1px solid ${langConfig.color}20`,
-          }}
+          className="rounded-2xl overflow-hidden flex flex-col"
+          style={{ background: 'rgba(8,8,25,0.8)', border: `1px solid ${langConfig.color}20` }}
         >
-          <div className="flex items-center gap-2">
-            <span className="text-lg">{langConfig.flag}</span>
-            <span className="text-sm font-bold" style={{ color: langConfig.color }}>
-              {langConfig.label} — Mavzu matni
-            </span>
+          {/* card header */}
+          <div
+            className="flex items-center justify-between px-5 py-4"
+            style={{ borderBottom: `1px solid ${langConfig.color}15` }}
+          >
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4" style={{ color: langConfig.color }} />
+              <span className="text-sm font-bold" style={{ color: langConfig.color }}>
+                {langConfig.flag} {langConfig.label} — Dars materiali
+              </span>
+            </div>
+            {pdfSrc && (
+              <button
+                onClick={() => setFullscreen(true)}
+                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all hover:brightness-125"
+                style={{
+                  background: `${langConfig.color}18`,
+                  color: langConfig.color,
+                  border: `1px solid ${langConfig.color}30`,
+                }}
+                title="To'liq ekranda ochish"
+              >
+                <Maximize2 className="h-3 w-3" />
+                Kengaytirish
+              </button>
+            )}
           </div>
-          <textarea
-            value={current.text}
-            onChange={e => updateField('text', e.target.value)}
-            placeholder={langConfig.placeholder}
-            rows={14}
-            className="flex-1 resize-none rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 outline-none leading-relaxed transition-all"
-            style={{
-              background: 'rgba(255,255,255,0.03)',
-              border: `1px solid ${current.text ? langConfig.color + '35' : 'rgba(255,255,255,0.07)'}`,
-              minHeight: '280px',
-            }}
-          />
-          <p className="text-xs text-gray-600">
-            {current.text.length} belgi
-          </p>
+
+          {pdfSrc ? (
+            /* ── PDF viewer ── */
+            <div className="relative flex-1">
+              <iframe
+                src={`${pdfSrc}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`}
+                className="w-full"
+                style={{ height: 420 }}
+                title={current.pdfName}
+              />
+              {/* bottom open-fullscreen bar */}
+              <button
+                onClick={() => setFullscreen(true)}
+                className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-2 py-3 text-xs font-bold transition-all"
+                style={{
+                  background: `linear-gradient(to top, rgba(8,8,25,0.96) 60%, transparent)`,
+                  color: langConfig.color,
+                }}
+              >
+                <Maximize2 className="h-3.5 w-3.5" />
+                To&apos;liq ekranda o&apos;qish
+              </button>
+            </div>
+          ) : (
+            /* ── Empty state ── */
+            <div className="flex flex-col items-center justify-center gap-3 py-16 px-6 text-center">
+              <div
+                className="h-16 w-16 rounded-2xl flex items-center justify-center"
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+              >
+                <FileText className="h-7 w-7 text-gray-700" />
+              </div>
+              <p className="text-gray-500 text-sm font-semibold">Dars materiali hali yuklanmagan</p>
+              <p className="text-gray-700 text-xs">Tez orada qo&apos;shiladi</p>
+            </div>
+          )}
         </div>
 
         {/* Right: video */}
         <div
           className="rounded-2xl p-5 flex flex-col gap-4"
-          style={{
-            background: 'rgba(8,8,25,0.8)',
-            border: `1px solid ${langConfig.color}20`,
-          }}
+          style={{ background: 'rgba(8,8,25,0.8)', border: `1px solid ${langConfig.color}20` }}
         >
           <div className="flex items-center gap-2">
             <PlayCircle className="h-4 w-4" style={{ color: langConfig.color }} />
             <span className="text-sm font-bold" style={{ color: langConfig.color }}>
-              {langConfig.label} — Video dars
+              {langConfig.flag} {langConfig.label} — Video dars
             </span>
           </div>
 
-          {/* Video URL input */}
           <div className="relative">
             <Play className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
             <input
               value={current.videoUrl}
-              onChange={e => updateField('videoUrl', e.target.value)}
-              placeholder={langConfig.videoPlaceholder}
-              className="w-full rounded-xl pl-9 pr-4 py-3 text-sm text-white placeholder-gray-600 outline-none transition-all"
+              readOnly
+              placeholder="Video hali qo'shilmagan"
+              className="w-full rounded-xl pl-9 pr-4 py-3 text-sm text-white placeholder-gray-600 outline-none cursor-default"
               style={{
-                background: 'rgba(255,255,255,0.04)',
-                border: `1px solid ${current.videoUrl ? langConfig.color + '40' : 'rgba(255,255,255,0.08)'}`,
+                background: 'rgba(255,255,255,0.03)',
+                border: `1px solid ${current.videoUrl ? langConfig.color + '30' : 'rgba(255,255,255,0.06)'}`,
               }}
             />
           </div>
 
-          {/* Video player */}
           {videoId ? (
             <div className="rounded-xl overflow-hidden aspect-video"
               style={{ border: `1px solid ${langConfig.color}20` }}>
@@ -274,28 +306,20 @@ export default function TopicDetailPage() {
           ) : (
             <div
               className="rounded-xl aspect-video flex flex-col items-center justify-center gap-3"
-              style={{
-                background: 'rgba(255,255,255,0.02)',
-                border: '1px dashed rgba(255,255,255,0.07)',
-              }}
+              style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.07)' }}
             >
               <PlayCircle className="h-10 w-10 text-gray-700" />
-              <p className="text-gray-600 text-sm text-center">
-                YouTube havolasini yuqoriga kiriting
-              </p>
-              <p className="text-gray-700 text-xs">
-                Masalan: https://youtu.be/xxxxx
-              </p>
+              <p className="text-gray-600 text-sm">Video hali qo&apos;shilmagan</p>
+              <p className="text-gray-700 text-xs">Tez orada qo&apos;shiladi</p>
             </div>
           )}
         </div>
       </div>
 
-      {/* ── Simulatsiyalar bo'limi ── */}
+      {/* Simulatsiyalar */}
       <div className="mt-6 rounded-2xl overflow-hidden"
         style={{ border: '1px solid rgba(99,102,241,0.22)', background: 'rgba(6,6,20,0.85)' }}>
 
-        {/* Header — ochish/yopish */}
         <button
           onClick={() => setSimOpen(v => !v)}
           className="w-full flex items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-white/[0.03]"
@@ -311,7 +335,7 @@ export default function TopicDetailPage() {
             fontSize: 11, padding: '3px 10px', borderRadius: 20,
             background: 'rgba(99,102,241,0.15)', color: '#818cf8', fontWeight: 700,
           }}>
-            {SIMS.filter(s => ['gravity', 'pendulum', 'elektroskop'].includes(s.id)).length} ta
+            {SIMS.length} ta
           </span>
           <span style={{ color: '#6366f1', fontSize: 18, marginLeft: 4 }}>
             {simOpen ? '▲' : '▼'}
@@ -320,8 +344,6 @@ export default function TopicDetailPage() {
 
         {simOpen && (
           <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-
-            {/* Sim tanlash kartochkalari */}
             <div className="flex gap-3 p-4 flex-wrap">
               {SIMS.map(sim => (
                 <button key={sim.id}
@@ -339,63 +361,16 @@ export default function TopicDetailPage() {
                 </button>
               ))}
             </div>
-
-            {/* Tanlangan simulatsiya */}
             {activeSim && (
               <div style={{ height: 480, margin: '0 16px 16px', borderRadius: 14, overflow: 'hidden',
                 border: '1px solid rgba(255,255,255,0.07)' }}>
                 {activeSim === 'gravity'     && <GravitySim />}
-                {activeSim === 'pendulum'    && (
-                  <PendulumSim length={2} angleDeg={30} paused={false} speed={1} simKey={0} boardMode={false} />
-                )}
-                {activeSim === 'elektroskop' && (
-                  <ElektroskopSim showLabels={false} onToggle={() => {}} />
-                )}
+                {activeSim === 'pendulum'    && <PendulumSim length={2} angleDeg={30} paused={false} speed={1} simKey={0} boardMode={false} />}
+                {activeSim === 'elektroskop' && <ElektroskopSim showLabels={false} onToggle={() => {}} />}
               </div>
             )}
           </div>
         )}
-      </div>
-
-      {/* All languages overview */}
-      <div
-        className="mt-6 rounded-2xl p-5"
-        style={{ background: 'rgba(8,8,25,0.6)', border: '1px solid rgba(255,255,255,0.06)' }}
-      >
-        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
-          Barcha tillar holati
-        </p>
-        <div className="grid grid-cols-3 gap-3">
-          {LANGS.map(l => {
-            const c = content[l.key]
-            const hasText  = c.text.trim().length > 0
-            const hasVideo = extractYouTubeId(c.videoUrl) !== null
-            return (
-              <button
-                key={l.key}
-                onClick={() => setLang(l.key)}
-                className="rounded-xl p-3 text-left transition-all hover:brightness-110"
-                style={{
-                  background: lang === l.key ? `${l.color}12` : 'rgba(255,255,255,0.03)',
-                  border: `1px solid ${lang === l.key ? l.color + '30' : 'rgba(255,255,255,0.06)'}`,
-                }}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <span>{l.flag}</span>
-                  <span className="text-xs font-bold" style={{ color: l.color }}>{l.label}</span>
-                </div>
-                <div className="flex gap-2">
-                  <span className={`text-xs rounded px-1.5 py-0.5 ${hasText ? 'text-green-400 bg-green-400/10' : 'text-gray-600 bg-gray-800'}`}>
-                    Matn {hasText ? '✓' : '—'}
-                  </span>
-                  <span className={`text-xs rounded px-1.5 py-0.5 ${hasVideo ? 'text-green-400 bg-green-400/10' : 'text-gray-600 bg-gray-800'}`}>
-                    Video {hasVideo ? '✓' : '—'}
-                  </span>
-                </div>
-              </button>
-            )
-          })}
-        </div>
       </div>
     </div>
   )

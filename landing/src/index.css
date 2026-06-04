@@ -1,0 +1,147 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base ─────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-image: url('/physics-bg.jpg');
+  background-size: cover;
+  background-position: center center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-color: #050d1a;
+  color: white;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+#root {
+  min-height: 100vh;
+  background: transparent !important;
+}
+@media (max-width: 768px) {
+  body {
+    background-attachment: scroll;
+    background-position: center center;
+  }
+}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #7c3aed; border-radius: 3px; }
+
+/* ── Atom orbit animations ────────────────────────────── */
+@keyframes orbit-0 {
+  from { transform: rotate(0deg);   }
+  to   { transform: rotate(360deg); }
+}
+@keyframes orbit-60 {
+  from { transform: rotate(60deg);  }
+  to   { transform: rotate(420deg); }
+}
+@keyframes orbit-neg60 {
+  from { transform: rotate(-60deg); }
+  to   { transform: rotate(300deg); }
+}
+@keyframes nucleus-pulse {
+  0%, 100% { opacity: 0.85; r: 13; }
+  50%       { opacity: 1;    r: 17; }
+}
+@keyframes nucleus-glow {
+  0%, 100% { opacity: 0.2; }
+  50%       { opacity: 0.45; }
+}
+
+/* ── Pendulum ──────────────────────────────────────────── */
+@keyframes pendulum-swing {
+  0%   { transform: rotate(-32deg); }
+  50%  { transform: rotate(32deg);  }
+  100% { transform: rotate(-32deg); }
+}
+.pendulum-group {
+  transform-origin: 60px 10px;
+  animation: pendulum-swing 1.8s ease-in-out infinite;
+}
+
+/* ── Float / pulse misc ───────────────────────────────── */
+@keyframes float-y {
+  0%, 100% { transform: translateY(0px);  }
+  50%       { transform: translateY(-14px); }
+}
+@keyframes badge-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(255,184,0,0.3); }
+  50%       { box-shadow: 0 0 22px rgba(255,184,0,0.7); }
+}
+@keyframes scroll-bounce {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(6px); }
+}
+@keyframes chat-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes bar-grow {
+  from { width: 0; }
+}
+
+/* ── Progress bar ─────────────────────────────────────── */
+@keyframes progress {
+  from { width: 0%;   }
+  to   { width: 100%; }
+}
+
+/* ── Dot nav ──────────────────────────────────────────── */
+.dot-active  { width: 24px !important; background: #FFB800 !important; }
+.dot-passive { width: 8px;  background: rgba(255,255,255,0.35); border-radius: 9999px; height: 8px; }
+
+/* ── Slide gradient text ──────────────────────────────── */
+.grad-gold   { background: linear-gradient(135deg,#FFB800,#FF8C00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.grad-purple { background: linear-gradient(135deg,#a855f7,#7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.grad-cyan   { background: linear-gradient(135deg,#00BCD4,#0288D1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+/* ── Glass card ───────────────────────────────────────── */
+.glass {
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+}
+.glass-dark {
+  background: rgba(8,15,35,0.55);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 20px;
+}
+
+/* ── Input focus ─────────────────────────────────────── */
+.fi-input {
+  width: 100%;
+  padding: 12px 16px 12px 44px;
+  background: rgba(255,255,255,0.06);
+  border: 1.5px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  color: white;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.fi-input:focus  { border-color: #a855f7; }
+.fi-input::placeholder { color: rgba(255,255,255,0.3); }
+
+/* ── Btn ──────────────────────────────────────────────── */
+.btn-primary {
+  width: 100%;
+  padding: 13px;
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow: 0 0 24px rgba(124,58,237,0.4);
+  transition: opacity 0.2s, transform 0.1s;
+}
+.btn-primary:hover  { opacity: 0.92; transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }

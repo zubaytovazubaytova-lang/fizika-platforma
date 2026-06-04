@@ -286,7 +286,7 @@ export default function LandingPage() {
         @keyframes zoomBg{0%,100%{transform:scale(1) translateX(0)}33%{transform:scale(1.06) translateX(-12px)}66%{transform:scale(1.09) translateX(12px)}}
         @keyframes shimmer{0%{background-position:200% center}100%{background-position:-200% center}}
         @keyframes scrollDot{0%{transform:translateY(0);opacity:1}80%{transform:translateY(14px);opacity:0}100%{transform:translateY(0);opacity:0}}
-        @keyframes chevron{0%,100%{opacity:0;transform:rotate(45deg) translate(-4px,-4px)}50%{opacity:1;transform:rotate(45deg) translate(0,0)}}
+        @keyframes chevron{0%,100%{opacity:0;transform:rotate(-45deg) translate(-4px,-4px)}50%{opacity:1;transform:rotate(-45deg) translate(0,0)}}
         /* ── Gradient text CSS classes (inline style conflict yo'qotish) ── */
         .gt-title{background-image:linear-gradient(135deg,#f1f5f9 10%,#c4b5fd 50%,#60a5fa 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
         .gt-gold{background-image:linear-gradient(135deg,#fde68a 0%,#f59e0b 40%,#fbbf24 70%,#fde68a 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 3s linear infinite;filter:drop-shadow(0 0 20px rgba(245,158,11,.5))}

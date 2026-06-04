@@ -10,6 +10,7 @@ interface TestItem {
   id: number; topic: string; title: string
   questions: number; minutes: number; diff: string
   bestScore: number | null; attempts: number; isNew: boolean
+  comingSoon?: boolean
 }
 
 // API dan keladigan quiz format
@@ -45,39 +46,39 @@ function apiQuizToTestItem(q: ApiQuiz): TestItem {
 
 const STATIC_GRADE_TESTS: Record<number, TestItem[]> = {
   8: [
-    { id: 101, topic: 'Termodinamika', title: 'Ideal gaz qonunlari',      questions: 20, minutes: 30, diff: 'medium', bestScore: null, attempts: 0, isNew: true },
-    { id: 102, topic: 'Issiqlik',      title: "Issiqlik o'tkazish",       questions: 15, minutes: 20, diff: 'medium', bestScore: null, attempts: 0, isNew: true },
-    { id: 103, topic: 'Agregat',       title: "Agregat holat o'tishlari", questions: 12, minutes: 18, diff: 'easy',   bestScore: null, attempts: 0, isNew: true },
+    { id: 101, topic: 'Termodinamika', title: 'Ideal gaz qonunlari',      questions: 20, minutes: 30, diff: 'medium', bestScore: null, attempts: 0, isNew: true, comingSoon: true },
+    { id: 102, topic: 'Issiqlik',      title: "Issiqlik o'tkazish",       questions: 15, minutes: 20, diff: 'medium', bestScore: null, attempts: 0, isNew: true, comingSoon: true },
+    { id: 103, topic: 'Agregat',       title: "Agregat holat o'tishlari", questions: 12, minutes: 18, diff: 'easy',   bestScore: null, attempts: 0, isNew: true, comingSoon: true },
   ],
   9: [
-    { id: 201, topic: 'Elektr',  title: 'Elektr toki va qarshilik',  questions: 25, minutes: 35, diff: 'hard',   bestScore: null, attempts: 0, isNew: true },
-    { id: 202, topic: 'Elektr',  title: 'Om qonuni va Kirxgof',      questions: 20, minutes: 30, diff: 'hard',   bestScore: null, attempts: 0, isNew: true },
-    { id: 203, topic: 'Magnit',  title: 'Magnit maydon va kuch',     questions: 18, minutes: 25, diff: 'hard',   bestScore: null, attempts: 0, isNew: true },
+    { id: 201, topic: 'Elektr',  title: 'Elektr toki va qarshilik',  questions: 25, minutes: 35, diff: 'hard',   bestScore: null, attempts: 0, isNew: true, comingSoon: true },
+    { id: 202, topic: 'Elektr',  title: 'Om qonuni va Kirxgof',      questions: 20, minutes: 30, diff: 'hard',   bestScore: null, attempts: 0, isNew: true, comingSoon: true },
+    { id: 203, topic: 'Magnit',  title: 'Magnit maydon va kuch',     questions: 18, minutes: 25, diff: 'hard',   bestScore: null, attempts: 0, isNew: true, comingSoon: true },
   ],
   10: [
-    { id: 301, topic: 'Optika',       title: 'Geometrik optika',             questions: 20, minutes: 25, diff: 'medium', bestScore: null, attempts: 0, isNew: true },
-    { id: 302, topic: "To'lqin",      title: 'Interferensiya va difraksiya', questions: 15, minutes: 20, diff: 'hard',   bestScore: null, attempts: 0, isNew: true },
-    { id: 303, topic: 'Elektromagnit',title: 'Elektromagnit induksiya',      questions: 18, minutes: 28, diff: 'hard',   bestScore: null, attempts: 0, isNew: true },
+    { id: 301, topic: 'Optika',       title: 'Geometrik optika',             questions: 20, minutes: 25, diff: 'medium', bestScore: null, attempts: 0, isNew: true, comingSoon: true },
+    { id: 302, topic: "To'lqin",      title: 'Interferensiya va difraksiya', questions: 15, minutes: 20, diff: 'hard',   bestScore: null, attempts: 0, isNew: true, comingSoon: true },
+    { id: 303, topic: 'Elektromagnit',title: 'Elektromagnit induksiya',      questions: 18, minutes: 28, diff: 'hard',   bestScore: null, attempts: 0, isNew: true, comingSoon: true },
   ],
   11: [
-    { id: 401, topic: 'Yadro',      title: 'Radioaktiv parchalanish',       questions: 20, minutes: 30, diff: 'hard', bestScore: null, attempts: 0, isNew: true },
-    { id: 402, topic: 'Kvant',      title: 'Kvant mexanikasi asoslari',     questions: 15, minutes: 25, diff: 'hard', bestScore: null, attempts: 0, isNew: true },
-    { id: 403, topic: 'Nisbiylik',  title: "Maxsus nisbiylik nazariyasi",   questions: 12, minutes: 20, diff: 'hard', bestScore: null, attempts: 0, isNew: true },
+    { id: 401, topic: 'Yadro',      title: 'Radioaktiv parchalanish',       questions: 20, minutes: 30, diff: 'hard', bestScore: null, attempts: 0, isNew: true, comingSoon: true },
+    { id: 402, topic: 'Kvant',      title: 'Kvant mexanikasi asoslari',     questions: 15, minutes: 25, diff: 'hard', bestScore: null, attempts: 0, isNew: true, comingSoon: true },
+    { id: 403, topic: 'Nisbiylik',  title: "Maxsus nisbiylik nazariyasi",   questions: 12, minutes: 20, diff: 'hard', bestScore: null, attempts: 0, isNew: true, comingSoon: true },
   ],
 }
 
 const MILLIY_TESTS: TestItem[] = [
-  { id: 501, topic: 'Mexanika',        title: "Milliy sertifikat — Mexanika bo'limi",       questions: 20, minutes: 30, diff: 'medium', bestScore: null, attempts: 0, isNew: true },
-  { id: 502, topic: 'Termodinamika',   title: "Milliy sertifikat — Termodinamika bo'limi",  questions: 20, minutes: 30, diff: 'medium', bestScore: null, attempts: 0, isNew: true },
-  { id: 503, topic: 'Elektrodinamika', title: "Milliy sertifikat — Elektr va magnit",       questions: 20, minutes: 30, diff: 'hard',   bestScore: null, attempts: 0, isNew: true },
-  { id: 504, topic: 'Aralash',         title: "Milliy sertifikat — 1-variant (to'liq)",     questions: 30, minutes: 50, diff: 'hard',   bestScore: null, attempts: 0, isNew: true },
+  { id: 501, topic: 'Mexanika',        title: "Milliy sertifikat — Mexanika bo'limi",       questions: 20, minutes: 30, diff: 'medium', bestScore: null, attempts: 0, isNew: true, comingSoon: true },
+  { id: 502, topic: 'Termodinamika',   title: "Milliy sertifikat — Termodinamika bo'limi",  questions: 20, minutes: 30, diff: 'medium', bestScore: null, attempts: 0, isNew: true, comingSoon: true },
+  { id: 503, topic: 'Elektrodinamika', title: "Milliy sertifikat — Elektr va magnit",       questions: 20, minutes: 30, diff: 'hard',   bestScore: null, attempts: 0, isNew: true, comingSoon: true },
+  { id: 504, topic: 'Aralash',         title: "Milliy sertifikat — 1-variant (to'liq)",     questions: 30, minutes: 50, diff: 'hard',   bestScore: null, attempts: 0, isNew: true, comingSoon: true },
 ]
 
 const DTM_TESTS: TestItem[] = [
-  { id: 601, topic: 'Mexanika',        title: "DTM — Mexanika (chuqur)",                  questions: 30, minutes: 45, diff: 'hard', bestScore: null, attempts: 0, isNew: true },
-  { id: 602, topic: 'Termodinamika',   title: "DTM — Termodinamika va molekulyar fizika", questions: 25, minutes: 40, diff: 'hard', bestScore: null, attempts: 0, isNew: true },
-  { id: 603, topic: 'Elektrodinamika', title: "DTM — Elektrodinamika",                    questions: 30, minutes: 45, diff: 'hard', bestScore: null, attempts: 0, isNew: true },
-  { id: 604, topic: 'Aralash',         title: "DTM simulyator — 1-variant (30 savol)",    questions: 30, minutes: 45, diff: 'hard', bestScore: null, attempts: 0, isNew: true },
+  { id: 601, topic: 'Mexanika',        title: "DTM — Mexanika (chuqur)",                  questions: 30, minutes: 45, diff: 'hard', bestScore: null, attempts: 0, isNew: true, comingSoon: true },
+  { id: 602, topic: 'Termodinamika',   title: "DTM — Termodinamika va molekulyar fizika", questions: 25, minutes: 40, diff: 'hard', bestScore: null, attempts: 0, isNew: true, comingSoon: true },
+  { id: 603, topic: 'Elektrodinamika', title: "DTM — Elektrodinamika",                    questions: 30, minutes: 45, diff: 'hard', bestScore: null, attempts: 0, isNew: true, comingSoon: true },
+  { id: 604, topic: 'Aralash',         title: "DTM simulyator — 1-variant (30 savol)",    questions: 30, minutes: 45, diff: 'hard', bestScore: null, attempts: 0, isNew: true, comingSoon: true },
 ]
 
 const GRADE_INFO: Record<number, { topics: string[]; color: string; count: number }> = {
@@ -112,6 +113,7 @@ function TestCard({ t, accent }: { t: TestItem; accent: string }) {
   const router = useRouter()
   const diff = DIFF_CFG[t.diff]
   const hasAttempt = t.bestScore !== null
+  const isLocked = t.comingSoon
   return (
     <div className="rounded-2xl p-5 flex flex-col gap-4 transition-all duration-300"
       style={{
@@ -166,14 +168,22 @@ function TestCard({ t, accent }: { t: TestItem; accent: string }) {
             style={{ width: `${t.bestScore}%`, background: t.bestScore! >= 80 ? 'linear-gradient(90deg,#34D399,#10b981)' : t.bestScore! >= 60 ? 'linear-gradient(90deg,#FFB347,#f59e0b)' : 'linear-gradient(90deg,#EF4444,#dc2626)' }} />
         </div>
       )}
-      <button
-        onClick={() => router.push(`/tests/${t.id}`)}
-        className="flex items-center justify-center gap-2 rounded-xl py-2.5 font-bold text-sm text-white transition-all"
-        style={{ background: hov ? `linear-gradient(135deg,${accent},${accent}aa)` : accent + '18', border: `1px solid ${accent}35`, boxShadow: hov ? `0 0 20px ${accent}40` : 'none' }}>
-        <Zap className="h-4 w-4" />
-        {hasAttempt ? 'Qayta boshlash' : 'Boshlash'}
-        <ChevronRight className="h-4 w-4" />
-      </button>
+      {isLocked ? (
+        <div className="flex items-center justify-center gap-2 rounded-xl py-2.5 font-bold text-sm cursor-not-allowed"
+          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.3)' }}>
+          <Lock className="h-4 w-4" />
+          Tez kunda
+        </div>
+      ) : (
+        <button
+          onClick={() => router.push(`/tests/${t.id}`)}
+          className="flex items-center justify-center gap-2 rounded-xl py-2.5 font-bold text-sm text-white transition-all"
+          style={{ background: hov ? `linear-gradient(135deg,${accent},${accent}aa)` : accent + '18', border: `1px solid ${accent}35`, boxShadow: hov ? `0 0 20px ${accent}40` : 'none' }}>
+          <Zap className="h-4 w-4" />
+          {hasAttempt ? 'Qayta boshlash' : 'Boshlash'}
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      )}
     </div>
   )
 }
