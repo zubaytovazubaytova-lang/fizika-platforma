@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SOAR GAZ — Gaz Ta'minoti Platformasi</title>
+
+  <!-- OG / Telegram Preview -->
+  <meta property="og:title" content="SOAR GAZ — Gaz Ta'minoti Platformasi"/>
+  <meta property="og:description" content="Gaz tizimlarini loyihalashtirish, montaj, servis va uskunalar xaridi. O'zbekistonda ishonchli hamkor."/>
+  <meta property="og:image" content="https://zubaytovazubaytova-lang.github.io/fizika-platforma/soar-gaz/preview.svg"/>
+  <meta property="og:url" content="https://zubaytovazubaytova-lang.github.io/fizika-platforma/soar-gaz/"/>
+  <meta property="og:type" content="website"/>
+  <meta name="description" content="SOAR GAZ — gaz tizimlarini loyihalashtirish, montaj va servis xizmat ko'rsatish."/>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: { 900:'#0a1835', 800:'#132751', 700:'#1e3a6e', 600:'#2e4f8a' },
+            gold: { 300:'#f5d97a', 400:'#f0c940', 500:'#d4af37', 600:'#b8952a' }
+          },
+          fontFamily: { sans: ['Inter','sans-serif'] }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    html { scroll-behavior: smooth; }
+    body { background: #0a1835; }
+
+    /* Animated gradient background */
+    .hero-bg {
+      background: linear-gradient(135deg, #0a1835 0%, #1e3a6e 50%, #0a1835 100%);
+      background-size: 400% 400%;
+      animation: gradientShift 8s ease infinite;
+    }
+    @keyframes gradientShift {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .gold-line { background: linear-gradient(90deg, transparent, #d4af37, transparent); height:1px; }
+    .gold-btn  { background: linear-gradient(90deg, #d4af37, #f0c940); }
+
+    /* Card hover */
+    .card { transition: all .3s ease; border: 1px solid rgba(212,175,55,0.15); }
+    .card:hover { transform: translateY(-6px); border-color: rgba(212,175,55,0.5); box-shadow: 0 20px 40px rgba(10,24,53,.4); }
+
+    /* Flame animation */
+    @keyframes flicker { 0%{opacity:1;transform:scale(1)} 100%{opacity:.8;transform:scale(1.08)} }
+    .flame { animation: flicker 1.5s infinite alternate; }
+
+    /* Pipe animation */
+    @keyframes flow {
+      0%   { stroke-dashoffset: 200; }
+      100% { stroke-dashoffset: 0; }
+    }
+    .gas-flow { stroke-dasharray: 20 10; animation: flow 2s linear infinite; }
+
+    /* Tabs */
+    .tab-active { background: linear-gradient(90deg,#d4af37,#f0c940); color:#0a1835; }
+
+    /* Progress bar */
+    .progress-fill { transition: width 1s ease; }
+
+    /* Pulse badge */
+    @keyframes pulse-ring { 0%{transform:scale(.8);opacity:.8} 100%{transform:scale(1.5);opacity:0} }
+    .pulse-ring::before {
+      content:''; position:absolute; inset:0; border-radius:50%;
+      background: #22c55e; animation: pulse-ring 2s infinite;
+    }
+
+    /* Modal */
+    .modal-bg { background: rgba(10,24,53,0.85); backdrop-filter: blur(8px); }
+
+    /* Navbar scroll effect */
+    .nav-scrolled { background: rgba(10,24,53,0.98) !important; box-shadow: 0 2px 20px rgba(0,0,0,.4); }
+
+    /* Number counter */
+    .counter-num { font-variant-numeric: tabular-nums; }
+
+    /* Tooltip */
+    .tooltip { display:none; }
+    .has-tooltip:hover .tooltip { display:block; }
+
+    /* Loader */
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .spin { animation: spin 1s linear infinite; }
+  </style>
+</head>
+<body class="font-sans text-white">
+
+<!-- ====== NAVBAR ====== -->
+<nav id="navbar" class="fixed top-0 left-0 right-0 z-50 bg-navy-900/90 backdrop-blur-md border-b border-gold-500/10 transition-all duration-300">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+
+    <!-- Logo -->
+    <a href="#" class="flex items-center gap-3">
+      <div class="w-10 h-10 gold-btn rounded-xl flex items-center justify-center shadow-lg">
+        <i class="fas fa-fire text-navy-900 text-lg flame"></i>
+      </div>
+      <div class="leading-tight">
+        <span class="text-lg font-black">SOAR<span class="text-gold-500"> GAZ</span></span>
+        <div class="text-[10px] text-gold-500/60 -mt-0.5 tracking-widest uppercase">Gaz Ta'minoti Platformasi</div>
+      </div>
+    </a>
+
+    <!-- Desktop links -->
+    <div class="hidden md:flex items-center gap-6 text-sm font-medium">
+      <a href="#xizmatlar" class="text-gray-400 hover:text-gold-400 transition-colors">Xizmatlar</a>
+      <a href="#kalkulator" class="text-gray-400 hover:text-gold-400 transition-colors">Kalkulator</a>
+      <a href="#xaridlar" class="text-gray-400 hover:text-gold-400 transition-colors">Xaridlar</a>
+      <a href="#tolov" class="text-gray-400 hover:text-gold-400 transition-colors">To'lov</a>
+      <a href="#aloqa" class="gold-btn text-navy-900 font-bold px-5 py-2 rounded-xl hover:opacity-90 transition-all">
+        <i class="fas fa-phone-alt mr-1.5"></i>Murojaat
+      </a>
+    </div>
+
+    <!-- Mobile burger -->
+    <button onclick="toggleNav()" class="md:hidden text-gold-400 text-xl p-2">
+      <i id="navIcon" class="fas fa-bars"></i>
+    </button>
+  </div>
+
+  <!-- Mobile menu -->
+  <div id="mobileNav" class="hidden md:hidden bg-navy-800 border-t border-gold-500/10">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col gap-1">
+      <a href="#xizmatlar" onclick="toggleNav()" class="py-3 px-4 text-gray-300 hover:text-gold-400 hover:bg-navy-700 rounded-lg transition-all">Xizmatlar</a>
+      <a href="#kalkulator" onclick="toggleNav()" class="py-3 px-4 text-gray-300 hover:text-gold-400 hover:bg-navy-700 rounded-lg transition-all">Kalkulator</a>
+      <a href="#xaridlar" onclick="toggleNav()" class="py-3 px-4 text-gray-300 hover:text-gold-400 hover:bg-navy-700 rounded-lg transition-all">Xaridlar</a>
+      <a href="#tolov" onclick="toggleNav()" class="py-3 px-4 text-gray-300 hover:text-gold-400 hover:bg-navy-700 rounded-lg transition-all">To'lov</a>
+      <a href="#aloqa" onclick="toggleNav()" class="py-3 px-4 gold-btn text-navy-900 font-bold rounded-lg text-center mt-1">Murojaat</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ====== HERO ====== -->
+<section class="hero-bg min-h-screen pt-16 flex items-center relative overflow-hidden">
+
+  <!-- Animated SVG pipe diagram -->
+  <div class="absolute inset-0 opacity-10 pointer-events-none">
+    <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <path d="M-50,200 Q300,100 600,200 Q900,300 1250,200" stroke="#d4af37" stroke-width="3" fill="none" class="gas-flow"/>
+      <path d="M-50,400 Q200,350 500,400 Q800,450 1250,380" stroke="#d4af37" stroke-width="2" fill="none" class="gas-flow"/>
+      <path d="M-50,500 Q400,480 700,520 Q1000,560 1250,500" stroke="#d4af37" stroke-width="1.5" fill="none" class="gas-flow"/>
+    </svg>
+  </div>
+
+  <div class="absolute top-32 right-16 w-80 h-80 bg-gold-500/5 rounded-full blur-3xl"></div>
+  <div class="absolute bottom-20 left-10 w-64 h-64 bg-gold-500/5 rounded-full blur-3xl"></div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10 w-full">
+    <div class="grid lg:grid-cols-2 gap-16 items-center">
+
+      <!-- LEFT -->
+      <div>
+        <div class="inline-flex items-center gap-2 bg-gold-500/10 border border-gold-500/30 rounded-full px-4 py-2 mb-8">
+          <span class="relative w-2 h-2">
+            <span class="absolute inset-0 bg-green-400 rounded-full animate-ping opacity-75"></span>
+            <span class="relative block w-2 h-2 bg-green-400 rounded-full"></span>
+          </span>
+          <span class="text-gold-400 text-sm font-semibold">O'zbekistonda №1 Gaz Ta'minoti</span>
+        </div>
+
+        <h1 class="text-5xl lg:text-6xl font-black leading-tight mb-6">
+          <span class="text-white">Ishonchli</span><br/>
+          <span class="text-gold-400">Gaz Ta'minoti</span><br/>
+          <span class="text-white">Yechimi</span>
+        </h1>
+
+        <p class="text-gray-400 text-lg leading-relaxed mb-10 max-w-md">
+          Gaz tizimlarini <strong class="text-white">loyihalashtirish</strong>, <strong class="text-white">montaj qilish</strong> va <strong class="text-white">servis</strong> xizmat ko'rsatishda O'zbekistondagi eng ishonchli hamkoringiz.
+        </p>
+
+        <div class="flex flex-wrap gap-4 mb-12">
+          <a href="#kalkulator" class="gold-btn text-navy-900 font-bold px-8 py-4 rounded-xl hover:opacity-90 transition-all shadow-lg shadow-gold-500/20 flex items-center gap-2">
+            <i class="fas fa-calculator"></i> Narx hisoblash
+          </a>
+          <a href="#xizmatlar" class="border border-gold-500/40 text-gold-400 font-semibold px-8 py-4 rounded-xl hover:bg-gold-500/10 transition-all flex items-center gap-2">
+            <i class="fas fa-tools"></i> Xizmatlar
+          </a>
+        </div>
+
+        <!-- Quick stats -->
+        <div class="grid grid-cols-3 gap-4 pt-8 border-t border-navy-700">
+          <div class="text-center">
+            <div class="text-3xl font-black text-gold-400 counter-num" data-target="500">0</div>
+            <div class="text-gray-500 text-xs mt-1">Loyiha+</div>
+          </div>
+          <div class="text-center border-x border-navy-700">
+            <div class="text-3xl font-black text-gold-400 counter-num" data-target="10">0</div>
+            <div class="text-gray-500 text-xs mt-1">Yil tajriba</div>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl font-black text-gold-400">24/7</div>
+            <div class="text-gray-500 text-xs mt-1">Servis</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT — Interactive status panel -->
+      <div class="hidden lg:block">
+        <div class="bg-navy-800/80 border border-gold-500/20 rounded-3xl p-6 backdrop-blur-sm">
+
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="font-bold text-white">Tizim Monitoring</h3>
+            <span class="text-xs text-green-400 bg-green-400/10 px-3 py-1 rounded-full">
+              <i class="fas fa-circle text-[8px] mr-1 animate-pulse"></i>Jonli
+            </span>
+          </div>
+
+          <!-- Status items -->
+          <div class="space-y-4">
+            <div>
+              <div class="flex justify-between text-sm mb-2">
+                <span class="text-gray-400"><i class="fas fa-fire text-gold-400 mr-2"></i>Gaz bosimi</span>
+                <span class="text-green-400 font-semibold">Normal</span>
+              </div>
+              <div class="h-2 bg-navy-900 rounded-full overflow-hidden">
+                <div class="h-full w-[78%] progress-fill rounded-full" style="background:linear-gradient(90deg,#22c55e,#16a34a)"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between text-sm mb-2">
+                <span class="text-gray-400"><i class="fas fa-tachometer-alt text-gold-400 mr-2"></i>Sarflanish</span>
+                <span class="text-gold-400 font-semibold">4.2 m³/soat</span>
+              </div>
+              <div class="h-2 bg-navy-900 rounded-full overflow-hidden">
+                <div class="h-full w-[42%] progress-fill rounded-full" style="background:linear-gradient(90deg,#d4af37,#f0c940)"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between text-sm mb-2">
+                <span class="text-gray-400"><i class="fas fa-thermometer-half text-gold-400 mr-2"></i>Harorat</span>
+                <span class="text-blue-400 font-semibold">18°C</span>
+              </div>
+              <div class="h-2 bg-navy-900 rounded-full overflow-hidden">
+                <div class="h-full w-[55%] progress-fill rounded-full" style="background:linear-gradient(90deg,#3b82f6,#2563eb)"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gold-line my-6"></div>
+
+          <!-- Quick actions -->
+          <div class="grid grid-cols-2 gap-3">
+            <button onclick="showModal('servis')" class="bg-navy-700 hover:bg-navy-600 border border-navy-600 hover:border-gold-500/40 rounded-xl p-4 text-center transition-all group">
+              <i class="fas fa-wrench text-gold-400 text-xl mb-2 block group-hover:scale-110 transition-transform"></i>
+              <span class="text-xs text-gray-300">Servis chaqir</span>
+            </button>
+            <button onclick="showModal('hisobot')" class="bg-navy-700 hover:bg-navy-600 border border-navy-600 hover:border-gold-500/40 rounded-xl p-4 text-center transition-all group">
+              <i class="fas fa-file-alt text-gold-400 text-xl mb-2 block group-hover:scale-110 transition-transform"></i>
+              <span class="text-xs text-gray-300">Hisobot olish</span>
+            </button>
+            <button onclick="showModal('buyurtma')" class="bg-navy-700 hover:bg-navy-600 border border-navy-600 hover:border-gold-500/40 rounded-xl p-4 text-center transition-all group">
+              <i class="fas fa-shopping-cart text-gold-400 text-xl mb-2 block group-hover:scale-110 transition-transform"></i>
+              <span class="text-xs text-gray-300">Buyurtma</span>
+            </button>
+            <button onclick="document.querySelector('#aloqa').scrollIntoView({behavior:'smooth'})" class="bg-navy-700 hover:bg-navy-600 border border-navy-600 hover:border-gold-500/40 rounded-xl p-4 text-center transition-all group">
+              <i class="fas fa-headset text-gold-400 text-xl mb-2 block group-hover:scale-110 transition-transform"></i>
+              <span class="text-xs text-gray-300">Qo'ng'iroq</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="gold-line"></div>
+
+<!-- ====== XIZMATLAR ====== -->
+<section id="xizmatlar" class="py-24 bg-navy-900">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-16">
+      <p class="text-gold-500 text-sm font-semibold uppercase tracking-widest mb-3">Nima qilamiz</p>
+      <h2 class="text-4xl font-black">Bizning <span class="text-gold-400">Xizmatlar</span></h2>
+      <p class="text-gray-400 mt-4 max-w-xl mx-auto">Gaz ta'minotining barcha bosqichlarida professional yechimlar</p>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-8">
+      <!-- Loyiha -->
+      <div class="card bg-navy-800 rounded-2xl p-8 cursor-pointer" onclick="showModal('loyiha')">
+        <div class="w-16 h-16 bg-gold-500/10 rounded-2xl flex items-center justify-center mb-6">
+          <i class="fas fa-drafting-compass text-gold-400 text-2xl"></i>
+        </div>
+        <h3 class="text-xl font-bold mb-3">Loyihalashtirish</h3>
+        <p class="text-gray-400 text-sm leading-relaxed mb-6">Professional gaz tizimi dizayni, texnik hujjatlar va ruxsatnomalar</p>
+        <ul class="space-y-2 text-sm text-gray-400">
+          <li class="flex items-center gap-2"><i class="fas fa-check-circle text-gold-500 text-xs"></i>Texnik loyiha</li>
+          <li class="flex items-center gap-2"><i class="fas fa-check-circle text-gold-500 text-xs"></i>Ruxsatnomalar</li>
+          <li class="flex items-center gap-2"><i class="fas fa-check-circle text-gold-500 text-xs"></i>Ekspertiza</li>
+          <li class="flex items-center gap-2"><i class="fas fa-check-circle text-gold-500 text-xs"></i>3D modellashtirish</li>
+        </ul>
+        <div class="mt-6 text-gold-400 text-sm font-semibold">Batafsil <i class="fas fa-arrow-right ml-1"></i></div>
+      </div>
+
+      <!-- Montaj -->
+      <div class="card bg-navy-800 rounded-2xl p-8 cursor-pointer relative" style="border-color:rgba(212,175,55,0.4)" onclick="showModal('montaj')">
+        <div class="absolute top-4 right-4 gold-btn text-navy-900 text-xs font-bold px-3 py-1 rounded-full">Mashhur</div>
+        <div class="w-16 h-16 bg-gold-500/20 rounded-2xl flex items-center justify-center mb-6">
+          <i class="fas fa-tools text-gold-400 text-2xl"></i>
+        </div>
+        <h3 class="text-xl font-bold mb-3">Montaj Qilish</h3>
+        <p class="text-gray-400 text-sm leading-relaxed mb-6">Gaz quvurlari va uskunalarini xavfsiz va sifatli o'rnatish</p>
+        <ul class="space-y-2 text-sm text-gray-400">
+          <li class="flex items-center gap-2"><i class="fas fa-check-circle text-gold-500 text-xs"></i>Ichki tarmoqlar</li>
+          <li class="flex items-center gap-2"><i class="fas fa-check-circle text-gold-500 text-xs"></i>Magistral quvurlar</li>
+          <li class="flex items-center gap-2"><i class="fas fa-check-circle text-gold-500 text-xs"></i>Hisoblagichlar</li>
+          <li class="flex items-center gap-2"><i class="fas fa-check-circle text-gold-500 text-xs"></i>Xavfsizlik tizimlari</li>
+        </ul>
+        <div class="mt-6 text-gold-400 text-sm font-semibold">Batafsil <i class="fas fa-arrow-right ml-1"></i></div>
+      </div>
+
+      <!-- Servis -->
+      <div class="card bg-navy-800 rounded-2xl p-8 cursor-pointer" onclick="showModal('servis')">
+        <div class="w-16 h-16 bg-gold-500/10 rounded-2xl flex items-center justify-center mb-6">
+          <i class="fas fa-headset text-gold-400 text-2xl"></i>
+        </div>
+        <h3 class="text-xl font-bold mb-3">Servis Xizmatlar</h3>
+        <p class="text-gray-400 text-sm leading-relaxed mb-6">Texnik ko'rik, ta'mirlash va 24/7 favqulodda yordam</p>
+        <ul class="space-y-2 text-sm text-gray-400">
+          <li class="flex items-center gap-2"><i class="fas fa-check-circle text-gold-500 text-xs"></i>Davriy tekshiruv</li>
+          <li class="flex items-center gap-2"><i class="fas fa-check-circle text-gold-500 text-xs"></i>Ta'mirlash</li>
+          <li class="flex items-center gap-2"><i class="fas fa-check-circle text-gold-500 text-xs"></i>24/7 tez yordam</li>
+          <li class="flex items-center gap-2"><i class="fas fa-check-circle text-gold-500 text-xs"></i>Kafolat xizmati</li>
+        </ul>
+        <div class="mt-6 text-gold-400 text-sm font-semibold">Batafsil <i class="fas fa-arrow-right ml-1"></i></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="gold-line"></div>
+
+<!-- ====== KALKULATOR ====== -->
+<section id="kalkulator" class="py-24 bg-navy-800">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-16">
+      <p class="text-gold-500 text-sm font-semibold uppercase tracking-widest mb-3">Onlayn</p>
+      <h2 class="text-4xl font-black">Narx <span class="text-gold-400">Kalkulatori</span></h2>
+      <p class="text-gray-400 mt-4 max-w-xl mx-auto">Xizmat narxini hisoblang va darhol taklif oling</p>
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-10 items-start">
+
+      <!-- Kalkulator form -->
+      <div class="bg-navy-900 border border-gold-500/20 rounded-2xl p-8">
+        <h3 class="font-bold text-lg mb-6 flex items-center gap-2">
+          <i class="fas fa-calculator text-gold-400"></i> Hisoblash
+        </h3>
+
+        <div class="space-y-5">
+          <div>
+            <label class="text-gray-400 text-sm block mb-2">Xizmat turi</label>
+            <select id="calcService" onchange="calculate()" class="w-full bg-navy-800 border border-navy-600 focus:border-gold-500 text-white rounded-xl px-4 py-3 text-sm outline-none transition-colors">
+              <option value="0">Tanlang...</option>
+              <option value="1500000">Loyihalashtirish (boshlang'ich)</option>
+              <option value="3000000">Montaj — Uy-joy (1 qavat)</option>
+              <option value="5000000">Montaj — Ko'p qavatli bino</option>
+              <option value="800000">Servis ko'rik (yillik)</option>
+              <option value="2500000">Hisoblagich o'rnatish</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-gray-400 text-sm block mb-2">Maydon (m²)</label>
+            <input type="range" id="calcArea" min="50" max="1000" value="150" oninput="calculate()" class="w-full accent-yellow-500"/>
+            <div class="flex justify-between text-xs text-gray-500 mt-1">
+              <span>50 m²</span>
+              <span id="areaVal" class="text-gold-400 font-bold">150 m²</span>
+              <span>1000 m²</span>
+            </div>
+          </div>
+
+          <div>
+            <label class="text-gray-400 text-sm block mb-2">Qavat soni</label>
+            <div class="flex gap-2">
+              <button onclick="changeFloor(-1)" class="w-12 h-12 bg-navy-700 hover:bg-navy-600 border border-navy-600 rounded-xl font-bold text-xl transition-all">−</button>
+              <input type="number" id="calcFloor" value="1" min="1" max="30" oninput="calculate()" class="flex-1 bg-navy-800 border border-navy-600 text-white text-center rounded-xl px-4 py-3 text-lg font-bold outline-none"/>
+              <button onclick="changeFloor(1)" class="w-12 h-12 bg-navy-700 hover:bg-navy-600 border border-navy-600 rounded-xl font-bold text-xl transition-all">+</button>
+            </div>
+          </div>
+
+          <div>
+            <label class="text-gray-400 text-sm block mb-2">Qo'shimcha xizmatlar</label>
+            <div class="space-y-2">
+              <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" id="opt1" onchange="calculate()" class="accent-yellow-500 w-4 h-4"/>
+                <span class="text-sm text-gray-300">Ruxsatnomalar rasmiylashtirish (+500,000 so'm)</span>
+              </label>
+              <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" id="opt2" onchange="calculate()" class="accent-yellow-500 w-4 h-4"/>
+                <span class="text-sm text-gray-300">Garant servis 1 yil (+300,000 so'm)</span>
+              </label>
+              <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" id="opt3" onchange="calculate()" class="accent-yellow-500 w-4 h-4"/>
+                <span class="text-sm text-gray-300">Tezkor bajarish (×1.3 koeffitsient)</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Natija -->
+      <div class="space-y-6">
+        <div class="bg-navy-900 border border-gold-500/30 rounded-2xl p-8">
+          <div class="text-center mb-6">
+            <p class="text-gray-400 text-sm mb-2">Taxminiy narx</p>
+            <div id="calcResult" class="text-5xl font-black text-gold-400">0</div>
+            <p class="text-gray-500 text-xs mt-2">so'm (QQS bilan)</p>
+          </div>
+
+          <div class="space-y-3 text-sm" id="calcBreakdown">
+            <div class="flex justify-between text-gray-400">
+              <span>Asosiy xizmat</span>
+              <span id="basePrice" class="text-white">0 so'm</span>
+            </div>
+            <div class="flex justify-between text-gray-400">
+              <span>Maydon koeffitsienti</span>
+              <span id="areaCoeff" class="text-white">×1.0</span>
+            </div>
+            <div class="flex justify-between text-gray-400">
+              <span>Qo'shimchalar</span>
+              <span id="extras" class="text-white">0 so'm</span>
+            </div>
+            <div class="gold-line my-2"></div>
+            <div class="flex justify-between font-bold">
+              <span class="text-white">Jami</span>
+              <span class="text-gold-400" id="totalPrice">0 so'm</span>
+            </div>
+          </div>
+
+          <button onclick="showModal('buyurtma')" class="w-full gold-btn text-navy-900 font-bold py-4 rounded-xl mt-6 hover:opacity-90 transition-all">
+            <i class="fas fa-paper-plane mr-2"></i>Taklif so'rash
+          </button>
+        </div>
+
+        <div class="bg-navy-900 border border-navy-700 rounded-2xl p-6">
+          <h4 class="font-semibold mb-4 flex items-center gap-2">
+            <i class="fas fa-shield-alt text-gold-400"></i> Kafolatlar
+          </h4>
+          <div class="space-y-3 text-sm text-gray-400">
+            <div class="flex items-center gap-3"><i class="fas fa-check text-green-400 text-xs"></i>Ish sifatiga 2 yil kafolat</div>
+            <div class="flex items-center gap-3"><i class="fas fa-check text-green-400 text-xs"></i>Materiallarga 5 yil kafolat</div>
+            <div class="flex items-center gap-3"><i class="fas fa-check text-green-400 text-xs"></i>Belgilangan muddatda topshirish</div>
+            <div class="flex items-center gap-3"><i class="fas fa-check text-green-400 text-xs"></i>Qo'shimcha to'lovsiz ta'mirlash</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="gold-line"></div>
+
+<!-- ====== XARIDLAR ====== -->
+<section id="xaridlar" class="py-24 bg-navy-900">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-16">
+      <p class="text-gold-500 text-sm font-semibold uppercase tracking-widest mb-3">Katalog</p>
+      <h2 class="text-4xl font-black">Xaridlar <span class="text-gold-400">Bo'limi</span></h2>
+      <p class="text-gray-400 mt-4 max-w-xl mx-auto">Sertifikatlangan gaz uskunalari va materiallar</p>
+    </div>
+
+    <!-- Filter tabs -->
+    <div class="flex flex-wrap gap-3 justify-center mb-10" id="filterTabs">
+      <button class="tab-active px-5 py-2.5 rounded-full text-sm font-semibold border border-gold-500/30 transition-all" onclick="filterCat('all',this)">Hammasi</button>
+      <button class="px-5 py-2.5 rounded-full text-sm font-semibold border border-gold-500/20 text-gray-400 hover:text-gold-400 transition-all" onclick="filterCat('quvur',this)">Quvurlar</button>
+      <button class="px-5 py-2.5 rounded-full text-sm font-semibold border border-gold-500/20 text-gray-400 hover:text-gold-400 transition-all" onclick="filterCat('hisob',this)">Hisoblagichlar</button>
+      <button class="px-5 py-2.5 rounded-full text-sm font-semibold border border-gold-500/20 text-gray-400 hover:text-gold-400 transition-all" onclick="filterCat('ventil',this)">Ventillar</button>
+      <button class="px-5 py-2.5 rounded-full text-sm font-semibold border border-gold-500/20 text-gray-400 hover:text-gold-400 transition-all" onclick="filterCat('jihoz',this)">Jihozlar</button>
+    </div>
+
+    <!-- Products -->
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6" id="products">
+
+      <div class="product card bg-navy-800 rounded-2xl overflow-hidden" data-cat="quvur">
+        <div class="h-36 bg-gradient-to-br from-navy-700 to-navy-900 flex items-center justify-center text-5xl">🪈</div>
+        <div class="p-5">
+          <span class="text-[10px] text-gold-500 font-bold uppercase tracking-widest">Quvurlar</span>
+          <h4 class="font-bold mt-1 mb-1">Polietilen gaz quvuri PE-100</h4>
+          <p class="text-gray-400 text-xs mb-4">SDR 11, 63 mm — yerosti va ustki montaj uchun</p>
+          <div class="flex items-center justify-between">
+            <span class="text-gold-400 font-bold text-sm">Narx so'rovnoma</span>
+            <button onclick="addToCart(this,'Polietilen quvur PE-100')" class="bg-gold-500/20 hover:gold-btn hover:text-navy-900 text-gold-400 text-xs font-bold px-4 py-2 rounded-lg transition-all border border-gold-500/30">
+              <i class="fas fa-cart-plus mr-1"></i>Qo'shish
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="product card bg-navy-800 rounded-2xl overflow-hidden" data-cat="hisob">
+        <div class="h-36 bg-gradient-to-br from-navy-700 to-navy-900 flex items-center justify-center text-5xl">⏱️</div>
+        <div class="p-5">
+          <span class="text-[10px] text-gold-500 font-bold uppercase tracking-widest">Hisoblagichlar</span>
+          <h4 class="font-bold mt-1 mb-1">Gaz hisoblagich G4</h4>
+          <p class="text-gray-400 text-xs mb-4">Uy-joy uchun, 4 m³/soat, raqamli ko'rsatgich</p>
+          <div class="flex items-center justify-between">
+            <span class="text-gold-400 font-bold text-sm">Narx so'rovnoma</span>
+            <button onclick="addToCart(this,'Gaz hisoblagich G4')" class="bg-gold-500/20 hover:gold-btn hover:text-navy-900 text-gold-400 text-xs font-bold px-4 py-2 rounded-lg transition-all border border-gold-500/30">
+              <i class="fas fa-cart-plus mr-1"></i>Qo'shish
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="product card bg-navy-800 rounded-2xl overflow-hidden" data-cat="ventil">
+        <div class="h-36 bg-gradient-to-br from-navy-700 to-navy-900 flex items-center justify-center text-5xl">🔩</div>
+        <div class="p-5">
+          <span class="text-[10px] text-gold-500 font-bold uppercase tracking-widest">Ventillar</span>
+          <h4 class="font-bold mt-1 mb-1">Shar tiqinli kran DN50</h4>
+          <p class="text-gray-400 text-xs mb-4">Po'lat, 40 bar ishchi bosim, kauchuk zichlovchi</p>
+          <div class="flex items-center justify-between">
+            <span class="text-gold-400 font-bold text-sm">Narx so'rovnoma</span>
+            <button onclick="addToCart(this,'Shar tiqinli kran DN50')" class="bg-gold-500/20 hover:gold-btn hover:text-navy-900 text-gold-400 text-xs font-bold px-4 py-2 rounded-lg transition-all border border-gold-500/30">
+              <i class="fas fa-cart-plus mr-1"></i>Qo'shish
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="product card bg-navy-800 rounded-2xl overflow-hidden" data-cat="quvur">
+        <div class="h-36 bg-gradient-to-br from-navy-700 to-navy-900 flex items-center justify-center text-5xl">⚙️</div>
+        <div class="p-5">
+          <span class="text-[10px] text-gold-500 font-bold uppercase tracking-widest">Quvurlar</span>
+          <h4 class="font-bold mt-1 mb-1">Po'lat gaz quvuri 57×3.5</h4>
+          <p class="text-gray-400 text-xs mb-4">GOST 3262, yuqori bosimli magistrallar uchun</p>
+          <div class="flex items-center justify-between">
+            <span class="text-gold-400 font-bold text-sm">Narx so'rovnoma</span>
+            <button onclick="addToCart(this,'Po\'lat quvur 57×3.5')" class="bg-gold-500/20 hover:gold-btn hover:text-navy-900 text-gold-400 text-xs font-bold px-4 py-2 rounded-lg transition-all border border-gold-500/30">
+              <i class="fas fa-cart-plus mr-1"></i>Qo'shish
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="product card bg-navy-800 rounded-2xl overflow-hidden" data-cat="hisob">
+        <div class="h-36 bg-gradient-to-br from-navy-700 to-navy-900 flex items-center justify-center text-5xl">📡</div>
+        <div class="p-5">
+          <span class="text-[10px] text-gold-500 font-bold uppercase tracking-widest">Hisoblagichlar</span>
+          <h4 class="font-bold mt-1 mb-1">Ultratovush hisoblagich G25</h4>
+          <p class="text-gray-400 text-xs mb-4">Sanoat, 25–250 m³/soat, telemetrik uzatish</p>
+          <div class="flex items-center justify-between">
+            <span class="text-gold-400 font-bold text-sm">Narx so'rovnoma</span>
+            <button onclick="addToCart(this,'Ultratovush hisoblagich G25')" class="bg-gold-500/20 hover:gold-btn hover:text-navy-900 text-gold-400 text-xs font-bold px-4 py-2 rounded-lg transition-all border border-gold-500/30">
+              <i class="fas fa-cart-plus mr-1"></i>Qo'shish
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="product card bg-navy-800 rounded-2xl overflow-hidden" data-cat="jihoz">
+        <div class="h-36 bg-gradient-to-br from-navy-700 to-navy-900 flex items-center justify-center text-5xl">🏭</div>
+        <div class="p-5">
+          <span class="text-[10px] text-gold-500 font-bold uppercase tracking-widest">Jihozlar</span>
+          <h4 class="font-bold mt-1 mb-1">Bosim regulyatori RDSK-50</h4>
+          <p class="text-gray-400 text-xs mb-4">Kirish 1.2 MPa, chiqish 0.3 MPa, bronza korpus</p>
+          <div class="flex items-center justify-between">
+            <span class="text-gold-400 font-bold text-sm">Narx so'rovnoma</span>
+            <button onclick="addToCart(this,'Bosim regulyatori RDSK-50')" class="bg-gold-500/20 hover:gold-btn hover:text-navy-900 text-gold-400 text-xs font-bold px-4 py-2 rounded-lg transition-all border border-gold-500/30">
+              <i class="fas fa-cart-plus mr-1"></i>Qo'shish
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cart -->
+    <div id="cartBar" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
+      <div class="bg-navy-800 border border-gold-500/50 rounded-2xl px-6 py-4 shadow-2xl flex items-center gap-6">
+        <div class="flex items-center gap-2">
+          <i class="fas fa-shopping-cart text-gold-400"></i>
+          <span class="font-bold text-white"><span id="cartCount">0</span> ta mahsulot</span>
+        </div>
+        <button onclick="showModal('savat')" class="gold-btn text-navy-900 font-bold px-5 py-2 rounded-xl text-sm hover:opacity-90">
+          Savat <i class="fas fa-arrow-right ml-1"></i>
+        </button>
+        <button onclick="clearCart()" class="text-gray-400 hover:text-red-400 text-sm transition-colors">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="gold-line"></div>
+
+<!-- ====== TO'LOV ====== -->
+<section id="tolov" class="py-24 bg-navy-800">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-16">
+      <p class="text-gold-500 text-sm font-semibold uppercase tracking-widest mb-3">Moliya</p>
+      <h2 class="text-4xl font-black">To'lovlar <span class="text-gold-400">Bo'limi</span></h2>
+      <p class="text-gray-400 mt-4 max-w-xl mx-auto">Qulay to'lov usullari va shaffof narx siyosati</p>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-6 mb-12">
+      <div class="card bg-navy-900 rounded-2xl p-6 text-center cursor-pointer" onclick="selectPayment(this,'bank')">
+        <div class="w-14 h-14 bg-gold-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4"><i class="fas fa-university text-gold-400 text-xl"></i></div>
+        <h3 class="font-bold mb-2">Bank o'tkazmasi</h3>
+        <p class="text-gray-400 text-xs leading-relaxed">To'g'ridan-to'g'ri bank hisob raqamiga</p>
+        <div class="flex justify-center gap-2 mt-4 flex-wrap">
+          <span class="bg-navy-700 text-xs px-2 py-1 rounded-full">Uzcard</span>
+          <span class="bg-navy-700 text-xs px-2 py-1 rounded-full">Humo</span>
+          <span class="bg-navy-700 text-xs px-2 py-1 rounded-full">Visa</span>
+        </div>
+      </div>
+
+      <div class="card bg-navy-900 rounded-2xl p-6 text-center cursor-pointer" style="border-color:rgba(212,175,55,0.4)" onclick="selectPayment(this,'online')">
+        <div class="w-14 h-14 bg-gold-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4"><i class="fas fa-mobile-alt text-gold-400 text-xl"></i></div>
+        <h3 class="font-bold mb-2">Onlayn to'lov</h3>
+        <p class="text-gray-400 text-xs leading-relaxed">Click, Payme va boshqa tizimlar orqali</p>
+        <div class="flex justify-center gap-2 mt-4 flex-wrap">
+          <span class="bg-navy-700 text-xs px-2 py-1 rounded-full">Click</span>
+          <span class="bg-navy-700 text-xs px-2 py-1 rounded-full">Payme</span>
+          <span class="bg-navy-700 text-xs px-2 py-1 rounded-full">Apelsin</span>
+        </div>
+      </div>
+
+      <div class="card bg-navy-900 rounded-2xl p-6 text-center cursor-pointer" onclick="selectPayment(this,'shartnoma')">
+        <div class="w-14 h-14 bg-gold-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4"><i class="fas fa-handshake text-gold-400 text-xl"></i></div>
+        <h3 class="font-bold mb-2">Shartnoma asosida</h3>
+        <p class="text-gray-400 text-xs leading-relaxed">Katta loyihalar uchun bo'lib to'lash</p>
+        <div class="flex justify-center gap-2 mt-4 flex-wrap">
+          <span class="bg-navy-700 text-xs px-2 py-1 rounded-full">Bo'lib to'lash</span>
+          <span class="bg-navy-700 text-xs px-2 py-1 rounded-full">Kredit</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Invoice form -->
+    <div class="bg-navy-900 border border-gold-500/20 rounded-2xl p-8 max-w-2xl mx-auto">
+      <h3 class="text-lg font-bold mb-6 flex items-center gap-2">
+        <i class="fas fa-file-invoice-dollar text-gold-400"></i> Hisob-faktura so'rash
+      </h3>
+      <form onsubmit="submitForm(event,'invoice')" class="space-y-4">
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label class="text-gray-400 text-sm mb-1.5 block">Ism-familiya *</label>
+            <input type="text" required placeholder="To'liq ism" class="w-full bg-navy-800 border border-navy-600 focus:border-gold-500 text-white rounded-xl px-4 py-3 text-sm outline-none transition-colors"/>
+          </div>
+          <div>
+            <label class="text-gray-400 text-sm mb-1.5 block">Telefon *</label>
+            <input type="tel" required placeholder="+998 90 000 00 00" class="w-full bg-navy-800 border border-navy-600 focus:border-gold-500 text-white rounded-xl px-4 py-3 text-sm outline-none transition-colors"/>
+          </div>
+        </div>
+        <div>
+          <label class="text-gray-400 text-sm mb-1.5 block">To'lov turi</label>
+          <select id="payType" class="w-full bg-navy-800 border border-navy-600 focus:border-gold-500 text-white rounded-xl px-4 py-3 text-sm outline-none">
+            <option>Bank o'tkazmasi</option>
+            <option>Onlayn (Click/Payme)</option>
+            <option>Shartnoma / Bo'lib to'lash</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-gray-400 text-sm mb-1.5 block">Xizmat turi</label>
+          <select class="w-full bg-navy-800 border border-navy-600 focus:border-gold-500 text-white rounded-xl px-4 py-3 text-sm outline-none">
+            <option>Loyihalashtirish</option>
+            <option>Montaj qilish</option>
+            <option>Servis xizmat</option>
+            <option>Uskunalar xaridi</option>
+          </select>
+        </div>
+        <button type="submit" class="w-full gold-btn text-navy-900 font-bold py-4 rounded-xl hover:opacity-90 transition-all">
+          <i class="fas fa-paper-plane mr-2"></i>Yuborish
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<div class="gold-line"></div>
+
+<!-- ====== ALOQA ====== -->
+<section id="aloqa" class="py-24 bg-navy-900">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-16">
+      <p class="text-gold-500 text-sm font-semibold uppercase tracking-widest mb-3">Bog'lanish</p>
+      <h2 class="text-4xl font-black">Biz bilan <span class="text-gold-400">Aloqa</span></h2>
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-10">
+      <div class="space-y-4">
+        <a href="tel:+998712345678" class="flex items-center gap-4 bg-navy-800 border border-navy-700 hover:border-gold-500/40 rounded-2xl p-5 card transition-all group">
+          <div class="w-12 h-12 bg-gold-500/10 group-hover:bg-gold-500/20 rounded-xl flex items-center justify-center shrink-0"><i class="fas fa-phone text-gold-400"></i></div>
+          <div>
+            <div class="text-xs text-gray-500 mb-0.5">Telefon</div>
+            <div class="font-semibold">+998 71 234 56 78</div>
+            <div class="text-sm text-gray-400">+998 90 123 45 67</div>
+          </div>
+        </a>
+        <a href="mailto:info@soargaz.uz" class="flex items-center gap-4 bg-navy-800 border border-navy-700 hover:border-gold-500/40 rounded-2xl p-5 card transition-all group">
+          <div class="w-12 h-12 bg-gold-500/10 group-hover:bg-gold-500/20 rounded-xl flex items-center justify-center shrink-0"><i class="fas fa-envelope text-gold-400"></i></div>
+          <div>
+            <div class="text-xs text-gray-500 mb-0.5">Email</div>
+            <div class="font-semibold">info@soargaz.uz</div>
+          </div>
+        </a>
+        <div class="flex items-center gap-4 bg-navy-800 border border-navy-700 rounded-2xl p-5">
+          <div class="w-12 h-12 bg-gold-500/10 rounded-xl flex items-center justify-center shrink-0"><i class="fas fa-map-marker-alt text-gold-400"></i></div>
+          <div>
+            <div class="text-xs text-gray-500 mb-0.5">Manzil</div>
+            <div class="font-semibold">Toshkent, Chilonzor tumani</div>
+            <div class="text-sm text-gray-400">Qo'yliq ko'chasi, 25-uy</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-4 bg-navy-800 border border-navy-700 rounded-2xl p-5">
+          <div class="w-12 h-12 bg-gold-500/10 rounded-xl flex items-center justify-center shrink-0"><i class="fas fa-clock text-gold-400"></i></div>
+          <div>
+            <div class="text-xs text-gray-500 mb-0.5">Ish vaqti</div>
+            <div class="font-semibold">Du–Ju: 09:00–18:00 | Sha: 09:00–14:00</div>
+            <div class="text-sm text-green-400"><i class="fas fa-circle text-xs mr-1 animate-pulse"></i>Favqulodda: 24/7</div>
+          </div>
+        </div>
+
+        <!-- Ijtimoiy tarmoqlar -->
+        <div class="flex gap-3">
+          <a href="#" class="flex-1 flex items-center justify-center gap-2 bg-navy-800 hover:bg-blue-500/10 border border-navy-700 hover:border-blue-400/50 rounded-xl py-3 text-sm text-gray-400 hover:text-blue-400 transition-all">
+            <i class="fab fa-telegram text-lg"></i> Telegram
+          </a>
+          <a href="#" class="flex-1 flex items-center justify-center gap-2 bg-navy-800 hover:bg-pink-500/10 border border-navy-700 hover:border-pink-400/50 rounded-xl py-3 text-sm text-gray-400 hover:text-pink-400 transition-all">
+            <i class="fab fa-instagram text-lg"></i> Instagram
+          </a>
+          <a href="#" class="flex-1 flex items-center justify-center gap-2 bg-navy-800 hover:bg-red-500/10 border border-navy-700 hover:border-red-400/50 rounded-xl py-3 text-sm text-gray-400 hover:text-red-400 transition-all">
+            <i class="fab fa-youtube text-lg"></i> YouTube
+          </a>
+        </div>
+      </div>
+
+      <!-- Contact form -->
+      <div class="bg-navy-800 border border-navy-700 rounded-2xl p-8">
+        <h3 class="font-bold text-lg mb-6">Xabar yuborish</h3>
+        <form onsubmit="submitForm(event,'contact')" class="space-y-4">
+          <div>
+            <label class="text-gray-400 text-sm mb-1.5 block">Ism *</label>
+            <input type="text" required placeholder="Sizning ismingiz" class="w-full bg-navy-900 border border-navy-600 focus:border-gold-500 text-white rounded-xl px-4 py-3 text-sm outline-none transition-colors"/>
+          </div>
+          <div>
+            <label class="text-gray-400 text-sm mb-1.5 block">Telefon *</label>
+            <input type="tel" required placeholder="+998 __ ___ __ __" class="w-full bg-navy-900 border border-navy-600 focus:border-gold-500 text-white rounded-xl px-4 py-3 text-sm outline-none transition-colors"/>
+          </div>
+          <div>
+            <label class="text-gray-400 text-sm mb-1.5 block">Mavzu</label>
+            <select class="w-full bg-navy-900 border border-navy-600 focus:border-gold-500 text-white rounded-xl px-4 py-3 text-sm outline-none">
+              <option>Loyiha haqida</option>
+              <option>Montaj xizmati</option>
+              <option>Servis chaqirish</option>
+              <option>Uskunalar xaridi</option>
+              <option>To'lov masalasi</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-gray-400 text-sm mb-1.5 block">Xabar</label>
+            <textarea rows="4" placeholder="Muammo yoki savolingizni yozing..." class="w-full bg-navy-900 border border-navy-600 focus:border-gold-500 text-white rounded-xl px-4 py-3 text-sm outline-none transition-colors resize-none"></textarea>
+          </div>
+          <button type="submit" class="w-full gold-btn text-navy-900 font-bold py-4 rounded-xl hover:opacity-90 transition-all">
+            <i class="fas fa-paper-plane mr-2"></i>Yuborish
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== FOOTER ====== -->
+<footer class="bg-navy-900 border-t border-gold-500/15 py-10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 gold-btn rounded-lg flex items-center justify-center">
+          <i class="fas fa-fire text-navy-900"></i>
+        </div>
+        <span class="font-black">SOAR<span class="text-gold-500"> GAZ</span></span>
+      </div>
+      <p class="text-gray-500 text-sm">© 2024 SOAR GAZ. Barcha huquqlar himoyalangan.</p>
+      <p class="text-gray-600 text-xs">Litsenziya: № GZ-2024-0521</p>
+    </div>
+  </div>
+</footer>
+
+<!-- ====== MODALS ====== -->
+<div id="modal" class="hidden fixed inset-0 modal-bg z-50 flex items-center justify-center p-4" onclick="closeModalOutside(event)">
+  <div class="bg-navy-800 border border-gold-500/30 rounded-2xl p-8 max-w-md w-full relative" id="modalBox">
+    <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl"><i class="fas fa-times"></i></button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<!-- ====== TOAST ====== -->
+<div id="toast" class="hidden fixed bottom-6 right-6 z-50 flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl text-white font-semibold text-sm" style="background:linear-gradient(90deg,#22c55e,#16a34a)">
+  <i class="fas fa-check-circle text-xl"></i>
+  <span id="toastMsg">Muvaffaqiyatli!</span>
+</div>
+
+<!-- ====== SCRIPTS ====== -->
+<script>
+  // Navbar scroll
+  window.addEventListener('scroll', () => {
+    document.getElementById('navbar').classList.toggle('nav-scrolled', window.scrollY > 50);
+  });
+
+  // Mobile nav
+  function toggleNav() {
+    const m = document.getElementById('mobileNav');
+    const i = document.getElementById('navIcon');
+    m.classList.toggle('hidden');
+    i.className = m.classList.contains('hidden') ? 'fas fa-bars' : 'fas fa-times';
+  }
+
+  // Counter animation
+  function animateCounters() {
+    document.querySelectorAll('[data-target]').forEach(el => {
+      const target = +el.dataset.target;
+      const step = Math.ceil(target / 60);
+      let cur = 0;
+      const t = setInterval(() => {
+        cur = Math.min(cur + step, target);
+        el.textContent = cur + (target >= 100 ? '+' : '');
+        if (cur >= target) clearInterval(t);
+      }, 30);
+    });
+  }
+  const obs = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting) { animateCounters(); obs.disconnect(); }
+  });
+  const counterEl = document.querySelector('[data-target]');
+  if (counterEl) obs.observe(counterEl);
+
+  // ---- CALCULATOR ----
+  function calculate() {
+    const svc  = +document.getElementById('calcService').value;
+    const area = +document.getElementById('calcArea').value;
+    const floor= +document.getElementById('calcFloor').value;
+    document.getElementById('areaVal').textContent = area + ' m²';
+
+    if (!svc) { document.getElementById('calcResult').textContent = '0'; return; }
+
+    const areaCoeff = 1 + (area - 150) * 0.001;
+    let extras = 0;
+    if (document.getElementById('opt1').checked) extras += 500000;
+    if (document.getElementById('opt2').checked) extras += 300000;
+    const urgent = document.getElementById('opt3').checked ? 1.3 : 1;
+
+    let total = (svc * areaCoeff * floor + extras) * urgent;
+    total = Math.round(total / 10000) * 10000;
+
+    document.getElementById('calcResult').textContent = fmt(total);
+    document.getElementById('basePrice').textContent   = fmt(svc);
+    document.getElementById('areaCoeff').textContent   = '×' + areaCoeff.toFixed(2);
+    document.getElementById('extras').textContent      = fmt(extras);
+    document.getElementById('totalPrice').textContent  = fmt(total) + ' so\'m';
+  }
+
+  function fmt(n) { return n.toLocaleString('uz-UZ') + ' so\'m'; }
+  function changeFloor(d) {
+    const el = document.getElementById('calcFloor');
+    el.value = Math.max(1, Math.min(30, +el.value + d));
+    calculate();
+  }
+
+  // ---- PRODUCT FILTER ----
+  function filterCat(cat, btn) {
+    document.querySelectorAll('#filterTabs button').forEach(b => {
+      b.className = 'px-5 py-2.5 rounded-full text-sm font-semibold border border-gold-500/20 text-gray-400 hover:text-gold-400 transition-all';
+    });
+    btn.className = 'tab-active px-5 py-2.5 rounded-full text-sm font-semibold border border-gold-500/30 transition-all';
+    document.querySelectorAll('.product').forEach(p => {
+      p.style.display = (cat === 'all' || p.dataset.cat === cat) ? 'block' : 'none';
+    });
+  }
+
+  // ---- CART ----
+  let cart = [];
+  function addToCart(btn, name) {
+    cart.push(name);
+    document.getElementById('cartCount').textContent = cart.length;
+    document.getElementById('cartBar').classList.remove('hidden');
+    btn.innerHTML = '<i class="fas fa-check mr-1"></i>Qo\'shildi';
+    btn.classList.add('bg-green-500/20','text-green-400');
+    btn.classList.remove('text-gold-400');
+    setTimeout(() => {
+      btn.innerHTML = '<i class="fas fa-cart-plus mr-1"></i>Qo\'shish';
+      btn.classList.remove('bg-green-500/20','text-green-400');
+      btn.classList.add('text-gold-400');
+    }, 2000);
+    showToast(name + ' savatga qo\'shildi!');
+  }
+  function clearCart() {
+    cart = [];
+    document.getElementById('cartBar').classList.add('hidden');
+  }
+
+  // ---- MODAL ----
+  const modalContents = {
+    loyiha: `<div class="text-gold-400 text-3xl mb-3">📐</div><h3 class="text-xl font-bold mb-3">Loyihalashtirish xizmati</h3><p class="text-gray-400 text-sm leading-relaxed mb-4">Professional gaz tizimlarini loyihalashtirish. Barcha standartlar va me'yorlarga muvofiq texnik hujjatlar, ruxsatnomalar va ekspertizadan o'tkazish.</p><ul class="space-y-2 text-sm text-gray-400 mb-6"><li class="flex gap-2"><i class="fas fa-check text-gold-400 mt-0.5"></i>Texnik loyiha (PDF + AutoCAD)</li><li class="flex gap-2"><i class="fas fa-check text-gold-400 mt-0.5"></i>Gaz xizmatidan ruxsatnoma</li><li class="flex gap-2"><i class="fas fa-check text-gold-400 mt-0.5"></i>Davlat ekspertizasi</li><li class="flex gap-2"><i class="fas fa-check text-gold-400 mt-0.5"></i>3D vizualizatsiya</li></ul><button onclick="closeModal();document.querySelector('#aloqa').scrollIntoView({behavior:'smooth'})" class="w-full gold-btn text-navy-900 font-bold py-3 rounded-xl">Murojaat qilish</button>`,
+
+    montaj: `<div class="text-3xl mb-3">🔧</div><h3 class="text-xl font-bold mb-3">Montaj xizmati</h3><p class="text-gray-400 text-sm leading-relaxed mb-4">Malakali jamoamiz tomonidan gaz tizimlarini xavfsiz va sifatli o'rnatish. Barcha ishlar sertifikatlangan mutaxassislar tomonidan bajariladi.</p><ul class="space-y-2 text-sm text-gray-400 mb-6"><li class="flex gap-2"><i class="fas fa-check text-gold-400 mt-0.5"></i>Ichki va tashqi gaz tarmoqlari</li><li class="flex gap-2"><i class="fas fa-check text-gold-400 mt-0.5"></i>Hisoblagichlar o'rnatish</li><li class="flex gap-2"><i class="fas fa-check text-gold-400 mt-0.5"></i>Xavfsizlik tizimlari</li><li class="flex gap-2"><i class="fas fa-check text-gold-400 mt-0.5"></i>2 yil kafolat</li></ul><button onclick="closeModal();document.querySelector('#kalkulator').scrollIntoView({behavior:'smooth'})" class="w-full gold-btn text-navy-900 font-bold py-3 rounded-xl">Narx hisoblash</button>`,
+
+    servis: `<div class="text-3xl mb-3">🛠️</div><h3 class="text-xl font-bold mb-3">Servis chaqirish</h3><p class="text-gray-400 text-sm leading-relaxed mb-4">Texnik muammo yuzaga keldi? Mutaxassisimizni 30 daqiqada chaqiring.</p><div class="space-y-3 mb-6"><input type="text" placeholder="Ismingiz" class="w-full bg-navy-700 border border-navy-600 text-white rounded-xl px-4 py-3 text-sm outline-none"/><input type="tel" placeholder="+998 90 000 00 00" class="w-full bg-navy-700 border border-navy-600 text-white rounded-xl px-4 py-3 text-sm outline-none"/><textarea rows="3" placeholder="Muammo tavsifi..." class="w-full bg-navy-700 border border-navy-600 text-white rounded-xl px-4 py-3 text-sm outline-none resize-none"></textarea></div><button onclick="closeModal();showToast('Servis so\\'rovi yuborildi! 30 daqiqa ichida bog\\'lanamiz.')" class="w-full gold-btn text-navy-900 font-bold py-3 rounded-xl">🚨 Tez yordam chaqirish</button>`,
+
+    hisobot: `<div class="text-3xl mb-3">📊</div><h3 class="text-xl font-bold mb-3">Oylik hisobot</h3><div class="space-y-3 mb-6"><div class="flex justify-between p-3 bg-navy-700 rounded-xl text-sm"><span class="text-gray-400">Gaz sarfi (may)</span><span class="text-white font-bold">124.5 m³</span></div><div class="flex justify-between p-3 bg-navy-700 rounded-xl text-sm"><span class="text-gray-400">O'tgan oy</span><span class="text-white font-bold">118.2 m³</span></div><div class="flex justify-between p-3 bg-navy-700 rounded-xl text-sm"><span class="text-gray-400">Farq</span><span class="text-gold-400 font-bold">+6.3 m³ (+5.3%)</span></div><div class="flex justify-between p-3 bg-navy-700 rounded-xl text-sm"><span class="text-gray-400">To'lov summasi</span><span class="text-white font-bold">87,150 so'm</span></div></div><button onclick="closeModal();showToast('Hisobot emailga yuborildi!')" class="w-full gold-btn text-navy-900 font-bold py-3 rounded-xl">📧 Emailga yuborish</button>`,
+
+    buyurtma: `<div class="text-3xl mb-3">🛒</div><h3 class="text-xl font-bold mb-3">Buyurtma berish</h3><div class="space-y-3 mb-6"><input type="text" placeholder="Ism-familiya" class="w-full bg-navy-700 border border-navy-600 text-white rounded-xl px-4 py-3 text-sm outline-none"/><input type="tel" placeholder="+998 90 000 00 00" class="w-full bg-navy-700 border border-navy-600 text-white rounded-xl px-4 py-3 text-sm outline-none"/><select class="w-full bg-navy-700 border border-navy-600 text-white rounded-xl px-4 py-3 text-sm outline-none"><option>Loyihalashtirish</option><option>Montaj</option><option>Servis</option><option>Uskunalar</option></select><textarea rows="3" placeholder="Qo'shimcha ma'lumot..." class="w-full bg-navy-700 border border-navy-600 text-white rounded-xl px-4 py-3 text-sm outline-none resize-none"></textarea></div><button onclick="closeModal();showToast('Buyurtmangiz qabul qilindi! Tez orada bog\\'lanamiz.')" class="w-full gold-btn text-navy-900 font-bold py-3 rounded-xl">✅ Buyurtma berish</button>`,
+
+    savat: `<div class="text-3xl mb-3">🛒</div><h3 class="text-xl font-bold mb-3">Sizning savatingiz</h3><div id="cartItemsList" class="space-y-2 mb-6 max-h-48 overflow-y-auto"></div><button onclick="closeModal();clearCart();showToast('Buyurtmangiz yuborildi!')" class="w-full gold-btn text-navy-900 font-bold py-3 rounded-xl">Buyurtma berish</button>`,
+  };
+
+  function showModal(type) {
+    document.getElementById('modal').classList.remove('hidden');
+    document.getElementById('modalContent').innerHTML = modalContents[type] || '';
+    if (type === 'savat') {
+      const list = document.getElementById('cartItemsList');
+      list.innerHTML = cart.length
+        ? cart.map((c,i) => `<div class="flex justify-between items-center bg-navy-700 rounded-xl px-4 py-3 text-sm"><span>${i+1}. ${c}</span><i class="fas fa-check text-green-400"></i></div>`).join('')
+        : '<p class="text-gray-400 text-center py-4">Savat bo\'sh</p>';
+    }
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    document.getElementById('modal').classList.add('hidden');
+    document.body.style.overflow = '';
+  }
+
+  function closeModalOutside(e) {
+    if (e.target === document.getElementById('modal')) closeModal();
+  }
+
+  // ---- PAYMENT SELECT ----
+  function selectPayment(el, type) {
+    document.querySelectorAll('#tolov .card').forEach(c => c.style.borderColor = '');
+    el.style.borderColor = '#d4af37';
+    document.getElementById('payType').value = type === 'bank' ? 'Bank o\'tkazmasi' : type === 'online' ? 'Onlayn (Click/Payme)' : 'Shartnoma / Bo\'lib to\'lash';
+    showToast('To\'lov usuli tanlandi!');
+  }
+
+  // ---- FORMS ----
+  function submitForm(e, type) {
+    e.preventDefault();
+    showToast(type === 'contact' ? 'Xabaringiz yuborildi! 24 soat ichida javob beramiz.' : 'Hisob-faktura so\'rovi yuborildi!');
+    e.target.reset();
+  }
+
+  // ---- TOAST ----
+  let toastTimer;
+  function showToast(msg) {
+    clearTimeout(toastTimer);
+    const t = document.getElementById('toast');
+    document.getElementById('toastMsg').textContent = msg;
+    t.classList.remove('hidden');
+    toastTimer = setTimeout(() => t.classList.add('hidden'), 4000);
+  }
+
+  // Smooth scroll
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const el = document.querySelector(a.getAttribute('href'));
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+</script>
+</body>
+</html>
