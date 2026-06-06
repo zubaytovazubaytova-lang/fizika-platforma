@@ -6,6 +6,7 @@ import SimChat     from '@/components/3d/SimChat'
 import SimSelector from '@/components/3d/SimSelector'
 import type { PendulumSimProps  } from '@/components/3d/PendulumSim'
 import type { ElectricSimProps  } from '@/components/3d/ElectricFieldSim'
+import { type Sol, parseProblem, solveProblem, PROB_EXAMPLES } from '@/lib/physicsParser'
 
 const PendulumSim      = dynamic<PendulumSimProps>(() => import('@/components/3d/PendulumSim'),      { ssr: false })
 const ElectricFieldSim = dynamic<ElectricSimProps>(() => import('@/components/3d/ElectricFieldSim'), { ssr: false })
@@ -109,6 +110,67 @@ function ElectricControls({
           <RotateCcw className="h-3 w-3" /> Reset
         </button>
       </div>
+    </div>
+  )
+}
+
+/* ── Masala yechish paneli (TezlikSim slot uchun) ── */
+function MasalaPanel({
+  masalaText, masalaSol, masalaErr, onChange, onSolve,
+}: {
+  masalaText: string; masalaSol: Sol | null; masalaErr: string
+  onChange: (t: string) => void; onSolve: () => void
+}) {
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
+      {/* Chips */}
+      <div style={{ display:'flex', gap:4, flexWrap:'wrap' }}>
+        {PROB_EXAMPLES.map((ex, i) => (
+          <button key={i} onClick={() => onChange(ex)} title={ex}
+            style={{
+              padding:'2px 8px', borderRadius:20, fontSize:10, cursor:'pointer',
+              background:'rgba(124,58,237,0.15)', border:'1px solid rgba(124,58,237,0.38)',
+              color:'#c4b5fd', fontWeight:600, whiteSpace:'nowrap', overflow:'hidden',
+              maxWidth:140, textOverflow:'ellipsis',
+            }}>
+            {ex.slice(0,22)}{ex.length>22?'…':''}
+          </button>
+        ))}
+      </div>
+
+      {/* Textarea + button */}
+      <div style={{ display:'flex', gap:6, alignItems:'flex-start' }}>
+        <textarea
+          value={masalaText}
+          onChange={e => onChange(e.target.value)}
+          placeholder={"Masala yozing...\nMisol: \"Avtomobil 72 km/soat...\""}
+          rows={2}
+          style={{
+            flex:1, boxSizing:'border-box',
+            background:'rgba(255,255,255,0.05)', border:'1.5px solid rgba(124,58,237,0.35)',
+            borderRadius:8, padding:'6px 8px', resize:'none',
+            color:'#e2e8f0', fontSize:11, fontFamily:'inherit', outline:'none', lineHeight:1.5,
+          }}
+          onFocus={e => { e.currentTarget.style.borderColor='rgba(168,85,247,0.8)' }}
+          onBlur={e  => { e.currentTarget.style.borderColor='rgba(124,58,237,0.35)' }}
+        />
+        <button
+          onClick={onSolve} disabled={!masalaText.trim()}
+          style={{
+            padding:'6px 12px', borderRadius:8, fontWeight:700, fontSize:11,
+            background:'linear-gradient(135deg,#7C3AED,#a855f7)', border:'none', color:'#fff',
+            cursor: masalaText.trim() ? 'pointer' : 'not-allowed',
+            opacity: masalaText.trim() ? 1 : 0.4, whiteSpace:'nowrap',
+            boxShadow:'0 0 10px rgba(124,58,237,0.4)', flexShrink:0,
+          }}>Yeching →</button>
+      </div>
+
+      {masalaErr && <span style={{ fontSize:10, color:'#f87171' }}>{masalaErr}</span>}
+      {masalaSol && (
+        <div style={{ fontSize:10, color:'rgba(167,139,250,0.7)', fontStyle:'italic', paddingTop:2 }}>
+          ✓ Yechim monitor ekranida ko&apos;rinmoqda
+        </div>
+      )}
     </div>
   )
 }
@@ -368,6 +430,36 @@ export default function SimulationsPage() {
   /* ── Elektroskop info panel ── */
   const [eInfoOpen, setEInfoOpen] = useState(false)
 
+  /* ── Tezlik sim params (controlled from MasalaPanel) ── */
+  const [tezlikSpeed, setTezlikSpeed] = useState(10)
+  const [tezlikDist,  setTezlikDist]  = useState(100)
+
+  /* ── Masala panel state ── */
+  const [masalaText, setMasalaText] = useState('')
+  const [masalaSol,  setMasalaSol]  = useState<Sol | null>(null)
+  const [masalaErr,  setMasalaErr]  = useState('')
+  const [solveKey,   setSolveKey]   = useState(0)
+
+  function handleMasalaSolve() {
+    const trimmed = masalaText.trim()
+    if (!trimmed) return
+    const data = parseProblem(trimmed)
+    const sol  = solveProblem(data)
+    if (!sol) { setMasalaErr('Masaladan tezlik, masofa yoki vaqtni aniqlay olmadim.'); setMasalaSol(null); return }
+    setMasalaErr('')
+    setMasalaSol(sol)
+    // speed: use given v, or solved answer when find='v'
+    const vSI = data.v?.si ?? (sol.answer.sym === 'v' ? sol.answer.val : undefined)
+    // distance: use given s, or solved answer (convert km→m if needed)
+    const sSI = data.s?.si
+      ?? (sol.answer.sym === 's'
+          ? (sol.answer.unit === 'km' ? sol.answer.val * 1000 : sol.answer.val)
+          : undefined)
+    if (vSI) setTezlikSpeed(Math.max(0.1, parseFloat(vSI.toFixed(4))))
+    if (sSI) setTezlikDist(Math.max(1, Math.round(sSI)))
+    setSolveKey(k => k + 1)
+  }
+
   function handleSelect(id: string) {
     setActiveId(id)
     setSimKey(k => k + 1)
@@ -441,8 +533,8 @@ export default function SimulationsPage() {
               </div>
             )}
 
-            {/* 📷 Screenshot tugmasi */}
-            {activeId && (
+            {/* 📷 Screenshot tugmasi — TezlikSim o'z tugmalarini boshqaradi */}
+            {activeId && activeId !== 'tezlik' && (
               <button
                 onClick={takeScreenshot}
                 title="Skrinshot"
@@ -460,36 +552,38 @@ export default function SimulationsPage() {
               >📷</button>
             )}
 
-            {/* To'liq ekran tugmasi */}
-            <button
-              onClick={toggleFullscreen}
-              title={isFullscreen ? "Kichraytirish" : "To'liq ekran"}
-              style={{
-                position: 'absolute', top: 12, right: 12, zIndex: 20,
-                width: 36, height: 36,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                borderRadius: 10,
-                background: 'rgba(10,12,35,0.75)',
-                border: '1px solid rgba(255,255,255,0.15)',
-                backdropFilter: 'blur(10px)',
-                color: 'rgba(255,255,255,0.8)',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-              }}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLButtonElement).style.background = 'rgba(99,102,241,0.35)'
-                ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(99,102,241,0.6)'
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLButtonElement).style.background = 'rgba(10,12,35,0.75)'
-                ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.15)'
-              }}
-            >
-              {isFullscreen
-                ? <Minimize2 style={{ width: 16, height: 16 }} />
-                : <Maximize2 style={{ width: 16, height: 16 }} />
-              }
-            </button>
+            {/* To'liq ekran tugmasi — TezlikSim'da mavjud bo'lganda yashiriladi */}
+            {activeId !== 'tezlik' && (
+              <button
+                onClick={toggleFullscreen}
+                title={isFullscreen ? "Kichraytirish" : "To'liq ekran"}
+                style={{
+                  position: 'absolute', top: 12, right: 12, zIndex: 20,
+                  width: 36, height: 36,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  borderRadius: 10,
+                  background: 'rgba(10,12,35,0.75)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  backdropFilter: 'blur(10px)',
+                  color: 'rgba(255,255,255,0.8)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLButtonElement).style.background = 'rgba(99,102,241,0.35)'
+                  ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(99,102,241,0.6)'
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLButtonElement).style.background = 'rgba(10,12,35,0.75)'
+                  ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.15)'
+                }}
+              >
+                {isFullscreen
+                  ? <Minimize2 style={{ width: 16, height: 16 }} />
+                  : <Maximize2 style={{ width: 16, height: 16 }} />
+                }
+              </button>
+            )}
 
             {activeId === 'pendulum' && (
               <PendulumSim
@@ -517,7 +611,115 @@ export default function SimulationsPage() {
             )}
 
             {activeId === 'tezlik' && (
-              <TezlikSim key={simKey} />
+              <TezlikSim
+                key={simKey}
+                initSpeed={tezlikSpeed}
+                initDistance={tezlikDist}
+                solveKey={solveKey}
+                masalaSlot={
+                  <MasalaPanel
+                    masalaText={masalaText}
+                    masalaSol={masalaSol}
+                    masalaErr={masalaErr}
+                    onChange={text => { setMasalaText(text); setMasalaSol(null); setMasalaErr('') }}
+                    onSolve={handleMasalaSolve}
+                  />
+                }
+                monitorSolution={masalaSol ? (
+                  <div style={{ display:'flex', flexDirection:'column', gap:16, height:'100%' }}>
+
+                    {/* Row 1: Formula pill + Given values side by side */}
+                    <div style={{ display:'flex', gap:20, alignItems:'stretch' }}>
+                      {/* Formula */}
+                      <div style={{
+                        flexShrink:0,
+                        display:'flex', alignItems:'center', justifyContent:'center',
+                        padding:'10px 32px', borderRadius:20,
+                        background:'linear-gradient(135deg,rgba(99,102,241,0.25),rgba(168,85,247,0.20))',
+                        border:'2px solid rgba(168,85,247,0.55)',
+                        boxShadow:'0 0 30px rgba(168,85,247,0.18), inset 0 0 20px rgba(99,102,241,0.08)',
+                      }}>
+                        <span style={{
+                          fontSize:44, fontWeight:900, color:'#e0d7ff',
+                          fontFamily:"'Courier New',monospace",
+                          letterSpacing:'0.12em',
+                          textShadow:'0 0 16px rgba(192,132,252,0.6)',
+                        }}>{masalaSol.formula}</span>
+                      </div>
+                      {/* Given */}
+                      <div style={{
+                        flex:1, display:'flex', flexDirection:'column', justifyContent:'center', gap:8,
+                        padding:'10px 18px', borderRadius:16,
+                        background:'rgba(0,0,0,0.30)', border:'1px solid rgba(148,163,184,0.12)',
+                      }}>
+                        <div style={{ fontSize:19, color:'rgba(148,163,184,0.55)', fontWeight:700,
+                          letterSpacing:'0.16em', textTransform:'uppercase', fontFamily:'sans-serif' }}>
+                          BERILGAN
+                        </div>
+                        {masalaSol.given.map(g => (
+                          <div key={g.sym} style={{ display:'flex', alignItems:'baseline', gap:8 }}>
+                            <span style={{ fontSize:32, fontWeight:900, color:'#67e8f9',
+                              fontFamily:"'Courier New',monospace",
+                              textShadow:'0 0 12px rgba(103,232,249,0.5)' }}>{g.sym}</span>
+                            <span style={{ fontSize:28, color:'rgba(226,232,240,0.75)',
+                              fontFamily:"'Courier New',monospace" }}> = {g.disp}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Row 2: Steps */}
+                    <div style={{
+                      display:'flex', flexDirection:'column', gap:6,
+                      padding:'12px 18px', borderRadius:16,
+                      background:'rgba(0,0,0,0.25)', border:'1px solid rgba(59,130,246,0.15)',
+                    }}>
+                      {masalaSol.steps.map((step, i) => (
+                        <div key={i} style={{ display:'flex', alignItems:'center', gap:12 }}>
+                          <div style={{
+                            width:28, height:28, borderRadius:'50%', flexShrink:0,
+                            display:'flex', alignItems:'center', justifyContent:'center',
+                            background: i === masalaSol.steps.length-1
+                              ? 'rgba(168,85,247,0.30)' : 'rgba(59,130,246,0.18)',
+                            border: `1px solid ${i === masalaSol.steps.length-1 ? 'rgba(168,85,247,0.55)' : 'rgba(59,130,246,0.35)'}`,
+                            fontSize:16, fontWeight:900, color:'rgba(255,255,255,0.6)',
+                            fontFamily:'sans-serif',
+                          }}>{i+1}</div>
+                          <span style={{
+                            fontSize:28, color: i === masalaSol.steps.length-1
+                              ? 'rgba(216,180,254,0.9)' : 'rgba(203,213,225,0.80)',
+                            fontFamily:"'Courier New',monospace",
+                          }}>{step}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Row 3: Answer */}
+                    <div style={{
+                      padding:'14px 24px', borderRadius:18,
+                      background:'linear-gradient(135deg,rgba(16,185,129,0.15),rgba(5,150,105,0.10))',
+                      border:'2px solid rgba(52,211,153,0.45)',
+                      boxShadow:'0 0 30px rgba(52,211,153,0.12), inset 0 0 20px rgba(16,185,129,0.05)',
+                      display:'flex', alignItems:'center', gap:18, flexWrap:'wrap',
+                    }}>
+                      <span style={{ fontSize:22, color:'rgba(148,163,184,0.55)', fontWeight:700,
+                        letterSpacing:'0.14em', fontFamily:'sans-serif' }}>JAVOB:</span>
+                      <span style={{ fontSize:62, fontWeight:900, color:'#34d399',
+                        fontFamily:"'Courier New',monospace", letterSpacing:'0.05em',
+                        textShadow:'0 0 28px rgba(52,211,153,0.65), 0 0 10px rgba(52,211,153,0.35)' }}>
+                        {masalaSol.answer.sym} = {masalaSol.answer.val} {masalaSol.answer.unit}
+                      </span>
+                      {masalaSol.answer.alt && (
+                        <span style={{ fontSize:24, color:'rgba(148,163,184,0.45)',
+                          fontFamily:"'Courier New',monospace" }}>
+                          ({masalaSol.answer.alt})
+                        </span>
+                      )}
+                    </div>
+
+                  </div>
+                ) : undefined}
+              />
             )}
 
             {activeId === 'paskal' && (
@@ -571,24 +773,21 @@ export default function SimulationsPage() {
           <ElektroskopInfoPanel />
         )}
 
-        {/* ── bottom two panels ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-          {/* left: AI Chat */}
-          <SimChat simId={activeId ?? 'general'} simTitle={simTitle} />
-
-          {/* right: selector + info */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <SimSelector
-              activeId={activeId}
-              viewedId={viewedId}
-              onSelect={handleSelect}
-              onView={setViewedId}
-            />
-            {viewedId && viewedId !== activeId && (
-              <SimInfoPanel simId={viewedId} />
-            )}
-          </div>
+        {/* ── bottom: SimSelector (full width) ── */}
+        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          <SimSelector
+            activeId={activeId}
+            viewedId={viewedId}
+            onSelect={handleSelect}
+            onView={setViewedId}
+          />
+          {viewedId && viewedId !== activeId && (
+            <SimInfoPanel simId={viewedId} />
+          )}
         </div>
+
+        {/* ── AI Chat (full width below) ── */}
+        <SimChat simId={activeId ?? 'general'} simTitle={simTitle} />
 
       </div>
     </div>
