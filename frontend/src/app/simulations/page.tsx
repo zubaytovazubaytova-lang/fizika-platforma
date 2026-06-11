@@ -6,7 +6,7 @@ import SimChat     from '@/components/3d/SimChat'
 import SimSelector from '@/components/3d/SimSelector'
 import type { PendulumSimProps  } from '@/components/3d/PendulumSim'
 import type { ElectricSimProps  } from '@/components/3d/ElectricFieldSim'
-import { type Sol, parseProblem, solveProblem, PROB_EXAMPLES } from '@/lib/physicsParser'
+import { type Sol, parseProblem, solveProblem, detectObjectId, PROB_EXAMPLES } from '@/lib/physicsParser'
 
 const PendulumSim      = dynamic<PendulumSimProps>(() => import('@/components/3d/PendulumSim'),      { ssr: false })
 const ElectricFieldSim = dynamic<ElectricSimProps>(() => import('@/components/3d/ElectricFieldSim'), { ssr: false })
@@ -433,6 +433,7 @@ export default function SimulationsPage() {
   /* ── Tezlik sim params (controlled from MasalaPanel) ── */
   const [tezlikSpeed, setTezlikSpeed] = useState(10)
   const [tezlikDist,  setTezlikDist]  = useState(100)
+  const [tezlikObjId, setTezlikObjId] = useState<string | null>(null)
 
   /* ── Masala panel state ── */
   const [masalaText, setMasalaText] = useState('')
@@ -457,6 +458,7 @@ export default function SimulationsPage() {
           : undefined)
     if (vSI) setTezlikSpeed(Math.max(0.1, parseFloat(vSI.toFixed(4))))
     if (sSI) setTezlikDist(Math.max(1, Math.round(sSI)))
+    setTezlikObjId(detectObjectId(trimmed))
     setSolveKey(k => k + 1)
   }
 
@@ -615,6 +617,7 @@ export default function SimulationsPage() {
                 key={simKey}
                 initSpeed={tezlikSpeed}
                 initDistance={tezlikDist}
+                initObjId={tezlikObjId}
                 solveKey={solveKey}
                 masalaSlot={
                   <MasalaPanel
@@ -773,21 +776,25 @@ export default function SimulationsPage() {
           <ElektroskopInfoPanel />
         )}
 
-        {/* ── bottom: SimSelector (full width) ── */}
-        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-          <SimSelector
-            activeId={activeId}
-            viewedId={viewedId}
-            onSelect={handleSelect}
-            onView={setViewedId}
-          />
-          {viewedId && viewedId !== activeId && (
-            <SimInfoPanel simId={viewedId} />
-          )}
+        {/* ── bottom: SimSelector + AI Chat side by side ── */}
+        <div style={{ display:'flex', gap:14, alignItems:'stretch' }}>
+          {/* left: sim selector */}
+          <div style={{ flex:1, minWidth:0, display:'flex', flexDirection:'column', gap:12 }}>
+            <SimSelector
+              activeId={activeId}
+              viewedId={viewedId}
+              onSelect={handleSelect}
+              onView={setViewedId}
+            />
+            {viewedId && viewedId !== activeId && (
+              <SimInfoPanel simId={viewedId} />
+            )}
+          </div>
+          {/* right: AI chat */}
+          <div style={{ flex:1, minWidth:0 }}>
+            <SimChat simId={activeId ?? 'general'} simTitle={simTitle} />
+          </div>
         </div>
-
-        {/* ── AI Chat (full width below) ── */}
-        <SimChat simId={activeId ?? 'general'} simTitle={simTitle} />
 
       </div>
     </div>

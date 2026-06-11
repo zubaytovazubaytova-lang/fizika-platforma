@@ -131,52 +131,46 @@ export default function SimSelector({ activeId, viewedId, onSelect, onView }: Si
   return (
     <div
       className="flex flex-col rounded-2xl"
-      style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(8,8,24,0.97)' }}
+      style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(8,8,24,0.97)', height: '100%' }}
     >
-      {/* Header */}
-      <div className="px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-        <p className="font-bold text-white text-sm">⚗️ Simulatsiya tanlash</p>
-        <p className="mt-0.5 text-xs text-gray-600">Fizik hodisani qidiring yoki tanlang</p>
-      </div>
-
-      <div className="px-4 py-3 flex-1">
+      <div className="px-4 pt-3 pb-2">
         <div ref={wrapRef} className="relative">
 
-          {/* Search input */}
-          <div
-            className="flex items-center gap-2.5 rounded-xl px-4 py-3"
+          {/* Single trigger — click to open categories */}
+          <button
+            onClick={() => { setOpen(v => !v); if (!open) inputRef.current?.focus() }}
+            className="flex w-full items-center gap-2.5 rounded-xl px-4 py-3 text-left"
             style={{
               background: 'rgba(255,255,255,0.04)',
-              border: `1.5px solid ${open ? 'rgba(96,165,250,0.5)' : 'rgba(255,255,255,0.11)'}`,
-              transition: 'border-color 0.2s',
+              border: `1.5px solid ${open ? 'rgba(96,165,250,0.55)' : 'rgba(255,255,255,0.11)'}`,
+              boxShadow: open ? '0 0 0 3px rgba(96,165,250,0.08)' : 'none',
+              transition: 'border-color 0.2s, box-shadow 0.2s',
+              cursor: 'pointer',
             }}
           >
-            <Search className="h-4 w-4 shrink-0 text-gray-600" />
+            <Search className="h-4 w-4 shrink-0" style={{ color: open ? '#60a5fa' : '#4b5563' }} />
             <input
               ref={inputRef}
               value={query}
               onChange={e => { setQuery(e.target.value); setOpen(true) }}
               onFocus={() => setOpen(true)}
+              onClick={e => e.stopPropagation()}
               placeholder="Fizik hodisani qidiring yoki tanlang..."
-              className="flex-1 bg-transparent text-sm text-white outline-none placeholder-gray-700"
+              className="flex-1 bg-transparent text-sm text-white outline-none placeholder-gray-600 cursor-pointer"
+              readOnly={!open}
             />
-            {query && (
+            {query && open && (
               <button
-                onMouseDown={e => {
-                  e.preventDefault()
-                  setQuery('')
-                  inputRef.current?.focus()
-                }}
+                onMouseDown={e => { e.preventDefault(); setQuery(''); inputRef.current?.focus() }}
+                onClick={e => e.stopPropagation()}
                 className="text-xl leading-none text-gray-600 hover:text-gray-400 transition-colors"
-              >
-                ×
-              </button>
+              >×</button>
             )}
             <ChevronDown
-              className="h-4 w-4 shrink-0 text-gray-600 transition-transform duration-200"
-              style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
+              className="h-4 w-4 shrink-0 transition-transform duration-200"
+              style={{ color: open ? '#60a5fa' : '#4b5563', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
             />
-          </div>
+          </button>
 
           {/* Dropdown */}
           {open && (

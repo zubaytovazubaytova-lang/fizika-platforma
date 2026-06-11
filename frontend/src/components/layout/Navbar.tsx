@@ -3,18 +3,19 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { useRef, useState, useEffect } from 'react'
-import { BookOpen, TestTube2, Bot, Atom, User, LogOut, Settings, ChevronDown, Globe, BookMarked, Telescope, ShieldCheck, FlaskConical, Sigma, Library } from 'lucide-react'
+import { BookOpen, TestTube2, Bot, Atom, User, LogOut, Settings, ChevronDown, BookMarked, Telescope, ShieldCheck, FlaskConical, Sigma, Library, Trophy } from 'lucide-react'
 import clsx from 'clsx'
 import { useAuthStore } from '@/store/auth'
 import EnergyLine from '@/components/effects/EnergyLine'
 
 const navLinks = [
-  { href: '/courses',      label: 'Kurslar',    icon: BookOpen   },
-  { href: '/darsliklar',   label: 'Darsliklar', icon: BookMarked },
-  { href: '/tests',        label: 'Testlar',    icon: TestTube2  },
-  { href: '/simulations',  label: '3D',          icon: Atom       },
-  { href: '/kashfiyotlar', label: 'Kashfiyot',  icon: Telescope  },
-  { href: '/ai-tutor',     label: 'AI Tutor',   icon: Bot        },
+  { href: '/courses',      label: 'Kurslar',  icon: BookOpen  },
+  { href: '/darsliklar',   label: 'Darslik',  icon: BookMarked},
+  { href: '/tests',        label: 'Test',     icon: TestTube2 },
+  { href: '/musobaqa',     label: 'Musobaqa', icon: Trophy    },
+  { href: '/simulations',  label: '3D',       icon: Atom      },
+  { href: '/kashfiyotlar', label: 'Kashf',    icon: Telescope },
+  { href: '/ai-tutor',     label: 'AI Tutor', icon: Bot       },
 ]
 
 const LANGS = [
@@ -53,14 +54,14 @@ function RefDropdown() {
       <button
         onClick={() => setOpen(v => !v)}
         className={clsx(
-          'flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-medium transition-all',
+          'flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-sm font-medium transition-all whitespace-nowrap',
           isActive || open
             ? 'bg-purple-500/15 text-purple-300 border border-purple-500/20'
             : 'text-gray-400 hover:bg-white/[0.06] hover:text-white'
         )}
       >
-        <Library className="h-4 w-4" />
-        Ma&apos;lumotnoma
+        <Library className="h-3.5 w-3.5" />
+        Manba
         <ChevronDown className={clsx('h-3 w-3 text-gray-600 transition-transform duration-200', open && 'rotate-180')} />
       </button>
 
@@ -113,13 +114,13 @@ function LangMenu() {
     <div className="relative" ref={ref}>
       <button onClick={() => setOpen(v => !v)}
         className={clsx(
-          'flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-semibold transition-all',
+          'flex items-center gap-1 rounded-xl border px-2 py-1 text-xs font-semibold transition-all whitespace-nowrap',
           open
             ? 'border-purple-500/40 bg-purple-500/10 text-purple-300'
             : 'border-white/[0.1] bg-white/[0.04] text-gray-300 hover:border-white/[0.15] hover:text-white'
         )}>
-        <Globe className="h-3.5 w-3.5" />
-        <span>{current.flag} {current.code}</span>
+        <span>{current.flag}</span>
+        <span>{current.code}</span>
         <ChevronDown className={clsx('h-3 w-3 text-gray-600 transition-transform duration-200', open && 'rotate-180')} />
       </button>
 
@@ -178,7 +179,7 @@ function UserMenu() {
   return (
     <div className="relative" ref={ref}>
       <button onClick={() => setOpen(v => !v)}
-        className="flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm transition-all"
+        className="flex items-center gap-1.5 rounded-xl px-2.5 py-1 text-sm transition-all"
         style={{ border: '1px solid rgba(124,58,237,0.25)', background: 'rgba(124,58,237,0.08)' }}>
         {user.avatar
           ? <Image src={user.avatar} alt="" width={28} height={28} unoptimized className="h-7 w-7 rounded-full object-cover" />
@@ -239,35 +240,43 @@ export default function Navbar() {
         borderBottom: '1px solid rgba(124,58,237,0.18)',
         boxShadow: '0 4px 24px rgba(0,0,0,0.4), inset 0 -1px 0 rgba(124,58,237,0.1)',
       }}>
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 gap-4">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2 gap-2">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
-          <div className="h-8 w-8 rounded-xl flex items-center justify-center text-sm transition-all"
-            style={{ background: 'linear-gradient(135deg,#7c3aed,#5b21b6)', boxShadow: '0 0 14px rgba(124,58,237,0.45)' }}>⚛️</div>
-          <span className="text-lg font-black text-white tracking-tight" style={{ fontFamily: "'Space Grotesk',sans-serif" }}>
-            Fizika <span style={{ background: 'linear-gradient(90deg,#a78bfa,#7c3aed)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>AI</span>
-          </span>
+        <Link href="/" className="flex items-center gap-2 shrink-0 group">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/sofena-icon.svg"
+            alt="SOFENA"
+            style={{ height: 40, width: 40, borderRadius: 11, userSelect: 'none', flexShrink: 0 }}
+            draggable={false}
+          />
+          <span style={{
+            fontSize: 17, fontWeight: 800, letterSpacing: '0.06em',
+            background: 'linear-gradient(135deg,#b8d8ff,#6699ee)',
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}>SOFENA</span>
         </Link>
 
         {/* Nav links */}
-        <div className="hidden items-center gap-0.5 md:flex flex-1 justify-center">
+        <div className="hidden items-center gap-0 md:flex flex-1 justify-center">
           {navLinks.map(({ href, label, icon: Icon }) => (
             <Link key={href} href={href}
               className={clsx(
-                'flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-medium transition-all duration-200',
+                'flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-sm font-medium transition-all duration-200 whitespace-nowrap',
                 pathname.startsWith(href)
                   ? 'bg-purple-500/15 text-purple-300 border border-purple-500/20'
                   : 'text-gray-400 hover:bg-white/[0.06] hover:text-white'
               )}
             >
-              <Icon className="h-4 w-4" /> {label}
+              <Icon className="h-3.5 w-3.5" /> {label}
             </Link>
           ))}
           <RefDropdown />
         </div>
 
         {/* Right */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0">
           <LangMenu />
           <UserMenu />
         </div>

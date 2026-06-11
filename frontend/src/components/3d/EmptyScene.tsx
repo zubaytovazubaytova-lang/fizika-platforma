@@ -7,7 +7,7 @@ function GridScene() {
     <>
       <ambientLight intensity={0.1} />
       <gridHelper args={[24, 24, 'rgba(99,179,237,0.18)', 'rgba(99,179,237,0.06)']} />
-      <OrbitControls enablePan={false} minDistance={4} maxDistance={30} />
+      <OrbitControls enablePan={true} enableDamping={true} dampingFactor={0.06} zoomSpeed={2.0} rotateSpeed={0.75} panSpeed={0.9} minDistance={0.5} maxDistance={100} />
     </>
   )
 }

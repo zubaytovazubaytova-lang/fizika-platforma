@@ -296,9 +296,14 @@ export default function PaskalShariSim() {
         >
           <PaskalShariScene pressure={pressure} auto={auto} />
           <OrbitControls
-            enablePan={false}
-            minDistance={4}
-            maxDistance={16}
+            enablePan={true}
+            enableDamping={true}
+            dampingFactor={0.06}
+            zoomSpeed={2.0}
+            rotateSpeed={0.75}
+            panSpeed={0.9}
+            minDistance={0.5}
+            maxDistance={80}
             target={[0, 0.1, 0]}
           />
         </Canvas>

@@ -22,7 +22,7 @@ export default function Human({ position = [0, 0, 0], moving = false, speed = 1 
   const hair  = <meshStandardMaterial color="#3D2B1F" roughness={0.9} />
 
   return (
-    <group ref={group} position={position} scale={[0.55, 0.55, 0.55]}>
+    <group ref={group} position={position} scale={[0.55, 0.55, 0.55]} rotation={[0, Math.PI, 0]}>
       {/* Head */}
       <mesh position={[0, 1.65, 0]}><sphereGeometry args={[0.28, 10, 10]} />{skin}</mesh>
       {/* Hair */}

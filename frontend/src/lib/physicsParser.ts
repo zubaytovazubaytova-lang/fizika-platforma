@@ -213,6 +213,34 @@ export function solveProblem(p: Prob): Sol | null {
   return null
 }
 
+/* ── detect which moving object the problem talks about ──
+   Maps keywords found in the problem text to a TezlikSim OBJECTS id,
+   so the simulation shows/animates the body the masala is actually about
+   (e.g. "Avtomobil ... yurdi" → 'car'), not whatever was picked before. */
+const OBJ_KEYWORDS: { id: string; re: RegExp }[] = [
+  { id: 'truck',    re: /\byuk\s*(?:mashina|avtomobil)\w*/i },
+  { id: 'car',      re: /\b(?:avtomobil|avtomashina|mashina|avto)\w*/i },
+  { id: 'moto',     re: /\bmotor?otsikl\w*/i },
+  { id: 'bicycle',  re: /\bvelosiped\w*/i },
+  { id: 'wolf',     re: /\bbo[''`ʻ]?ri\w*/i },
+  { id: 'rabbit',   re: /\bquyon\w*/i },
+  { id: 'ant',      re: /\bchumoli\w*/i },
+  { id: 'snail',    re: /\bshilliq[qg]?urt\w*/i },
+  { id: 'ship',     re: /\bkema\w*/i },
+  { id: 'airplane', re: /\bsam[ao]lyot\w*/i },
+  { id: 'heli',     re: /\bvert[ao]lyot\w*/i },
+  { id: 'balloon',  re: /\bhavo\s*shar\w*/i },
+  { id: 'human',    re: /\b(?:odam|piyoda|bola|qiz|yigit|sayohatchi|talaba|o['`'ʻ‘’]?quvchi)\w*/i },
+]
+
+export function detectObjectId(inputTxt: string): string | null {
+  const txt = normalizeUzb(inputTxt)
+  for (const { id, re } of OBJ_KEYWORDS) {
+    if (re.test(txt)) return id
+  }
+  return null
+}
+
 export const PROB_EXAMPLES = [
   "Avtomobil 72 km/soat tezlikda 2 soat yurdi. Qancha yo'l bosdi?",
   "Velosiped 5 m/s tezlikda 300 metr masofa bosdi. Vaqt toping.",

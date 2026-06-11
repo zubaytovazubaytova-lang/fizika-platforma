@@ -1,0 +1,48 @@
+const { chromium } = require('playwright-core');
+(async () => {
+  const browser = await chromium.launch();
+  const page = await browser.newPage({ viewport: { width: 1700, height: 1000 }, deviceScaleFactor: 4 });
+  await page.goto('http://localhost:3000/register', { waitUntil: 'networkidle', timeout: 60000 });
+  await page.waitForSelector('input', { timeout: 30000 });
+  await page.waitForTimeout(800);
+  const inputs = await page.locator('input').all();
+  const email = `bikecheck35_${Date.now()}@test.local`;
+  await inputs[0].fill('Bike'); await inputs[1].fill('Check'); await inputs[2].fill(email);
+  await inputs[3].fill('BikeCheck123!'); await inputs[4].fill('BikeCheck123!');
+  await page.locator('button').filter({ hasText: /Ro.?yxatdan o.?tish/i }).first().click();
+  await page.waitForTimeout(3500);
+
+  await page.goto('http://localhost:3000/simulations', { waitUntil: 'networkidle', timeout: 60000 });
+  await page.waitForTimeout(2500);
+  const search = page.locator('input[placeholder*="qidir" i]').first();
+  await search.click(); await page.waitForTimeout(400);
+  await page.keyboard.type('tezlik'); await page.waitForTimeout(900);
+  await page.locator('button, a, li, div[role="button"], div[role="option"]').filter({ hasText: /tezlik/i }).last().click();
+  await page.waitForTimeout(4000);
+  const canvas = page.locator('canvas').first();
+  const box = await canvas.boundingBox();
+  await page.locator('button').filter({ hasText: /Jism/i }).first().click();
+  await page.waitForTimeout(600);
+  await page.locator('button, div[role="option"], li').filter({ hasText: /Velosiped/ }).last().click();
+  await page.waitForTimeout(2000);
+  const cw = box.width, ch = box.height;
+
+  // start moving briefly, then PAUSE early to freeze with bike still near start (~0.045, 0.85 at this zoom)
+  await page.locator('button').filter({ hasText: /Velosiped 5 m\/s/ }).first().click();
+  await page.waitForTimeout(400);
+  await page.locator('button').filter({ hasText: /Yeching/i }).first().click();
+  await page.waitForTimeout(180);
+  await page.locator('button').filter({ hasText: /Pauza/i }).first().click().catch(()=>{});
+  await page.waitForTimeout(300);
+
+  // NOW frozen — zoom in tight directly on the bike with no time pressure
+  const tx = box.x + cw*0.045, ty = box.y + ch*0.86;
+  await page.mouse.move(tx, ty);
+  for (let i=0;i<6;i++){ await page.mouse.wheel(0, -85); await page.waitForTimeout(200); }
+  await page.waitForTimeout(400);
+  await canvas.screenshot({ path: 'd35_close.png' });
+  await page.screenshot({ path: 'd35_crop.png',
+    clip: { x: box.x + cw*0.20, y: box.y + ch*0.30, width: cw*0.55, height: ch*0.55 } });
+
+  await browser.close();
+})().catch(e => { console.error('ERR', e); process.exit(1); });

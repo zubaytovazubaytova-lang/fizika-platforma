@@ -381,10 +381,14 @@ export default function LandingPage() {
       {/* ── NAV ──────────────────────────────────────────────────── */}
       <nav className="lg-nav" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200, padding: '14px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(124,58,237,0.22)', boxShadow: '0 4px 30px rgba(0,0,0,0.5), 0 0 60px rgba(124,58,237,0.06), inset 0 -1px 0 rgba(124,58,237,0.15)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg,#7c3aed,#5b21b6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, boxShadow: '0 0 16px rgba(124,58,237,.55)' }}>⚛️</div>
-          <span style={{ color: 'white', fontWeight: 900, fontSize: 19, letterSpacing: -0.5, fontFamily: "'Space Grotesk', sans-serif" }}>
-            Fizika <span className="gt-nav">AI</span>
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/sofena-icon.svg" alt="SOFENA" style={{ height: 36, width: 36, borderRadius: 10, boxShadow: '0 0 16px rgba(124,58,237,.55)' }} />
+          <span style={{
+            fontWeight: 900, fontSize: 19, letterSpacing: '0.06em', fontFamily: "'Space Grotesk', sans-serif",
+            background: 'linear-gradient(135deg,#b8d8ff,#6699ee)',
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}>SOFENA</span>
         </div>
         {/* Login tugmalari */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

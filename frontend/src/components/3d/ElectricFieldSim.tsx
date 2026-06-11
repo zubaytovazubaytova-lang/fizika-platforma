@@ -189,7 +189,7 @@ function ElectricScene({
         />
       ))}
       <Particles key={linesKey} lines={lines} paused={paused} />
-      <OrbitControls enablePan={false} minDistance={3} maxDistance={22} />
+      <OrbitControls enablePan={true} enableDamping={true} dampingFactor={0.06} zoomSpeed={2.0} rotateSpeed={0.75} panSpeed={0.9} minDistance={0.5} maxDistance={80} />
     </>
   )
 }

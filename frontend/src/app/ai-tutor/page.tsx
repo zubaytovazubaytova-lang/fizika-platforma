@@ -117,8 +117,11 @@ const EMOJIS = ['😊','🤔','💡','📚','⚡','🔭','🧪','✅','❓','�
 function TypingIndicator() {
   return (
     <div className="flex items-end gap-3 px-4 md:px-6">
-      <div className="h-8 w-8 shrink-0 rounded-xl bg-gradient-to-br from-cyan-500 via-blue-500 to-purple-600 flex items-center justify-center text-sm"
-        style={{ boxShadow: '0 0 14px rgba(0,212,255,0.3)' }}>🤖</div>
+      <div className="h-8 w-8 shrink-0 rounded-xl bg-gradient-to-br from-cyan-500 via-blue-500 to-purple-600 flex items-center justify-center p-1.5"
+        style={{ boxShadow: '0 0 14px rgba(0,212,255,0.3)' }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/sofena-icon.svg" alt="SOFENA" className="h-full w-full" />
+      </div>
       <div className="rounded-2xl rounded-bl-sm px-4 py-3"
         style={{ background: 'linear-gradient(135deg, rgba(0,30,60,0.9), rgba(30,10,60,0.8))', border: '1px solid rgba(0,212,255,0.15)' }}>
         <div className="flex items-center gap-1.5">
@@ -171,8 +174,11 @@ function Bubble({ msg, idx, katex, favorites, onFav }: BubbleProps) {
 
   return (
     <div className="flex items-start gap-2.5 px-4 md:px-6 bubble-in" style={{ animationDelay: `${Math.min(idx*30,300)}ms` }}>
-      <div className="h-8 w-8 shrink-0 rounded-xl bg-gradient-to-br from-cyan-500 via-blue-500 to-purple-600 flex items-center justify-center text-sm mt-1"
-        style={{ boxShadow: '0 0 14px rgba(0,212,255,0.25)' }}>🤖</div>
+      <div className="h-8 w-8 shrink-0 rounded-xl bg-gradient-to-br from-cyan-500 via-blue-500 to-purple-600 flex items-center justify-center p-1.5 mt-1"
+        style={{ boxShadow: '0 0 14px rgba(0,212,255,0.25)' }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/sofena-icon.svg" alt="SOFENA" className="h-full w-full" />
+      </div>
 
       <div className="max-w-[76%]">
         {/* Bubble */}
@@ -394,12 +400,13 @@ function EmptyState({ onNew }: { onNew: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center h-full px-6 pb-10 gap-8">
       <div className="flex flex-col items-center gap-4">
-        <div className="h-20 w-20 rounded-3xl flex items-center justify-center text-4xl"
+        <div className="h-20 w-20 rounded-3xl flex items-center justify-center p-4"
           style={{ background:'linear-gradient(135deg,rgba(0,212,255,0.15),rgba(139,92,246,0.15))', border:'1px solid rgba(0,212,255,0.25)', boxShadow:'0 0 40px rgba(0,212,255,0.12)' }}>
-          🤖
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/sofena-icon.svg" alt="SOFENA" className="h-full w-full" />
         </div>
         <div className="text-center">
-          <h2 className="text-2xl font-black text-white">FizikaAI Yordamchi</h2>
+          <h2 className="text-2xl font-black text-white">SOFENA AI Yordamchi</h2>
           <p className="text-gray-400 mt-1 text-sm">Chap paneldan mavzu tanlang yoki savol yozing</p>
         </div>
       </div>
@@ -468,7 +475,7 @@ function InputBar({ value, onChange, onSend, disabled, sending }: InputBarProps)
 
         {/* Textarea */}
         <textarea ref={ref} value={value} onChange={(e) => onChange(e.target.value)} onKeyDown={onKey}
-          placeholder="FizikaAI ga yozing... (Enter=yuborish, Shift+Enter=yangi qator, $F=ma$ LaTeX ishlaydi)"
+          placeholder="SOFENA AI ga yozing... (Enter=yuborish, Shift+Enter=yangi qator, $F=ma$ LaTeX ishlaydi)"
           rows={1}
           className="flex-1 resize-none bg-transparent py-2 text-sm text-white placeholder-gray-600 focus:outline-none leading-relaxed"
           style={{ maxHeight:'180px', minHeight:'36px' }} />
@@ -546,12 +553,13 @@ function LoginOverlay() {
       style={{ backdropFilter:'blur(10px)', background:'rgba(5,5,16,0.78)' }}>
       <div className="flex flex-col items-center gap-6 rounded-3xl p-10 text-center max-w-sm w-full mx-4"
         style={{ background:'rgba(10,10,30,0.92)', border:'1px solid rgba(0,212,255,0.20)', boxShadow:'0 0 60px rgba(0,212,255,0.08), 0 30px 60px rgba(0,0,0,0.6)' }}>
-        <div className="h-20 w-20 rounded-3xl flex items-center justify-center text-4xl"
+        <div className="h-20 w-20 rounded-3xl flex items-center justify-center p-4"
           style={{ background:'linear-gradient(135deg,rgba(0,212,255,0.2),rgba(139,92,246,0.2))', border:'1px solid rgba(0,212,255,0.25)', boxShadow:'0 0 30px rgba(0,212,255,0.15)' }}>
-          🤖
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/sofena-icon.svg" alt="SOFENA" className="h-full w-full" />
         </div>
         <div>
-          <h2 className="text-xl font-black text-white mb-2">FizikaAI Yordamchi</h2>
+          <h2 className="text-xl font-black text-white mb-2">SOFENA AI Yordamchi</h2>
           <p className="text-sm text-gray-400 leading-relaxed">
             AI yordamchidan foydalanish uchun{' '}
             <span className="text-cyan-400 font-semibold">hisobingizga kirishingiz</span> kerak
@@ -771,11 +779,14 @@ export default function AITutorPage() {
         <div className="flex items-center justify-between px-5 py-3.5 border-b shrink-0"
           style={{ borderColor:'rgba(255,255,255,0.06)', background:'rgba(7,7,22,0.92)', backdropFilter:'blur(12px)' }}>
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-cyan-500 via-blue-500 to-purple-600 flex items-center justify-center text-base"
-              style={{ boxShadow:'0 0 14px rgba(0,212,255,0.3)' }}>🤖</div>
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-cyan-500 via-blue-500 to-purple-600 flex items-center justify-center p-1.5"
+              style={{ boxShadow:'0 0 14px rgba(0,212,255,0.3)' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/sofena-icon.svg" alt="SOFENA" className="h-full w-full" />
+            </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="font-bold text-white text-sm">FizikaAI</h1>
+                <h1 className="font-bold text-white text-sm">SOFENA AI</h1>
                 <span className="flex items-center gap-1 rounded-full bg-green-500/15 border border-green-500/25 px-2 py-0.5 text-xs text-green-400">
                   <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" /> Faol
                 </span>

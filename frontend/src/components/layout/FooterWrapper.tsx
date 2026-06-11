@@ -41,19 +41,19 @@ export default function FooterWrapper() {
 
           {/* Brand */}
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <div style={{
-                width: 36, height: 36, borderRadius: 10,
-                background: 'linear-gradient(135deg,#7c3aed,#5b21b6)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 18, boxShadow: '0 0 16px rgba(124,58,237,0.4)',
-              }}>⚛️</div>
-              <span style={{ color: 'white', fontWeight: 900, fontSize: 20, fontFamily: "'Space Grotesk',sans-serif" }}>
-                Fizika{' '}
-                <span style={{ background: 'linear-gradient(90deg,#a78bfa,#7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                  AI
-                </span>
-              </span>
+            <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/sofena-icon.svg"
+                alt="SOFENA"
+                style={{ height: 48, width: 48, borderRadius: 13 }}
+              />
+              <span style={{
+                fontSize: 20, fontWeight: 900, letterSpacing: '0.07em',
+                background: 'linear-gradient(135deg,#b8d8ff,#6699ee)',
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}>SOFENA</span>
             </div>
             <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, lineHeight: 1.7, maxWidth: 280 }}>
               Fizika fanini interaktiv 3D simulatsiyalar, sun&apos;iy intellekt va zamonaviy metodlar orqali o&apos;rganing.
@@ -93,7 +93,7 @@ export default function FooterWrapper() {
         {/* Bottom */}
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 18, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
           <span style={{ color: 'rgba(255,255,255,0.22)', fontSize: 12 }}>
-            © 2026 Fizika AI Platformasi.
+            © 2026 SOFENA — Fizika 3D Platformasi.
           </span>
           <span style={{ color: 'rgba(255,255,255,0.18)', fontSize: 12 }}>
             Claude AI bilan ishlaydi 🤖

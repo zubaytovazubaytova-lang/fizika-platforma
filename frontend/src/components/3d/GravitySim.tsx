@@ -518,8 +518,11 @@ export default function GravitySim() {
             <OrbitControls
               enableZoom={orbitZoom}
               enableRotate={orbitRotate}
-              enablePan={false}
-              zoomSpeed={0.6}
+              enablePan={true}
+              enableDamping={true}
+              dampingFactor={0.06}
+              zoomSpeed={2.0}
+              rotateSpeed={0.75}
             />
           </>
         )}
@@ -535,7 +538,7 @@ export default function GravitySim() {
               autoRotate={false}
               minPolarAngle={0.2}
               maxPolarAngle={Math.PI / 1.7}
-              zoomSpeed={0.6}
+              zoomSpeed={2.0}
             />
           </>
         )}

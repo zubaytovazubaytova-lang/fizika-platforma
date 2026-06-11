@@ -7,8 +7,8 @@ import AnimatedBackground from '@/components/background/AnimatedBackground'
 import FooterWrapper from '@/components/layout/FooterWrapper'
 
 export const metadata: Metadata = {
-  title: 'Fizika AI Platformasi',
-  description: 'Fizika fanini interaktiv, 3D animatsiya va Claude AI yordamida o\'rganing',
+  title: 'SOFENA — Fizika 3D Platformasi',
+  description: 'Fizika fanini interaktiv 3D simulatsiyalar, sun\'iy intellekt va zamonaviy metodlar orqali o\'rganing.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -17,6 +17,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <style>{`html,body{background:#0c0c1e!important;color-scheme:dark}`}</style>
         <meta name="theme-color" content="#0c0c1e" />
+        <link rel="icon" type="image/svg+xml" href="/sofena-icon.svg" />
+        <link rel="apple-touch-icon" href="/sofena-icon.svg" />
       </head>
       <body className="min-h-full text-gray-100" style={{ background: 'transparent', position: 'relative', fontFamily: "'Inter', Arial, sans-serif" }}>
 

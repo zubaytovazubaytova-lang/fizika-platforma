@@ -515,17 +515,104 @@ function DPadBtn({ icon, onHold, style }: {
   )
 }
 
+/* ── Measurement ruler along track ──────── */
+function Ruler3D({ distance, progress }: { distance: number; progress: number }) {
+  const TICK_COUNT = 10
+  const Z_RULER = -6.2
+  const RULER_Y  = FLOOR_Y + 0.03
+
+  const progressRef = useRef(progress)
+  progressRef.current = progress
+
+  const ticks = useMemo(() =>
+    Array.from({ length: TICK_COUNT + 1 }, (_, i) => ({
+      x: -TRACK_LEN / 2 + IDLE_OFFSET + (i / TICK_COUNT) * VIS_LEN,
+      label: `${Math.round((i / TICK_COUNT) * distance)}m`,
+      isMajor: i === 0 || i === TICK_COUNT,
+    })),
+    [distance]
+  )
+
+  const tickRefs  = useRef<(THREE.Mesh | null)[]>([])
+  const labelRefs = useRef<(HTMLDivElement | null)[]>([])
+  const fillRef   = useRef<THREE.Mesh>(null!)
+
+  useFrame(() => {
+    const p = progressRef.current
+    if (fillRef.current) {
+      fillRef.current.scale.x = Math.max(p, 0.0001)
+      fillRef.current.position.x = -TRACK_LEN / 2 + IDLE_OFFSET + (p * VIS_LEN) / 2
+    }
+    tickRefs.current.forEach((mesh, i) => {
+      const passed = p >= (i / TICK_COUNT) - 0.002
+      if (mesh) {
+        const mat = mesh.material as THREE.MeshStandardMaterial
+        mat.color.setHex(passed ? 0x22c55e : 0x334155)
+        mat.emissive.setHex(passed ? 0x166534 : 0x000000)
+        mat.emissiveIntensity = passed ? 0.6 : 0
+      }
+      const div = labelRefs.current[i]
+      if (div) div.style.color = passed ? '#86efac' : '#475569'
+    })
+  })
+
+  return (
+    <group>
+      <mesh position={[0, RULER_Y, Z_RULER]}>
+        <boxGeometry args={[VIS_LEN, 0.05, 0.09]} />
+        <meshStandardMaterial color="#1e293b" />
+      </mesh>
+      <mesh ref={fillRef} position={[-TRACK_LEN / 2 + IDLE_OFFSET, RULER_Y, Z_RULER]} scale={[0.0001, 1, 1]}>
+        <boxGeometry args={[VIS_LEN, 0.11, 0.13]} />
+        <meshStandardMaterial color="#22c55e" emissive="#14532d" emissiveIntensity={0.55} />
+      </mesh>
+      {ticks.map(({ x, label, isMajor }, i) => {
+        const h = isMajor ? 0.75 : 0.42
+        return (
+          <group key={i} position={[x, RULER_Y, Z_RULER]}>
+            <mesh
+              ref={(el: THREE.Mesh | null) => { tickRefs.current[i] = el }}
+              position={[0, h / 2, 0]}
+            >
+              <boxGeometry args={[isMajor ? 0.10 : 0.055, h, 0.10]} />
+              <meshStandardMaterial color="#334155" />
+            </mesh>
+            <Html position={[0, h + 0.3, 0]} center style={{ pointerEvents:'none' }}>
+              <div
+                ref={(el: HTMLDivElement | null) => { labelRefs.current[i] = el }}
+                style={{
+                  fontSize: isMajor ? 11 : 9,
+                  fontWeight: isMajor ? 900 : 600,
+                  color: '#475569',
+                  fontFamily: 'monospace',
+                  whiteSpace: 'nowrap',
+                  textShadow: '0 1px 6px rgba(0,0,0,0.95)',
+                  userSelect: 'none',
+                }}
+              >
+                {label}
+              </div>
+            </Html>
+          </group>
+        )
+      })}
+    </group>
+  )
+}
+
 /*
 /* ════════════════════════════════════════════════════ */
 export default function TezlikSim({
   initSpeed = 10,
   initDistance = 100,
+  initObjId = null,
   solveKey = 0,
   masalaSlot,
   monitorSolution,
 }: {
   initSpeed?: number
   initDistance?: number
+  initObjId?: string | null
   solveKey?: number
   masalaSlot?: React.ReactNode
   monitorSolution?: React.ReactNode
@@ -620,9 +707,13 @@ export default function TezlikSim({
     if (!isNewSolve) return
     setSpeed(initSpeed)
     setDistance(initDistance)
+    if (initObjId) {
+      const idx = OBJECTS.findIndex(o => o.id === initObjId)
+      if (idx >= 0) setObjIdx(idx)
+    }
     setWantAutoStart(true)
     reset()
-  }, [initSpeed, initDistance, solveKey, reset])
+  }, [initSpeed, initDistance, initObjId, solveKey, reset])
 
   const start = useCallback(() => {
     if (running || progress >= 1 || ctrlMode) return
@@ -776,6 +867,7 @@ export default function TezlikSim({
           <TrackScene />
           <Flag x={-TRACK_LEN/2} label="A" color="#22c55e" />
           <Flag x={ TRACK_LEN/2} label="B" color="#ef4444" />
+          <Ruler3D distance={distance} progress={progress} />
 
           <MovingObj
             objId={curObj.id}

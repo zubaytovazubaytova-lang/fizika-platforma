@@ -95,9 +95,14 @@ export default function DashboardPage() {
         {/* Logo */}
         <div className="p-5 border-b" style={{ borderColor:'rgba(255,255,255,0.06)' }}>
           <Link href="/" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-sm"
-              style={{ boxShadow:'0 0 14px rgba(0,212,255,0.3)' }}>⚛️</div>
-            <span className="font-black text-white">Fizika <span className="text-cyan-400">AI</span></span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/sofena-icon.svg" alt="SOFENA" className="h-8 w-8 rounded-lg" style={{ boxShadow:'0 0 14px rgba(0,212,255,0.3)' }} />
+            <span className="font-black" style={{
+              letterSpacing: '0.06em',
+              background: 'linear-gradient(135deg,#b8d8ff,#6699ee)',
+              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}>SOFENA</span>
           </Link>
         </div>
 

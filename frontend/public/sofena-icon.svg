@@ -1,0 +1,185 @@
+<svg width="400" height="400" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+
+    <!-- Background -->
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1b2d50"/>
+      <stop offset="100%" stop-color="#0a1628"/>
+    </linearGradient>
+
+    <!-- S body gradient: light silver-blue at top, deeper blue at bottom -->
+    <linearGradient id="sBody" x1="75%" y1="0%" x2="25%" y2="100%">
+      <stop offset="0%"   stop-color="#ddeeff"/>
+      <stop offset="20%"  stop-color="#b8d8f8"/>
+      <stop offset="45%"  stop-color="#88baea"/>
+      <stop offset="70%"  stop-color="#5898d8"/>
+      <stop offset="100%" stop-color="#3370b8"/>
+    </linearGradient>
+
+    <!-- S inner shadow gradient (right/lower side of tube) -->
+    <linearGradient id="sShadow" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%"   stop-color="#0a1840" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#0a1840" stop-opacity="0.15"/>
+    </linearGradient>
+
+    <!-- Orbital line gradient -->
+    <linearGradient id="orbGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#6699ff" stop-opacity="0.05"/>
+      <stop offset="30%"  stop-color="#88bbff" stop-opacity="0.85"/>
+      <stop offset="65%"  stop-color="#aaccff" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#ccddff" stop-opacity="0.2"/>
+    </linearGradient>
+
+    <!-- Rocket body gradient -->
+    <linearGradient id="rkBody" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#99bbff"/>
+      <stop offset="100%" stop-color="#2244cc"/>
+    </linearGradient>
+
+    <!-- Rocket nose -->
+    <linearGradient id="rkNose" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#ccdeff"/>
+      <stop offset="100%" stop-color="#4466cc"/>
+    </linearGradient>
+
+    <!-- Flame gradient -->
+    <linearGradient id="flame" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#ffee44"/>
+      <stop offset="45%"  stop-color="#ff9900"/>
+      <stop offset="100%" stop-color="#ff4400" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Sphere gradient -->
+    <radialGradient id="sphGrad" cx="32%" cy="28%" r="68%">
+      <stop offset="0%"   stop-color="#cceeff"/>
+      <stop offset="40%"  stop-color="#55aaff"/>
+      <stop offset="100%" stop-color="#1133bb"/>
+    </radialGradient>
+
+    <!-- Glow filter (orbital + sphere) -->
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- S outer glow -->
+    <filter id="sGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="14" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Rocket glow -->
+    <filter id="rkGlow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+  </defs>
+
+  <!-- ─── BACKGROUND ──────────────────────────────────── -->
+  <rect width="400" height="400" rx="72" fill="url(#bg)"/>
+
+  <!-- ─── S — OUTER GLOW ATMOSPHERE ──────────────────── -->
+  <path d="M 256,86 C 316,76 328,170 188,207 C 58,244 56,334 148,344"
+        fill="none" stroke="#2255bb" stroke-width="130"
+        stroke-linecap="round" opacity="0.18" filter="url(#sGlow)"/>
+
+  <!-- ─── S — DARK EDGE / RIGHT SHADOW (3D depth) ────── -->
+  <path d="M 260,90 C 320,80 332,174 192,211 C 62,248 60,338 152,348"
+        fill="none" stroke="url(#sShadow)" stroke-width="100"
+        stroke-linecap="round"/>
+
+  <!-- ─── S — MAIN BODY ───────────────────────────────── -->
+  <path d="M 256,86 C 316,76 328,170 188,207 C 58,244 56,334 148,344"
+        fill="none" stroke="url(#sBody)" stroke-width="92"
+        stroke-linecap="round"/>
+
+  <!-- ─── S — PRIMARY HIGHLIGHT (broad soft reflection) ─ -->
+  <path d="M 248,76 C 306,68 318,160 180,198 C 52,234 48,326 140,338"
+        fill="none" stroke="rgba(230,245,255,0.55)" stroke-width="36"
+        stroke-linecap="round"/>
+
+  <!-- ─── S — SHARP HIGHLIGHT (bright center of reflection) -->
+  <path d="M 246,72 C 302,66 312,154 178,194 C 54,230 50,322 140,334"
+        fill="none" stroke="rgba(255,255,255,0.82)" stroke-width="13"
+        stroke-linecap="round"/>
+
+  <!-- ─── S — TOP ACCENT HIGHLIGHT (short bright arc at top) -->
+  <path d="M 248,72 C 296,68 316,100 298,140"
+        fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="20"
+        stroke-linecap="round"/>
+
+  <!-- ─── S — BOTTOM ACCENT HIGHLIGHT ─────────────────── -->
+  <path d="M 108,306 C 82,326 86,348 148,348"
+        fill="none" stroke="rgba(255,255,255,0.38)" stroke-width="16"
+        stroke-linecap="round"/>
+
+  <!-- ─── ORBITAL / COMET TRAIL ────────────────────────── -->
+  <!-- Wide soft glow layer -->
+  <path d="M 302,60 C 388,106 388,228 216,248 C 48,268 24,352 92,372"
+        fill="none" stroke="rgba(100,160,255,0.35)" stroke-width="8"
+        stroke-linecap="round" filter="url(#glow)"/>
+  <!-- Main glowing line -->
+  <path d="M 302,60 C 388,106 388,228 216,248 C 48,268 24,352 92,372"
+        fill="none" stroke="url(#orbGrad)" stroke-width="3"
+        stroke-linecap="round" filter="url(#glow)"/>
+  <!-- Bright core -->
+  <path d="M 302,60 C 388,106 388,228 216,248 C 48,268 24,352 92,372"
+        fill="none" stroke="rgba(200,230,255,0.7)" stroke-width="1.5"
+        stroke-linecap="round"/>
+
+  <!-- ─── ROCKET ────────────────────────────────────────── -->
+  <!-- Positioned at upper-right of S, rotated -42° (nose→upper-right) -->
+  <g transform="translate(254,142) rotate(-42)" filter="url(#rkGlow)">
+
+    <!-- Flame (behind body) -->
+    <ellipse cx="0" cy="32" rx="7" ry="19" fill="url(#flame)"/>
+    <ellipse cx="0" cy="38" rx="10" ry="13" fill="rgba(255,140,0,0.3)"/>
+    <ellipse cx="0" cy="44" rx="7"  ry="10" fill="rgba(255,80,0,0.15)"/>
+
+    <!-- Body -->
+    <path d="M -11,4 C -13,-8 -13,-18 0,-28 C 13,-18 13,-8 11,4 C 9,16 5,24 0,27 C -5,24 -9,16 -11,4 Z"
+          fill="url(#rkBody)"/>
+
+    <!-- Nose cone -->
+    <path d="M -10,4 C -12,-8 -12,-20 0,-30 C 12,-20 12,-8 10,4 Z"
+          fill="url(#rkNose)"/>
+
+    <!-- Body highlight -->
+    <path d="M -8,-2 C -10,-12 -9,-22 -2,-28 C 2,-22 2,-12 0,-2 Z"
+          fill="rgba(220,240,255,0.65)"/>
+
+    <!-- Window -->
+    <circle cx="0" cy="2" r="5.5" fill="rgba(160,210,255,0.5)"
+            stroke="rgba(120,180,220,0.6)" stroke-width="1.5"/>
+    <circle cx="-1.5" cy="0.5" r="2" fill="rgba(255,255,255,0.4)"/>
+
+    <!-- Left fin -->
+    <path d="M -11,16 L -24,34 L -11,26 Z" fill="#1e40a0" opacity="0.85"/>
+    <!-- Right fin -->
+    <path d="M  11,16 L  24,34 L  11,26 Z" fill="#1e40a0" opacity="0.85"/>
+
+  </g>
+
+  <!-- ─── ORBITAL SPHERE (blue ball) ───────────────────── -->
+  <!-- Outer glow rings -->
+  <circle cx="90" cy="364" r="28" fill="rgba(60,120,255,0.12)"/>
+  <circle cx="90" cy="364" r="22" fill="rgba(80,140,255,0.2)"/>
+  <!-- Main sphere -->
+  <circle cx="90" cy="364" r="16" fill="url(#sphGrad)" filter="url(#glow)"/>
+  <!-- Sphere specular highlight -->
+  <ellipse cx="84" cy="357" rx="5.5" ry="4" fill="rgba(230,248,255,0.75)"/>
+  <!-- Outer ring -->
+  <circle cx="90" cy="364" r="19" fill="none" stroke="#5599ff"
+          stroke-width="1.5" opacity="0.5"/>
+
+</svg>

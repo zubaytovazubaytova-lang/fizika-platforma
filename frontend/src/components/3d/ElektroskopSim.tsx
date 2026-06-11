@@ -477,9 +477,14 @@ export default function ElektroskopSim({
           />
           <OrbitControls
             ref={orbitRef}
-            enablePan={false}
-            minDistance={0.8}
-            maxDistance={18}
+            enablePan={true}
+            enableDamping={true}
+            dampingFactor={0.06}
+            zoomSpeed={2.0}
+            rotateSpeed={0.75}
+            panSpeed={0.9}
+            minDistance={0.3}
+            maxDistance={60}
             target={[0, 1.1, 0]}
           />
         </Canvas>

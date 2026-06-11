@@ -142,11 +142,19 @@ function LoginForm() {
 
             {/* Logo */}
             <div style={{ textAlign: 'center', marginBottom: 36 }}>
-              <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-                <div style={{ height: 50, width: 50, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, background: 'linear-gradient(135deg,#7c3aed,#a855f7)', boxShadow: '0 0 24px rgba(124,58,237,0.5)' }}>⚛️</div>
-                <span style={{ fontSize: 30, fontWeight: 900, color: 'white' }}>
-                  Fizika <span style={{ color: '#a855f7' }}>AI</span>
-                </span>
+              <Link href="/" style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/sofena-icon.svg"
+                  alt="SOFENA"
+                  style={{ height: 80, width: 80, borderRadius: 20, boxShadow: '0 8px 32px rgba(40,100,255,0.35)' }}
+                />
+                <span style={{
+                  fontSize: 22, fontWeight: 900, letterSpacing: '0.08em',
+                  background: 'linear-gradient(135deg,#c8e0ff,#6699ee)',
+                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}>SOFENA</span>
               </Link>
               <h1 style={{ marginTop: 24, fontSize: 32, fontWeight: 800, color: 'white', textShadow: '0 2px 12px rgba(0,0,0,0.5)' }}>Xush kelibsiz</h1>
               <p style={{

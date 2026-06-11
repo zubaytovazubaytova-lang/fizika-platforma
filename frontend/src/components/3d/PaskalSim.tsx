@@ -300,9 +300,14 @@ export default function PaskalSim() {
         >
           <PaskalScene pressure={pressure} auto={auto} />
           <OrbitControls
-            enablePan={false}
-            minDistance={5}
-            maxDistance={17}
+            enablePan={true}
+            enableDamping={true}
+            dampingFactor={0.06}
+            zoomSpeed={2.0}
+            rotateSpeed={0.75}
+            panSpeed={0.9}
+            minDistance={0.5}
+            maxDistance={80}
             target={[0, 0.2, 0]}
           />
         </Canvas>

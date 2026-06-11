@@ -1,45 +1,72 @@
-import { useRef } from 'react'
+import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
+import { useGLTF } from '@react-three/drei'
+
+// GLB vertex analysis dan olingan har bir mesh'ning aniq markaz koordinatalari.
+// G'ildirak va pidal bu markazlar atrofida aylanishi kerak (node origin emas).
+const WF_HUB = [-0.6581,  0.4000,  0.0063]  // WheelFront markazi
+const WR_HUB = [ 0.6577,  0.4000,  0.0063]  // WheelRear markazi
+const CR_HUB = [ 0.2042,  0.4153, -0.0167]  // Crank (pedal o'qi) markazi
 
 export default function Bicycle({ position = [0, 0, 0], moving = false, speed = 1 }) {
-  const wF = useRef(); const wB = useRef(); const pedals = useRef()
+  const gltf  = useGLTF('/models/bicycle.glb')
+  const model = useMemo(() => gltf.scene.clone(true), [gltf.scene])
+
+  const frame  = useMemo(() => model.getObjectByName('BikeFrame'),  [model])
+  const crank  = useMemo(() => model.getObjectByName('Pedals'),     [model])
+  const wFront = useMemo(() => model.getObjectByName('WheelFront'), [model])
+  const wRear  = useMemo(() => model.getObjectByName('WheelRear'),  [model])
+
+  // Pivot gruplar — har biri tegishli mesh markazi bo'yicha joylashtirilgan
+  const pivotF = useRef()
+  const pivotR = useRef()
+  const pivotP = useRef()
+
   useFrame(() => {
     if (!moving) return
-    const delta = speed * 0.08
-    if (wF.current) wF.current.rotation.x += delta
-    if (wB.current) wB.current.rotation.x += delta
-    if (pedals.current) pedals.current.rotation.x += delta
+    const delta = speed * 0.12
+    // G'ildiraklar va pidal Z o'qi atrofida aylanadi (ular X-Y tekisligida yotadi)
+    if (pivotF.current) pivotF.current.rotation.z += delta
+    if (pivotR.current) pivotR.current.rotation.z += delta
+    if (pivotP.current) pivotP.current.rotation.z += delta
   })
-  const chrome = <meshStandardMaterial color="#C0C0C0" metalness={0.9} roughness={0.1} />
-  const black  = <meshStandardMaterial color="#1a1a1a" metalness={0.2} roughness={0.6} />
-  const gold   = <meshStandardMaterial color="#DAA520" metalness={0.7} roughness={0.2} />
 
   return (
-    <group position={position} scale={[0.85, 0.85, 0.85]}>
-      {/* Rear wheel */}
-      <group ref={wB} position={[-0.9, 0, 0]} rotation={[0, Math.PI/2, 0]}><mesh><torusGeometry args={[0.45, 0.06, 8, 24]} />{black}</mesh><mesh><torusGeometry args={[0.42, 0.02, 4, 24]} />{chrome}</mesh></group>
-      {/* Front wheel */}
-      <group ref={wF} position={[0.9, 0, 0]} rotation={[0, Math.PI/2, 0]}><mesh><torusGeometry args={[0.45, 0.06, 8, 24]} />{black}</mesh><mesh><torusGeometry args={[0.42, 0.02, 4, 24]} />{chrome}</mesh></group>
-      {/* Frame: down tube */}
-      <mesh position={[0.1, 0.22, 0]} rotation={[0, 0, -0.5]}><cylinderGeometry args={[0.025, 0.025, 1.05, 6]} />{chrome}</mesh>
-      {/* Seat tube */}
-      <mesh position={[-0.18, 0.28, 0]} rotation={[0, 0, 0.12]}><cylinderGeometry args={[0.025, 0.025, 0.7, 6]} />{chrome}</mesh>
-      {/* Top tube */}
-      <mesh position={[0, 0.55, 0]} rotation={[0, 0, 0.08]}><cylinderGeometry args={[0.022, 0.022, 1.1, 6]} />{chrome}</mesh>
-      {/* Chain stay */}
-      <mesh position={[-0.58, -0.05, 0]} rotation={[0, 0, 0.1]}><cylinderGeometry args={[0.018, 0.018, 0.72, 5]} />{chrome}</mesh>
-      {/* Fork */}
-      <mesh position={[0.75, 0.18, 0]} rotation={[0, 0, -0.3]}><cylinderGeometry args={[0.022, 0.022, 0.52, 5]} />{chrome}</mesh>
-      {/* Handlebar */}
-      <mesh position={[0.9, 0.72, 0]}><cylinderGeometry args={[0.018, 0.018, 0.55, 5]} />{chrome}</mesh>
-      {/* Seat */}
-      <mesh position={[-0.18, 0.72, 0]} rotation={[0, 0, 0.05]}><boxGeometry args={[0.26, 0.06, 0.14]} />{black}</mesh>
-      {/* Pedals */}
-      <group ref={pedals} position={[-0.08, 0.15, 0]}>
-        <mesh><cylinderGeometry args={[0.06, 0.06, 0.08, 8]} />{gold}</mesh>
-        <mesh position={[0.15, 0, 0]}><boxGeometry args={[0.1, 0.04, 0.07]} />{black}</mesh>
-        <mesh position={[-0.15, 0, 0]}><boxGeometry args={[0.1, 0.04, 0.07]} />{black}</mesh>
-      </group>
+    <group position={[position[0], position[1] - 0.5, position[2]]} rotation={[0, -Math.PI / 2, 0]}>
+      {/* Rama — o'z joyida, animatsiyasiz */}
+      {frame && <primitive object={frame} />}
+
+      {/* Old g'ildirak: pivot WF_HUB da, mesh negative offset bilan markazlashtirilgan */}
+      {wFront && (
+        <group ref={pivotF} position={WF_HUB}>
+          <primitive
+            object={wFront}
+            position={[-WF_HUB[0], -WF_HUB[1], -WF_HUB[2]]}
+          />
+        </group>
+      )}
+
+      {/* Orqa g'ildirak: pivot WR_HUB da */}
+      {wRear && (
+        <group ref={pivotR} position={WR_HUB}>
+          <primitive
+            object={wRear}
+            position={[-WR_HUB[0], -WR_HUB[1], -WR_HUB[2]]}
+          />
+        </group>
+      )}
+
+      {/* Pidal: pivot CR_HUB da (kranк o'qi) */}
+      {crank && (
+        <group ref={pivotP} position={CR_HUB}>
+          <primitive
+            object={crank}
+            position={[-CR_HUB[0], -CR_HUB[1], -CR_HUB[2]]}
+          />
+        </group>
+      )}
     </group>
   )
 }
+
+useGLTF.preload('/models/bicycle.glb')

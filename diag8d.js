@@ -1,0 +1,21 @@
+const { chromium } = require('playwright-core');
+(async () => {
+  const browser = await chromium.launch();
+  const page = await browser.newPage({ viewport: { width: 1700, height: 1000 }, deviceScaleFactor: 2 });
+  await page.goto('http://localhost:3000/register', { waitUntil: 'networkidle', timeout: 60000 });
+  await page.waitForTimeout(1000);
+  const inputs = await page.locator('input').all();
+  const email = `bikecheck_${Date.now()}@test.local`;
+  await inputs[0].fill('Bike');
+  await inputs[1].fill('Check');
+  await inputs[2].fill(email);
+  await inputs[3].fill('BikeCheck123!');
+  await inputs[4].fill('BikeCheck123!');
+  await page.locator('button').filter({ hasText: /Ro.?yxatdan o.?tish/i }).first().click();
+  await page.waitForTimeout(3500);
+  console.log('after register url:', page.url());
+  console.log('email used:', email);
+  const bodyText = await page.locator('body').innerText();
+  console.log(bodyText.slice(0, 400));
+  await browser.close();
+})().catch(e => { console.error('ERR', e); process.exit(1); });
